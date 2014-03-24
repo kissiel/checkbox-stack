@@ -23,6 +23,7 @@ checkbox_ng/commands/certification.py
 checkbox_ng/commands/cli.py
 checkbox_ng/commands/service.py
 checkbox_ng/commands/sru.py
+checkbox_ng/commands/test_cli.py
 checkbox_ng/commands/test_sru.py
 checkbox_ng/dbus_ex/__init__.py
 checkbox_ng/dbus_ex/decorators.py
@@ -32,5 +33,6 @@ contrib/com.canonical.certification.PlainBox1.service
 docs/changelog.rst
 docs/conf.py
 docs/index.rst
+docs/release.rst
 docs/scripts/brightness_test.rst
 docs/scripts/index.rst

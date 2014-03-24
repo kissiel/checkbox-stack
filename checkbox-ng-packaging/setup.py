@@ -18,9 +18,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
 
+# To avoid an error in atexit._run_exitfuncs while running tests:
+import concurrent.futures
 import os
+import sys
 
 from setuptools import setup, find_packages
+
+if "test" in sys.argv:
+    # Reset locale for setup.py test
+    os.environ["LANG"] = ""
+    os.environ["LANGUAGE"] = ""
+    os.environ["LC_ALL"] = "C.UTF-8"
 
 base_dir = os.path.dirname(__file__)
 
@@ -38,13 +47,13 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = [
-        'plainbox >= 0.3',
+        'plainbox >= 0.5.1',
         'requests >= 1.0',
     ]
 
 setup(
     name="checkbox-ng",
-    version="0.1",
+    version="0.2.2",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     author="Zygmunt Krynicki",

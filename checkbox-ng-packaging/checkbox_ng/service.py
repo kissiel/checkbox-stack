@@ -1,6 +1,6 @@
 # This file is part of Checkbox.
 #
-# Copyright 2013 Canonical Ltd.
+# Copyright 2013, 2014 Canonical Ltd.
 # Written by:
 #   Zygmunt Krynicki <zygmunt.krynicki@canonical.com>
 #
@@ -38,6 +38,7 @@ except ImportError:
 from plainbox.abc import IJobResult
 from plainbox.impl.job import JobDefinition
 from plainbox.impl.result import MemoryJobResult
+from plainbox.impl.secure.qualifiers import select_jobs
 from plainbox.impl.session import JobState
 from plainbox.impl.signal import remove_signals_listeners
 from plainbox.vendor import extcmd
@@ -283,7 +284,17 @@ class JobDefinitionWrapper(PlainBoxObjectWrapper):
 
     @dbus.service.property(dbus_interface=JOB_IFACE, signature="s")
     def name(self):
-        return self.native.name
+        # XXX: name should be removed but for now it should just return the
+        # full id instead of the old name (name may be very well gone)
+        return self.native.id
+
+    @dbus.service.property(dbus_interface=JOB_IFACE, signature="s")
+    def id(self):
+        return self.native.id
+
+    @dbus.service.property(dbus_interface=JOB_IFACE, signature="s")
+    def partial_id(self):
+        return self.native.partial_id
 
     @dbus.service.property(dbus_interface=JOB_IFACE, signature="s")
     def description(self):
@@ -660,7 +671,7 @@ class JobStateWrapper(PlainBoxObjectWrapper):
         return dbus.types.Array([
             (inhibitor.cause,
              inhibitor.cause_name,
-             (inhibitor.related_job.name
+             (inhibitor.related_job.id
               if inhibitor.related_job is not None else ""),
              (inhibitor.related_expression.text
               if inhibitor.related_expression is not None else ""))
@@ -847,7 +858,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         """
         logger.debug("_job_added(%r)", job)
         # Get references to the three key objects, job, state and result
-        state = self.native.job_state_map[job.name]
+        state = self.native.job_state_map[job.id]
         result = state.result
         assert job is state.job
         # Wrap them in the right order (state has to be last)
@@ -855,7 +866,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         self.add_result(result)
         state_wrapper = self.add_state(state)
         # Update the job_state_map wrapper that we have here
-        self._job_state_map_wrapper[job.name] = state_wrapper
+        self._job_state_map_wrapper[job.id] = state_wrapper
         # Send the signal that the 'job_state_map' property has changed
         self.PropertiesChanged(SESSION_IFACE, {
             self.__class__.job_state_map._dbus_property:
@@ -874,7 +885,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         """
         logger.debug("_job_removed(%r)", job)
         # Get references to the three key objects, job, state and result
-        state_wrapper = self._job_state_map_wrapper[job.name]
+        state_wrapper = self._job_state_map_wrapper[job.id]
         result_wrapper = state_wrapper._result_wrapper
         job_wrapper = state_wrapper._job_wrapper
         # Remove result and state from our managed object list
@@ -890,7 +901,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         if job_wrapper._is_generated:
             job_wrapper.remove_from_connection()
         # Update the job_state_map wrapper that we have here
-        del self._job_state_map_wrapper[job.name]
+        del self._job_state_map_wrapper[job.id]
         # Send the signal that the 'job_state_map' property has changed
         self.PropertiesChanged(SESSION_IFACE, {
             self.__class__.job_state_map._dbus_property:
@@ -1001,7 +1012,8 @@ class SessionWrapper(PlainBoxObjectWrapper):
             'flags': dbus.types.Array(
                 sorted(self.native.metadata.flags), signature='s'),
             'running_job_name': self.native.metadata.running_job_name or "",
-            'app_blob': self.native.metadata.app_blob or b''
+            'app_blob': self.native.metadata.app_blob or b'',
+            'app_id': self.native.metadata.app_id or ''
         }, signature="sv")
 
     @metadata.setter
@@ -1010,6 +1022,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         self.native.metadata.running_job_name = value['running_job_name']
         self.native.metadata.flags = value['flags']
         self.native.metadata.app_blob = bytes(value.get('app_blob', b''))
+        self.native.metadata.app_id = value.get('app_id', '')
 
     # TODO: signal<metadata>
 
@@ -1099,6 +1112,16 @@ class ProviderWrapper(PlainBoxObjectWrapper):
         """
         return self.native.description
 
+    @dbus.service.property(dbus_interface=PROVIDER_IFACE, signature="s")
+    def gettext_domain(self):
+        """
+        the name of the gettext domain associated with this provider
+
+        This value may be empty, in such case provider data cannot be localized
+        for the user environment.
+        """
+        return self.native.gettext_domain or ""
+
 
 class ServiceWrapper(PlainBoxObjectWrapper):
     """
@@ -1172,6 +1195,20 @@ class ServiceWrapper(PlainBoxObjectWrapper):
                             option_list: 'as', output_file: 's'):
         return self.native.export_session_to_file(
             session, output_format, option_list, output_file)
+    
+    @dbus.service.method(
+        dbus_interface=SERVICE_IFACE, in_signature='', out_signature='as')
+    def GetAllTransports(self):
+        """
+        Get all transports names and their respective options
+        """
+        return self.native.get_all_transports()
+
+    @dbus.service.method(
+        dbus_interface=SERVICE_IFACE, in_signature='ssss', out_signature='s')
+    def SendDataViaTransport(self, transport, where, options, data):
+        return self.native.send_data_via_transport(transport, where,
+                                                   options, data)
 
     @dbus.service.method(
         dbus_interface=SERVICE_IFACE, in_signature='ao', out_signature='o')
@@ -1212,6 +1249,30 @@ class ServiceWrapper(PlainBoxObjectWrapper):
         return primed_job
 
     RunJob = PrimeJob
+
+    @dbus.service.method(
+        dbus_interface=SERVICE_IFACE, in_signature='ao', out_signature='ao')
+    @PlainBoxObjectWrapper.translate
+    def SelectJobs(self, whitelist_list: 'ao') -> 'ao':
+        """
+        Compute the effective desired job list out of a list of (arbitrary)
+        desired whitelists or job definitions.
+
+        :param whitelist_list:
+            A list of jobs or whitelists to select. Each whitelist selects all
+            the jobs selected by that whitelist.
+
+            This argument is a simple, limited, encoding of job qualifiers that
+            is sufficient to implement the desired semantics of the Checkbox
+            GUI.
+
+        :returns:
+            A list of jobs that were selected.
+        """
+        job_list = list(
+            itertools.chain(*[
+                p.load_all_jobs()[0] for p in self.native.provider_list]))
+        return select_jobs(job_list, whitelist_list)
 
 
 class UIOutputPrinter(extcmd.DelegateBase):
