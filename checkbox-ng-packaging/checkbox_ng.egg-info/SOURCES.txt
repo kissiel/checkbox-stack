@@ -6,6 +6,7 @@ setup.py
 checkbox_ng/__init__.py
 checkbox_ng/certification.py
 checkbox_ng/config.py
+checkbox_ng/launchpad.py
 checkbox_ng/main.py
 checkbox_ng/service.py
 checkbox_ng/test_certification.py
