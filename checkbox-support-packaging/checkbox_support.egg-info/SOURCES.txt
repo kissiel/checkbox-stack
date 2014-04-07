@@ -45,6 +45,7 @@ checkbox_support/parsers/tests/test_dmidecode.py
 checkbox_support/parsers/tests/test_efi.py
 checkbox_support/parsers/tests/test_pactl.py
 checkbox_support/parsers/tests/test_udevadm.py
+checkbox_support/parsers/tests/test_version.py
 checkbox_support/parsers/tests/test_xinput.py
 checkbox_support/parsers/tests/fixtures/xinput_quantal.txt
 checkbox_support/parsers/tests/fixtures/xinput_toshiba.txt

@@ -1,3 +1,18 @@
+checkbox-support (0.2-1) unstable; urgency=low
+
+  [ Sylvain Pineau ]
+  * New upstream release. List of bugs fixed:
+    https://launchpad.net/checkbox-support/+milestone/0.2
+
+  [ Zygmunt Krynicki ]
+  * Use armoured gpg keys to avoid having to keep binary files in Debian
+    packaging. Also, replace that with my key since I made the 0.2 release
+    upstream. 
+  * Patch away checkbox_support.vendor.mock. Also add a copyright entry for
+    that module. Both changes are similar to what we do in python3-plainbox.
+
+ -- Zygmunt Krynicki <zygmunt.krynicki@canonical.com>  Mon, 07 Apr 2014 12:16:36 +0200
+
 checkbox-support (0.1-1) unstable; urgency=low
 
   * Initial release (Closes: #735153)
