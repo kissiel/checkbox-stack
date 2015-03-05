@@ -22,7 +22,7 @@
 =======================================================
 """
 
-from threading import Lock
+from gettext import gettext as _
 import collections
 import functools
 import itertools
@@ -34,14 +34,14 @@ except ImportError:
     try:
         from plainbox.vendor.funcsigs import Signature
     except ImportError:
-        raise SystemExit("DBus parts require 'funcsigs' from pypi.")
+        raise SystemExit(_("DBus parts require 'funcsigs' from pypi."))
 from plainbox.abc import IJobResult
 from plainbox.impl.job import JobDefinition
 from plainbox.impl.result import MemoryJobResult
 from plainbox.impl.secure.qualifiers import select_jobs
 from plainbox.impl.session import JobState
-from plainbox.impl.signal import remove_signals_listeners
 from plainbox.vendor import extcmd
+from plainbox.vendor.morris import remove_signals_listeners
 
 from checkbox_ng import dbus_ex as dbus
 from checkbox_ng.dbus_ex import OBJECT_MANAGER_IFACE
@@ -82,11 +82,12 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
                  **kwargs):
         super(PlainBoxObjectWrapper, self).__init__(
             native, conn, object_path, bus_name)
-        logger.debug("Created DBus wrapper %s for: %r", id(self), self.native)
+        logger.debug(
+            _("Created DBus wrapper %s for: %r"), id(self), self.native)
         self.__shared_initialize__(**kwargs)
 
     def __del__(self):
-        logger.debug("DBus wrapper %s died", id(self))
+        logger.debug(_("DBus wrapper %s died"), id(self))
 
     def __shared_initialize__(self, **kwargs):
         """
@@ -118,7 +119,7 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
             pass
         object_path = self._get_preferred_object_path()
         self.add_to_connection(connection, object_path)
-        logger.debug("Published DBus wrapper for %r as %s",
+        logger.debug(_("Published DBus wrapper for %r as %s"),
                      self.native, object_path)
 
     def publish_related_objects(self, connection):
@@ -165,8 +166,8 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
                 obj = cls.find_object_by_path(object_path)
             except KeyError as exc:
                 raise dbus.exceptions.DBusException((
-                    "object path {} does not designate an existing"
-                    " object").format(exc))
+                    _("object path {0} does not designate an existing"
+                      " object")).format(exc))
             else:
                 return obj.native
 
@@ -176,22 +177,23 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
                             for object_path in object_path_list]
             except KeyError as exc:
                 raise dbus.exceptions.DBusException((
-                    "object path {} does not designate an existing"
-                    " object").format(exc))
+                    _("object path {0} does not designate an existing"
+                      " object")).format(exc))
             else:
                 return [obj.native for obj in obj_list]
 
         def translate_return_o(obj):
             if isinstance(obj, PlainBoxObjectWrapper):
                 cls._logger.warning(
-                    "Application error: %r should have returned native object"
-                    " but returned wrapper instead", func)
+                    _("Application error: %r should have returned native"
+                      " object but returned wrapper instead"), func)
                 return obj
             try:
                 return cls.find_wrapper_by_native(obj)
             except KeyError:
                 raise dbus.exceptions.DBusException(
-                    "(o) internal error, unable to lookup object wrapper")
+                    _("({0}) internal error, unable to lookup object"
+                      " wrapper").format('o'))
 
         def translate_return_ao(object_list):
             try:
@@ -201,7 +203,8 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
                 ], signature='o')
             except KeyError:
                 raise dbus.exceptions.DBusException(
-                    "(ao) internal error, unable to lookup object wrapper")
+                    _("({0}) internal error, unable to lookup object"
+                      " wrapper").format('ao'))
 
         def translate_return_a_brace_so_brace(mapping):
             try:
@@ -211,13 +214,14 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
                 }, signature='so')
             except KeyError:
                 raise dbus.exceptions.DBusException(
-                    "(a{so}) internal error, unable to lookup object wrapper")
+                    _("({0}) internal error, unable to lookup object"
+                      " wrapper").format('a{so}'))
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             bound = sig.bind(*args, **kwargs)
             cls._logger.debug(
-                "wrapped %s called with %s", func, bound.arguments)
+                _("wrapped %s called with %s"), func, bound.arguments)
             for param in sig.parameters.values():
                 if param.annotation is Signature.empty:
                     pass
@@ -233,12 +237,12 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
                     bound.arguments[param.name] = strings
                 else:
                     raise ValueError(
-                        "unsupported translation {!r}".format(
+                        _("unsupported translation {!r}").format(
                             param.annotation))
             cls._logger.debug(
-                "unwrapped %s called with %s", func, bound.arguments)
+                _("unwrapped %s called with %s"), func, bound.arguments)
             retval = func(**bound.arguments)
-            cls._logger.debug("unwrapped %s returned %r", func, retval)
+            cls._logger.debug(_("unwrapped %s returned %r"), func, retval)
             if sig.return_annotation is Signature.empty:
                 pass
             elif sig.return_annotation == 'o':
@@ -249,9 +253,9 @@ class PlainBoxObjectWrapper(dbus.service.ObjectWrapper):
                 retval = translate_return_a_brace_so_brace(retval)
             else:
                 raise ValueError(
-                    "unsupported translation {!r}".format(
+                    _("unsupported translation {!r}").format(
                         sig.return_annotation))
-            cls._logger.debug("wrapped %s returned  %r", func, retval)
+            cls._logger.debug(_("wrapped %s returned  %r"), func, retval)
             return retval
         return wrapper
 
@@ -356,7 +360,28 @@ class JobDefinitionWrapper(PlainBoxObjectWrapper):
 
     @dbus.service.property(dbus_interface=CHECKBOX_JOB_IFACE, signature="s")
     def via(self):
-        return self.native.via or ""
+        # NOTE: the via property is emulated after an incompatible API change
+        # that we didn't want to really expose to checkbox-gui. The property
+        # no longer belongs to the job definition object. Instead it has
+        # to be looked up in the per-session job state object.
+        #
+        # The downside is that it means that we need to find the job in the
+        # state map somewhere and it's not easy to get a hold of that from
+        # each job wrapper. So we cheat and look at the (only one possible)
+        # session object, conveniently exposed from ServiceWrapper, to find
+        # the associated job state object.
+        session_obj = ServiceWrapper.get_session_obj()
+        if session_obj is None:
+            return ""
+        try:
+            state = session_obj.job_state_map[self.native.id]
+        except KeyError:
+            # See: LP: #1412660, session_obj can be None and event if it isn't,
+            # session_obj.job_state_map might *not* have self.native.id in it.
+            return ""
+        if state.via_job is None:
+            return ""
+        return state.via_job.checksum
 
     @dbus.service.property(
         dbus_interface=CHECKBOX_JOB_IFACE, signature="(suu)")
@@ -383,9 +408,9 @@ class JobDefinitionWrapper(PlainBoxObjectWrapper):
         return self.native.user or ""
 
 
-class WhiteListWrapper(PlainBoxObjectWrapper):
+class TestPlanWrapper(PlainBoxObjectWrapper):
     """
-    Wrapper for exposing WhiteList objects on DBus
+    Wrapper for exposing testplan objects as whitelist on DBus
     """
 
     HIDDEN_INTERFACES = frozenset([
@@ -395,35 +420,23 @@ class WhiteListWrapper(PlainBoxObjectWrapper):
     # Some internal helpers
 
     def _get_preferred_object_path(self):
-        # TODO: this clashes with providers, maybe use a random ID instead
-        return "/plainbox/whitelist/{}".format(
-            mangle_object_path(self.native.name))
+        return "/plainbox/whitelist/{}".format(self.native.checksum)
 
     # Value added
 
     @dbus.service.property(dbus_interface=WHITELIST_IFACE, signature="s")
     def name(self):
         """
-        name of this whitelist
+        name of this testplan
         """
         return self.native.name or ""
 
-    @dbus.service.method(
-        dbus_interface=WHITELIST_IFACE, in_signature='', out_signature='as')
-    def GetPatternList(self):
+    @dbus.service.property(dbus_interface=WHITELIST_IFACE, signature="s")
+    def partial_id(self):
         """
-        Get a list of regular expression patterns that make up this whitelist
+        partial_id of this testplan
         """
-        return dbus.Array([
-            qualifier.pattern_text
-            for qualifier in self.native.inclusive_qualifier_list],
-            signature='s')
-
-    @dbus.service.method(
-        dbus_interface=WHITELIST_IFACE, in_signature='o', out_signature='b')
-    @PlainBoxObjectWrapper.translate
-    def Designates(self, job: 'o'):
-        return self.native.designates(job)
+        return self.native.partial_id or ""
 
 
 class JobResultWrapper(PlainBoxObjectWrapper):
@@ -682,7 +695,7 @@ class JobStateWrapper(PlainBoxObjectWrapper):
         """
         return dbus.types.Array([
             (inhibitor.cause,
-             inhibitor.cause_name,
+             inhibitor.cause.name,
              (inhibitor.related_job.id
               if inhibitor.related_job is not None else ""),
              (inhibitor.related_expression.text
@@ -753,7 +766,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         :returns:
             The wrapper for the result that was added
         """
-        logger.info("Adding result %r to DBus", result)
+        logger.info(_("Adding result %r to DBus"), result)
         result_wrapper = self._maybe_wrap(result)
         result_wrapper.publish_self(self.connection)
         self.add_managed_object(result_wrapper)
@@ -772,7 +785,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         :returns:
             The wrapper for the result that was removed
         """
-        logger.info("Removing result %r from DBus", result)
+        logger.info(_("Removing result %r from DBus"), result)
         result_wrapper = self.find_wrapper_by_native(result)
         self.remove_managed_object(result_wrapper)
         result_wrapper.remove_from_connection()
@@ -795,7 +808,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
         :returns:
             The wrapper for the job that was added
         """
-        logger.info("Adding job %r to DBus", job)
+        logger.info(_("Adding job %r to DBus"), job)
         job_wrapper = self._maybe_wrap(job)
         # Mark this job as generated, so far we only add generated jobs at
         # runtime and we need to treat those differently when we're changing
@@ -807,7 +820,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
 
     def add_state(self, state):
         """
-        Add a job state representatio to DBus.
+        Add a job state representation to DBus.
 
         :param state:
             Job state to add to the bus
@@ -827,7 +840,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
             and :meth:`add_result()`). This method *does not* publish those
             objects, it only publishes the state object.
         """
-        logger.info("Adding job state %r to DBus", state)
+        logger.info(_("Adding job state %r to DBus"), state)
         state_wrapper = self._maybe_wrap(state)
         state_wrapper.publish_self(self.connection)
         self.add_managed_object(state_wrapper)
@@ -858,7 +871,8 @@ class SessionWrapper(PlainBoxObjectWrapper):
             elif isinstance(obj, JobState):
                 return JobStateWrapper(obj, session_wrapper=self)
             else:
-                raise TypeError("Unable to wrap object of type %r" % type(obj))
+                raise TypeError(
+                    _("Unable to wrap object of type {0}").format(type(obj)))
 
     def _job_added(self, job):
         """
@@ -983,7 +997,7 @@ class SessionWrapper(PlainBoxObjectWrapper):
             wrapper.remove_from_connection()
         self.remove_from_connection()
         self.native.remove()
-        logger.debug("Remove() completed")
+        logger.debug(_("Remove() completed"))
 
     @dbus.service.method(
         dbus_interface=SESSION_IFACE, in_signature='', out_signature='')
@@ -1057,8 +1071,9 @@ class SessionWrapper(PlainBoxObjectWrapper):
           reflect actual test result. Otherwise, a failing test will not be
           detected by the user, which will cause embarrassment.
         """
-        logger.info("AskForOutcome(%r) suggested outcome is (%s)", primed_job,
-                    suggested_outcome)
+        logger.info(
+            _("AskForOutcome(%r) suggested outcome is (%s)"),
+            primed_job, suggested_outcome)
 
     @dbus.service.signal(
         dbus_interface=SESSION_IFACE, signature='o')
@@ -1083,11 +1098,10 @@ class ProviderWrapper(PlainBoxObjectWrapper):
 
     def __shared_initialize__(self, **kwargs):
         self._job_wrapper_list = [
-            JobDefinitionWrapper(job)
-            for job in self.native.get_builtin_jobs()]
+            JobDefinitionWrapper(job) for job in self.native.job_list]
         self._whitelist_wrapper_list = [
-            WhiteListWrapper(whitelist)
-            for whitelist in self.native.get_builtin_whitelists()]
+            TestPlanWrapper(unit)
+            for unit in self.native.unit_list if unit.Meta.name == 'test plan']
 
     def _get_preferred_object_path(self):
         mangled_name = mangle_object_path(self.native.name)
@@ -1219,7 +1233,7 @@ class ServiceWrapper(PlainBoxObjectWrapper):
     @dbus.service.method(
         dbus_interface=SERVICE_IFACE, in_signature='ossss', out_signature='s')
     @PlainBoxObjectWrapper.translate
-    def SendDataViaTransport(self, session: 'o', transport: 's', where: 's', 
+    def SendDataViaTransport(self, session: 'o', transport: 's', where: 's',
                              options: 's', data: 's'):
         return self.native.send_data_via_transport(session, transport, where,
                                                    options, data)
@@ -1231,6 +1245,8 @@ class ServiceWrapper(PlainBoxObjectWrapper):
         logger.info("CreateSession(%r)", job_list)
         # Create a session
         session_obj = self.native.create_session(job_list)
+        # Keep a global reference around so that job.via can be emulated
+        self.__class__._session_obj = session_obj
         # Wrap it
         session_wrp = SessionWrapper(session_obj)
         # Publish all objects
@@ -1241,6 +1257,22 @@ class ServiceWrapper(PlainBoxObjectWrapper):
         session_wrp.publish_managed_objects()
         # Return the session wrapper back
         return session_wrp
+
+    # Private class-wide instance of the session that gets created by
+    # :meth:`CreateSession()`.
+    _session_obj = None
+
+    @classmethod
+    def get_session_obj(cls):
+        """
+        Get the non-wrapped (native) session object associated with the most
+        recently created instance of the service wrapper's
+        :meth:`CreateSession()` method
+
+        :returns:
+            The Session object (or None if it's not created yet).
+        """
+        return cls._session_obj
 
     @dbus.service.method(
         dbus_interface=SERVICE_IFACE, in_signature='oo', out_signature='o')
@@ -1284,12 +1316,24 @@ class ServiceWrapper(PlainBoxObjectWrapper):
             A list of jobs that were selected.
         """
         if len(self.native.session_list) > 0:
-            job_list = self.native.session_list[0].job_list
+            legacy_session = self.native.session_list[0]
+            job_list = legacy_session.job_list
+            # NOTE: this is a bit magic so an explanation is in order.
+            # Each time SelectJobs is called by checkbox-gui we use it
+            # as a hack to teach the SessionManager hidden inside
+            # the SessionStateLegacyAPICompatImpl object (which is just
+            # a legacy SessionState class implemented on top of the new
+            # API) about test plans that this application is using.
+            #
+            # This results in a low-cost way to have overrides working
+            # in checkbox-gui without touching the C++ side of it.
+            if legacy_session._manager is not None:
+                legacy_session._manager.test_plans = tuple(whitelist_list)
         else:
-            job_list = list(
-                itertools.chain(*[
-                    p.load_all_jobs()[0] for p in self.native.provider_list]))
-        return select_jobs(job_list, whitelist_list)
+            job_list = list(itertools.chain(*[
+                p.job_list for p in self.native.provider_list]))
+        return select_jobs(job_list,
+                           [w.get_qualifier() for w in whitelist_list])
 
 
 class UIOutputPrinter(extcmd.DelegateBase):
@@ -1328,11 +1372,6 @@ class PrimedJobWrapper(PlainBoxObjectWrapper):
         # A future for the result each time we're waiting for the command to
         # finish. Gets reset to None after the command is done executing.
         self._result_future = None
-        # A lock that protects access to :ivar:`_result` and
-        # :ivar:`_result_future` from concurrent access from the thread that is
-        # executing Future callback which we register, the
-        # :meth:`_result_ready()`
-        self._result_lock = Lock()
 
     @dbus.service.method(
         dbus_interface=RUNNING_JOB_IFACE, in_signature='', out_signature='')
@@ -1346,7 +1385,7 @@ class PrimedJobWrapper(PlainBoxObjectWrapper):
         # 1) attempt to cancel the future in the extremely rare case where it
         #    is not started yet
         # 2) kill the job otherwise
-        logger.error("Kill() is not implemented")
+        logger.error(_("Kill() is not implemented"))
 
     @dbus.service.method(
         dbus_interface=RUNNING_JOB_IFACE, in_signature='', out_signature='')
@@ -1366,14 +1405,13 @@ class PrimedJobWrapper(PlainBoxObjectWrapper):
         """
         if self.native.job.automated:
             logger.error(
-                "RunCommand() should not be called for automated jobs")
-        with self._result_lock:
-            if self._result_future is None:
-                logger.info("RunCommand() is starting to run the job")
-                self._result_future = self._run_and_set_callback()
-            else:
-                logger.warning(
-                    "RunCommand() ignored, waiting for command to finish")
+                _("RunCommand() should not be called for automated jobs"))
+        if self._result_future is None:
+            logger.info(_("RunCommand() is starting to run the job"))
+            self._result_future = self._run_and_set_callback()
+        else:
+            logger.warning(
+                _("RunCommand() ignored, waiting for command to finish"))
 
     # Legacy GUI behavior method.
     # Should be redesigned when we can change GUI internals
@@ -1389,33 +1427,38 @@ class PrimedJobWrapper(PlainBoxObjectWrapper):
         3) The command is still running! (not handled)
         """
         logger.info("SetOutcome(%r, %r)", outcome, comments)
-        with self._result_lock:
-            if self._result_future is not None:
-                logger.error(
-                    "SetOutcome() called while the command is still running!")
-            if self._result is None:
-                # Warn us if this method is being called on jobs other than
-                # 'manual' before we get the result after running RunCommand()
-                if self.native.job.plugin != "manual":
-                    logger.warning("SetOutcome() called before RunCommand()")
-                    logger.warning("But the job is not manual, it is %s",
-                                   self.native.job.plugin)
-                # Create a new result object
-                self._result = MemoryJobResult({
-                    'outcome': outcome,
-                    'comments': comments
-                })
-                # Add the new result object to the bus
-                self._session_wrapper.add_result(self._result)
-            else:
-                # Set the values as requested
-                self._result.outcome = outcome
-                self._result.comments = comments
-            # Notify the application that the result is ready. This has to be
-            # done unconditionally each time this method called.
-            self.JobResultAvailable(
-                self.find_wrapper_by_native(self.native.job),
-                self.find_wrapper_by_native(self._result))
+        if self._result_future is not None:
+            logger.error(
+                _("SetOutcome() called while the command is still"
+                  " running!"))
+        if self._result is None:
+            # Warn us if this method is being called on jobs other than
+            # 'manual' before we get the result after running RunCommand()
+            if self.native.job.plugin != "manual":
+                logger.warning(
+                    _("SetOutcome() called before RunCommand()"))
+                logger.warning(
+                    # TRANSLATORS: don't translate 'manual' translate it as
+                    # 'of type manual' and leave the 'manual' string
+                    # intact.
+                    _("But the job is not manual, it is %s"),
+                    self.native.job.plugin)
+            # Create a new result object
+            self._result = MemoryJobResult({
+                'outcome': outcome,
+                'comments': comments
+            })
+            # Add the new result object to the bus
+            self._session_wrapper.add_result(self._result)
+        else:
+            # Set the values as requested
+            self._result.outcome = outcome
+            self._result.comments = comments
+        # Notify the application that the result is ready. This has to be
+        # done unconditionally each time this method called.
+        self.JobResultAvailable(
+            self.find_wrapper_by_native(self.native.job),
+            self.find_wrapper_by_native(self._result))
 
     # Legacy GUI behavior signal.
     # Should be redesigned when we can change GUI internals
@@ -1424,17 +1467,16 @@ class PrimedJobWrapper(PlainBoxObjectWrapper):
         """
         property that contains the 'outcome' of the result.
         """
-        with self._result_lock:
-            if self._result is not None:
-                # TODO: make it so that we don't have to do this translation
-                if self._result.outcome == IJobResult.OUTCOME_NONE:
-                    return "none"
-                else:
-                    return self._result.outcome
+        if self._result is not None:
+            # TODO: make it so that we don't have to do this translation
+            if self._result.outcome == IJobResult.OUTCOME_NONE:
+                return "none"
             else:
-                logger.warning("outcome_from_command() called too early!")
-                logger.warning("There is nothing to return yet")
-                return ""
+                return self._result.outcome
+        else:
+            logger.warning(_("outcome_from_command() called too early!"))
+            logger.warning(_("There is nothing to return yet"))
+            return ""
 
     @dbus.service.signal(
         dbus_interface=SERVICE_IFACE, signature='dsay')
@@ -1474,13 +1516,12 @@ class PrimedJobWrapper(PlainBoxObjectWrapper):
         # http://jobbox.readthedocs.org/en/latest/jobspec.html#startup
         if self.native.job.startup_user_interaction_required:
             logger.info(
-                "Sending ShowInteractiveUI() and not starting the job...")
+                _("Sending ShowInteractiveUI() and not starting the job..."))
             # Ask the application to show the interaction GUI
             self._session_wrapper.ShowInteractiveUI(self)
         else:
-            logger.info("Running %r right away", self.native.job)
-            with self._result_lock:
-                self._result_future = self._run_and_set_callback()
+            logger.info(_("Running %r right away"), self.native.job)
+            self._result_future = self._run_and_set_callback()
 
     def _run_and_set_callback(self):
         """
@@ -1498,38 +1539,37 @@ class PrimedJobWrapper(PlainBoxObjectWrapper):
         Internal method called when the result future becomes ready
         """
         logger.debug("_result_ready(%r)", result_future)
-        with self._result_lock:
-            if self._result is not None:
-                # NOTE: I'm not sure how this would behave if someone were to
-                # already assign the old result to any state objects.
-                self._session_wrapper.remove_result(self._result)
-            # Unpack the result from the future
-            self._result = result_future.result()
-            # Add the new result object to the session wrapper (and to the bus)
-            self._session_wrapper.add_result(self._result)
-            # Reset the future so that RunCommand() can run the job again
-            self._result_future = None
-            # Now fiddle with the GUI notifications
-            if self._result.outcome != IJobResult.OUTCOME_UNDECIDED:
-                # NOTE: OUTCOME_UNDECIDED is never handled by this method as
-                # the user should already see the manual test interaction
-                # dialog on their screen. For all other cases we need to notify
-                # the GUI that execution has finished and we are really just
-                # done with testing.
-                logger.debug(
-                    "calling JobResultAvailable(%r, %r)",
-                    self.native.job, self._result)
-                self.JobResultAvailable(
-                    self.find_wrapper_by_native(self.native.job),
-                    self.find_wrapper_by_native(self._result))
+        if self._result is not None:
+            # NOTE: I'm not sure how this would behave if someone were to
+            # already assign the old result to any state objects.
+            self._session_wrapper.remove_result(self._result)
+        # Unpack the result from the future
+        self._result = result_future.result()
+        # Add the new result object to the session wrapper (and to the bus)
+        self._session_wrapper.add_result(self._result)
+        # Reset the future so that RunCommand() can run the job again
+        self._result_future = None
+        # Now fiddle with the GUI notifications
+        if self._result.outcome != IJobResult.OUTCOME_UNDECIDED:
+            # NOTE: OUTCOME_UNDECIDED is never handled by this method as
+            # the user should already see the manual test interaction
+            # dialog on their screen. For all other cases we need to notify
+            # the GUI that execution has finished and we are really just
+            # done with testing.
+            logger.debug(
+                _("calling JobResultAvailable(%r, %r)"),
+                self.native.job, self._result)
+            self.JobResultAvailable(
+                self.find_wrapper_by_native(self.native.job),
+                self.find_wrapper_by_native(self._result))
+        else:
+            logger.debug(
+                _("sending AskForOutcome() after job finished"
+                  " running with OUTCOME_UNDECIDED"))
+            # Convert the return of the command to the suggested_outcome
+            # for the job
+            if self._result.return_code == 0:
+                suggested_outcome = IJobResult.OUTCOME_PASS
             else:
-                logger.debug(
-                    ("sending AskForOutcome() after job finished"
-                     " running with OUTCOME_UNDECIDED"))
-                # Convert the return of the command to the suggested_outcome
-                # for the job
-                if self._result.return_code == 0:
-                    suggested_outcome = IJobResult.OUTCOME_PASS
-                else:
-                    suggested_outcome = IJobResult.OUTCOME_FAIL
-                self._session_wrapper.AskForOutcome(self, suggested_outcome)
+                suggested_outcome = IJobResult.OUTCOME_FAIL
+            self._session_wrapper.AskForOutcome(self, suggested_outcome)

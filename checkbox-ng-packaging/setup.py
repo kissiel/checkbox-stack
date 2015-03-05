@@ -54,22 +54,23 @@ else:
 
 setup(
     name="checkbox-ng",
-    version="0.3.1",
-    url="https://launchpad.net/checkbox/",
+    version="0.18",
+    url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",
     test_suite='checkbox_ng.tests.test_suite',
     author_email="zygmunt.krynicki@canonical.com",
     license="GPLv3",
-    description="CheckBox / Next Generation",
+    description="Checkbox - Command Line Test Runner",
     long_description=long_description,
     install_requires=install_requires,
+    scripts = ['launchers/checkbox-cli'],
     entry_points={
         'console_scripts': [
-            'canonical-certification-server=checkbox_ng.main:cert_server',
-            'canonical-driver-test-suite-cli=checkbox_ng.main:cdts_cli',
             'checkbox=checkbox_ng.main:main',
-            'checkbox-cli=checkbox_ng.main:checkbox_cli',
+            'checkbox-submit=checkbox_ng.main:submit',
+            'checkbox-launcher=checkbox_ng.main:launcher',
+            'checkbox-gui-service=checkbox_ng.main:service',
         ],
         'plainbox.transport': [
             'certification='
