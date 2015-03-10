@@ -1,0 +1,5 @@
+[plainbox.parsers]
+submission = checkbox_support.parsers.submission:parse_submission_text
+pactl-list = checkbox_support.parsers.pactl:parse_pactl_output
+udevadm = checkbox_support.parsers.udevadm:parse_udevadm_output
+

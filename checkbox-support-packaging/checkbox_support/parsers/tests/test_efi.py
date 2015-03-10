@@ -15,15 +15,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
-#
-from io import StringIO
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from io import StringIO
 from unittest import TestCase
 
 from checkbox_support.parsers.efi import EfiParser
 
 
-class EfiResult:
+class EfiResult(object):
 
     def __init__(self):
         self.device = None
@@ -57,7 +61,7 @@ Foo Bar
 
     def test_vendor_product(self):
         result = self.getResult("""
-Foo by Bar
+Product by Vendor
 """)
-        self.assertEqual(result.device.vendor, "Foo")
-        self.assertEqual(result.device.product, "Bar")
+        self.assertEqual(result.device.vendor, "Vendor")
+        self.assertEqual(result.device.product, "Product")

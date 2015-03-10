@@ -18,14 +18,27 @@
 # You should have received a copy of the GNU General Public License
 # along with CloudBox.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import sys
+
+from io import open  # For compatibility with Python 2.7
 from setuptools import setup, find_packages
 
-with open("README.rst", encoding="UTF-8") as stream:
-    LONG_DESCRIPTION = stream.read()
+if "test" in sys.argv:
+    # Reset locale for setup.py test
+    os.environ["LANG"] = ""
+    os.environ["LANGUAGE"] = ""
+    os.environ["LC_ALL"] = "C.UTF-8"
+
+base_dir = os.path.dirname(__file__)
+
+# Load the README.rst file relative to the setup file
+with open(os.path.join(base_dir, "README.rst"), encoding="UTF-8") as stream:
+    long_description = stream.read()
 
 setup(
     name="checkbox-support",
-    version="0.2",
+    version="0.18",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     test_suite='checkbox_support.tests.test_suite',
@@ -33,8 +46,17 @@ setup(
     author_email="sylvain.pineau@canonical.com",
     license="GPLv3",
     description="CheckBox support library",
-    long_description=LONG_DESCRIPTION,
+    long_description=long_description,
+    package_data = {"checkbox_support": ["parsers/cputable"]},
     install_requires=[
+        'lxml >= 2.3',
         'pyparsing >= 2.0.0',
-    ],
+    ] + (['configparser'] if sys.version_info.major == 2 else []),
+    entry_points={
+        'plainbox.parsers': [
+            "pactl-list=checkbox_support.parsers.pactl:parse_pactl_output",
+            "submission=checkbox_support.parsers.submission:parse_submission_text",
+            "udevadm=checkbox_support.parsers.udevadm:parse_udevadm_output",
+        ],
+    },
 )

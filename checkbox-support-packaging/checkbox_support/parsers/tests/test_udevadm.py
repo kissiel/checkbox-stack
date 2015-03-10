@@ -15,17 +15,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
-#
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 from io import StringIO
+from io import open
+from unittest import TestCase
 
 from pkg_resources import resource_filename
-from unittest import TestCase
 
 from checkbox_support.parsers.udevadm import UdevadmParser, decode_id
 from checkbox_support.parsers.udevadm import parse_udevadm_output
 
 
-class DeviceResult:
+class DeviceResult(object):
 
     def __init__(self):
         self.devices = []
@@ -41,7 +47,7 @@ class DeviceResult:
         return None
 
 
-class UdevadmDataMixIn:
+class UdevadmDataMixIn(object):
     """
     Mix in with a helper method to load sample udevadm data
     """
@@ -239,12 +245,12 @@ E: UDEV_LOG=3
 
     def test_DELL_VOSTROV131(self):
         devices = self.parse("DELL_VOSTROV131")
-        expected_devices = [("RTL8111/8168 PCI Express Gigabit "
-                            "Ethernet controller",
-                            "NETWORK", "pci", 0x10EC, 0x8168),
-                            ("AR9285 Wireless Network Adapter (PCI-Express)",
-                            "WIRELESS", "pci", 0x168C, 0x002B)
-                            ]
+        expected_devices = [
+            ("RTL8111/8168 PCI Express Gigabit Ethernet controller",
+             "NETWORK", "pci", 0x10EC, 0x8168),
+            ("AR9285 Wireless Network Adapter (PCI-Express)",
+             "WIRELESS", "pci", 0x168C, 0x002B)
+        ]
         self.assertEqual(len(devices), 63)
         self.assertEqual(self.count(devices, "VIDEO"), 1)
         self.assertEqual(self.count(devices, "AUDIO"), 2)
@@ -283,6 +289,60 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "BLUETOOTH"), 1)
         self.assertEqual(self.count(devices, "NETWORK"), 1)
         self.assertEqual(self.count(devices, "WIRELESS"), 1)
+
+    def test_DELL_INSPIRON_7737_NVIDIA(self):
+        devices = self.parse("DELL_INSPIRON_7737_NVIDIA")
+        expected_devices = [(None,
+                             "WIRELESS", "pci", 0x8086, 0x08b1),
+                            (None,
+                             "VIDEO", "pci", 0x10de, 0x0fe4),
+                            (None,
+                             "VIDEO", "pci", 0x8086, 0x0a16)
+                            ]
+        # The first video device is an NVIDIA GPU, which is too new
+        # to have a  device name. The second one is the built-in Haswell
+        # GPU.
+        self.assertEqual(len(devices), 59)
+        self.assertEqual(self.count(devices, "WIRELESS"), 1)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 1)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+        self.assertEqual(self.count(devices, "VIDEO"), 2)
+        self.assertEqual(self.count(devices, "AUDIO"), 4)
+        self.assertEqual(self.count(devices, "DISK"), 1)
+        self.verify_devices(devices, expected_devices)
+
+    def test_DELL_INSPIRON_3048_AMD(self):
+        devices = self.parse("DELL_INSPIRON_3048")
+        expected_devices = [(None,
+                             "WIRELESS", "pci", 0x168c, 0x0036),
+                            (None,
+                             "VIDEO", "pci", 0x1002, 0x6664),
+                            (None,
+                             "VIDEO", "pci", 0x8086, 0x0402)
+                            ]
+        # The first video device is an AMD GPU, which is too new
+        # to have a  device name. The second one is the built-in Haswell
+        # GPU.
+        self.assertEqual(len(devices), 63)
+        self.assertEqual(self.count(devices, "WIRELESS"), 1)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 1)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+        self.assertEqual(self.count(devices, "AUDIO"), 4)
+        self.assertEqual(self.count(devices, "DISK"), 1)
+        self.assertEqual(self.count(devices, "VIDEO"), 2)
+        self.verify_devices(devices, expected_devices)
+
+    def test_DELL_POWEREDGE_R820_NVME(self):
+        devices = self.parse("DELL_POWEREDGE_R820_NVME")
+        expected_devices = [("NetXtreme BCM5720 Gigabit Ethernet PCIe",
+                             "NETWORK", "pci", 0x14E4, 0x165F, 4),
+                            ]
+        self.assertEqual(len(devices), 250)
+        self.assertEqual(self.count(devices, "NETWORK"), 4)
+        self.assertEqual(self.count(devices, "AUDIO"), 0)
+        self.assertEqual(self.count(devices, "VIDEO"), 1)
+        self.assertEqual(self.count(devices, "DISK"), 3)
+        self.verify_devices(devices, expected_devices)
 
     def test_HOME_MADE(self):
         devices = self.parse("HOME_MADE")
@@ -329,6 +389,29 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "DISK"), 1)
         self.assertEqual(self.count(devices, "NETWORK"), 1)
 
+    def test_HP_400_G2(self):
+        devices = self.parse("HP_400_G2")
+        self.assertEqual(len(devices), 69)
+        self.assertEqual(self.count(devices, "OTHER"), 28)
+        self.assertEqual(self.count(devices, "VIDEO"), 2)
+        self.assertEqual(self.count(devices, "AUDIO"), 4)
+        self.assertEqual(self.count(devices, "KEYBOARD"), 1)
+        self.assertEqual(self.count(devices, "TOUCHPAD"), 0)
+        self.assertEqual(self.count(devices, "CDROM"), 1)
+        self.assertEqual(self.count(devices, "FIREWIRE"), 0)
+        self.assertEqual(self.count(devices, "MOUSE"), 1)
+        self.assertEqual(self.count(devices, "ACCELEROMETER"), 0)
+        self.assertEqual(self.count(devices, "TOUCHSCREEN"), 0)
+        self.assertEqual(self.count(devices, "CAPTURE"), 0)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 0)
+        self.assertEqual(self.count(devices, "WIRELESS"), 1)
+        self.assertEqual(self.count(devices, "RAID"), 0)
+        self.assertEqual(self.count(devices, "DISK"), 1)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+        expected_devices = [(None, "VIDEO", "pci", 0x8086, 0x0412)]
+        expected_devices = [(None, "VIDEO", "pci", 0x10DE, 0x107D)]
+        self.verify_devices(devices, expected_devices)
+
     def test_HP_PRO2110(self):
         devices = self.parse("HP_PRO2110")
         self.assertEqual(len(devices), 60)
@@ -352,6 +435,8 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "RAID"), 0)
         self.assertEqual(self.count(devices, "DISK"), 3)
         self.assertEqual(self.count(devices, "NETWORK"), 1)
+        expected_devices = [(None, "VIDEO", "pci", 0x8086, 0x2E32)]
+        self.verify_devices(devices, expected_devices)
 
     def test_HP_PROBOOK6550B_ACCELEROMETER(self):
         devices = self.parse("HP_PROBOOK6550B_ACCELEROMETER")
@@ -405,7 +490,7 @@ E: UDEV_LOG=3
     def test_LENOVO_E445(self):
         devices = self.parse("LENOVO_E445")
         self.assertEqual(len(devices), 78)
-        self.assertEqual(self.count(devices, "VIDEO"), 1)
+        self.assertEqual(self.count(devices, "VIDEO"), 2)
         self.assertEqual(self.count(devices, "AUDIO"), 4)
         self.assertEqual(self.count(devices, "KEYBOARD"), 1)
         self.assertEqual(self.count(devices, "TOUCHPAD"), 1)
@@ -421,6 +506,11 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "CAPTURE"), 1)
         self.assertEqual(self.count(devices, "NETWORK"), 1)
         self.assertEqual(self.count(devices, "WIRELESS"), 1)
+        # System has two CPUs, AMD Richland [Radeon HD 8650G] and
+        # Sun PRO [Radeon HD 8570A/8570M]
+        expected_devices = [(None, "VIDEO", "pci", 0x1002, 0x990b),
+                            (None, "VIDEO", "pci", 0x1002, 0x6663)]
+        self.verify_devices(devices, expected_devices)
 
     def test_LENOVO_T430S(self):
         devices = self.parse("LENOVO_T430S")
@@ -571,15 +661,103 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "RAID"), 0)
         self.assertEqual(self.count(devices, "DISK"), 1)
 
+    def test_IBM_PSERIES_P8(self):
+        # Apparnently a virtualized system on a pSeries P8
+        # Quite bare-bones, server-oriented system
+        devices = self.parse("IBM_PSERIES_POWER7")
+        self.assertEqual(self.count(devices, "VIDEO"), 0)
+        self.assertEqual(self.count(devices, "AUDIO"), 0)
+        self.assertEqual(self.count(devices, "KEYBOARD"), 0)
+        self.assertEqual(self.count(devices, "TOUCHPAD"), 0)
+        self.assertEqual(self.count(devices, "CARDREADER"), 0)
+        self.assertEqual(self.count(devices, "CDROM"), 1)
+        self.assertEqual(self.count(devices, "FIREWIRE"), 0)
+        self.assertEqual(self.count(devices, "MOUSE"), 0)
+        self.assertEqual(self.count(devices, "ACCELEROMETER"), 0)
+        self.assertEqual(self.count(devices, "TOUCHSCREEN"), 0)
+        self.assertEqual(self.count(devices, "WIRELESS"), 0)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 0)
+        self.assertEqual(self.count(devices, "CAPTURE"), 0)
+        self.assertEqual(self.count(devices, "RAID"), 0)
+        self.assertEqual(self.count(devices, "DISK"), 2)
+        self.assertEqual(len(devices), 4)
+
+    def test_XEON(self):
+        devices = self.parse("XEON")
+        self.assertEqual(len(devices), 71)
+        self.assertEqual(self.count(devices, "VIDEO"), 2)
+
+    def test_QEMU_KVM(self):
+        # A virtual machine, QEMU-KVM-based. Some of its devices are those
+        # of the host system, we're interested mainly in network and disk
+        # devices (http://pad.lv/1355282)
+        devices = self.parse("QEMU_KVM")
+        self.assertEqual(len(devices), 23)
+        self.assertEqual(self.count(devices, "VIDEO"), 1)
+        self.assertEqual(self.count(devices, "AUDIO"), 0)
+        self.assertEqual(self.count(devices, "KEYBOARD"), 1)
+        self.assertEqual(self.count(devices, "CARDREADER"), 0)
+        self.assertEqual(self.count(devices, "CDROM"), 0)
+        self.assertEqual(self.count(devices, "FIREWIRE"), 0)
+        self.assertEqual(self.count(devices, "MOUSE"), 1)
+        self.assertEqual(self.count(devices, "WIRELESS"), 0)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 0)
+        self.assertEqual(self.count(devices, "CAPTURE"), 0)
+        self.assertEqual(self.count(devices, "RAID"), 0)
+        self.assertEqual(self.count(devices, "DISK"), 1)
+        self.assertEqual(self.count(devices, "SCSI"), 1)
+
+    def test_DELL_VOSTRO_270(self):
+        # Interesting because while its Intel video card has the same PCI
+        # vendor/product ID as others (8086:0152) the subvendor_id and
+        # subproduct_id attributes were causing it to not be recognized as
+        # video.  HOWEVER, we can't just assume that all Intel video cards are
+        # doing the same, so some creative quirking will be needed in the
+        # parser to single these out.  It's a desktop system so no touchpad and
+        # has an external mouse.  The card reader is not detected as such,
+        # instead it appears as about 11 disk devices.
+        # Finally, it's a hybrid video system with a second Nvidia GPU.
+        devices = self.parse("DELL_VOSTRO_270")
+        self.assertEqual(self.count(devices, "VIDEO"), 2)
+        self.assertEqual(self.count(devices, "AUDIO"), 4)
+        self.assertEqual(self.count(devices, "KEYBOARD"), 1)
+        self.assertEqual(self.count(devices, "TOUCHPAD"), 0)
+        self.assertEqual(self.count(devices, "CARDREADER"), 0)
+        self.assertEqual(self.count(devices, "CDROM"), 1)
+        self.assertEqual(self.count(devices, "FIREWIRE"), 0)
+        self.assertEqual(self.count(devices, "MOUSE"), 1)
+        self.assertEqual(self.count(devices, "ACCELEROMETER"), 0)
+        self.assertEqual(self.count(devices, "TOUCHSCREEN"), 0)
+        self.assertEqual(self.count(devices, "DISK"), 12)
+        self.assertEqual(self.count(devices, "CAPTURE"), 0)
+        self.assertEqual(self.count(devices, "RAID"), 0)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 0)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+        self.assertEqual(self.count(devices, "WIRELESS"), 1)
+        self.assertEqual(len(devices), 71)
+        # First card is an Intel Xeon E3-1200 v2/3rd Gen Core processor
+        # Graphics Controller Second one is NVidia  GF119 [GeForce GT 620 OEM]
+        expected_devices = [
+            (None, "VIDEO", "pci", 0x8086, 0x0152),
+            (None, "VIDEO", "pci", 0x10de, 0x1049),
+            ("RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller",
+             "NETWORK", "pci", 0x10EC, 0x8168),
+            ]
+        self.verify_devices(devices, expected_devices)
+
     def verify_devices(self, devices, expected_device_list):
         """
-        Verify we have exactly one of each device given in the list,
-        and that product name, category, bus, vendor_id and
-        product_id match.
-        The list contains a tuple with product name, category, bus,
-        vendor and product.
-        They look like:
+        Verify we have the expected quantity of each device given in the list,
+        and that product name, category, bus, vendor_id and product_id match.
+        The list contains a tuple with product name, category, bus, vendor and
+        product.
+        They look like (if we want to ensure there's one and only one device
+        with these characteristics):
         [(name, category, bus, vendor_id, product_id)]
+        OR if we want to ensure a system has X identical devices:
+        [(name, category, bus, vendor_id, product_id, quantity)]
         Note that name can be None, in which case we don't need the
         name to match. All other attributes must have a value and match.
         """
@@ -587,7 +765,15 @@ E: UDEV_LOG=3
         # devices and IDs:
         # https://bugs.launchpad.net/checkbox/+bug/1211521
         for device in expected_device_list:
-            # Match by product and vendor ID
+            # If it's a 5-tuple, then quantity to verify is 1.
+            # If it's a 6-tuple, then 6th element is quantity to verify
+            if len(device) == 5:
+                quantity = 1
+            elif len(device) == 6:
+                quantity = device[5]
+
+            # Find indices of devices that match this expected device by
+            # product and vendor ID
             indices = [idx for idx, elem in enumerate(devices)
                        if elem.product_id == device[4] and
                        elem.vendor_id == device[3]]
@@ -596,13 +782,20 @@ E: UDEV_LOG=3
             if device[0] is not None:
                 indices = [idx for idx in indices
                            if devices[idx].product == device[0]]
-            # Now do my validation checks
-            self.assertEqual(len(indices), 1,
+            # Here, devices that matched the one I'm looking for will be
+            # pointed to in indices. These indices refer to the devices
+            # list.
+
+            # Now I can do my validation checks.
+            # Do we have expected number of devices?
+            self.assertEqual(len(indices), quantity,
                              "{} items of {} (id {}:{}) found".format(
                                  len(indices),
                                  device[0],
                                  device[3],
                                  device[4]))
+            # For specific attribute checks, we will use only the first device.
+            # If there were multiple devices found, they are all identical
             if device[0] is not None:
                 self.assertEqual(devices[indices[0]].product, device[0],
                                  "Bad product name for {}".format(device[0]))

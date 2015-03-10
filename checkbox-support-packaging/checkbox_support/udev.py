@@ -16,12 +16,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
-#
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 """
 checkbox_support.udev
-=============
+=====================
 
-A collection of utility function sfor interacting with GUdev
+A collection of utility functions for interacting with GUdev
 """
 
 from gi.repository import GUdev
@@ -90,4 +95,21 @@ def get_udev_block_devices(udev_client):
     # Sort the list, this is not needed but makes various debugging dumps
     # look better.
     devices.sort(key=lambda device: device.get_device_file())
+    return devices
+
+
+def get_udev_xhci_devices(udev_client):
+    """
+    Get a list of all devices on pci slots using xhci drivers
+    """
+    # setup an enumerator so that we can list devices
+    enumerator = GUdev.Enumerator(client=udev_client)
+    # Iterate over pci devices only
+    enumerator.add_match_subsystem('pci')
+    devices = [
+        device for device in enumerator.execute()
+        if (device.get_driver() == 'xhci_hcd')]
+    # Sort the list, this is not needed but makes various debugging dumps
+    # look better.
+    devices.sort(key=lambda device: device.get_property('PCI_SLOT_NAME'))
     return devices

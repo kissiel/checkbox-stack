@@ -11,9 +11,11 @@ Build-Depends:
  python3-all,
  python3-pkg-resources,
  python3-pyparsing,
- python3-setuptools
-Standards-Version: 3.9.5
+ python3-setuptools,
+ python3-lxml (>= 2.3)
+Standards-Version: 3.9.6
 X-Python3-Version: >= 3.2
+XS-Testsuite: autopkgtest
 Vcs-Svn: svn://anonscm.debian.org/python-modules/packages/checkbox-support/trunk/
 Vcs-Browser: http://anonscm.debian.org/viewvc/python-modules/packages/checkbox-support/trunk/
 Homepage: http://launchpad.net/checkbox
@@ -36,7 +38,7 @@ Description: collection of Python modules used by PlainBox providers
   * checkbox_support.contrib.xrandr: provides a high level API for the XRandR
     extension of the X.org server.
  .
-  * checkbox_support.dbus.udisks2: module for working with UDisks2 from python
+  * checkbox_support.dbus.udisks2: module for working with UDisks2 from Python
  .
   * checkbox_support.heuristics.udev: heuristics for udev
   * checkbox_support.heuristics.udisks2: heuristics for udisks2

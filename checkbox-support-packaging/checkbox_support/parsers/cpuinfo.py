@@ -15,15 +15,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
-#
-import re
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from os import uname
+import re
 
 from checkbox_support.lib.conversion import string_to_type
 
 
-class CpuinfoParser:
+class CpuinfoParser(object):
     """Parser for the /proc/cpuinfo file."""
 
     def __init__(self, stream, machine=None):
@@ -44,13 +48,18 @@ class CpuinfoParser:
                     continue
                 key, value = line.split(":", 1)
                 key, value = key.strip(), value.strip()
-                
+
                 if key == 'processor':
                     count += 1
 
                 # Handle bogomips on sparc
                 if key.endswith("Bogo"):
                     key = "bogomips"
+
+                # Handle version on ppc
+                if self.machine[:3] == "ppc" and key == 'revision':
+                    value, version_value = value.split("(", 1)
+                    attributes["version"] = version_value[:-1]
 
                 attributes[key] = value
 
@@ -74,8 +83,8 @@ class CpuinfoParser:
             "model_number": "",
             "model_version": "",
             "model_revision": "",
-            "cache": 0,
-            "bogomips": 0,
+            "cache": -1,
+            "bogomips": -1,
             "speed": -1,
             "other": ""}
 
@@ -99,7 +108,7 @@ class CpuinfoParser:
                 "model_revision": "cpu revision",
                 "other": "platform string",
                 "speed": "cycle frequency [Hz]"},
-            ("armv7l",): {
+            ("armv7l","aarch64"): {
                 "type": "Hardware",
                 "model": "Processor",
                 "model_number": "CPU variant",
@@ -114,10 +123,13 @@ class CpuinfoParser:
                 "model_revision": "revision",
                 "other": "features",
                 "speed": "cpu mhz"},
-            ("ppc64", "ppc64le", "ppc",): {
+            ("ppc64", "ppc64le", "ppc64el", "ppc",): {
                 "type": "platform",
                 "model": "cpu",
-                "model_version": "revision",
+                "model_number": "model",
+                "model_version": "version",
+                "model_revision": "revision",
+                "other": "firmware",
                 "speed": "clock"},
             ("sparc64", "sparc",): {
                 "count": "ncpus probed",
@@ -147,7 +159,10 @@ class CpuinfoParser:
 
         # Adjust cache
         if processor["cache"]:
-            processor["cache"] = string_to_type(processor["cache"])
+            try:
+                processor["cache"] = string_to_type(processor["cache"])
+            except TypeError:
+                processor["cache"] = int(round(float(processor["cache"])))
 
         # Adjust speed
         try:
@@ -163,9 +178,14 @@ class CpuinfoParser:
         except ValueError:
             processor["speed"] = -1
 
-        # Make sure speed and bogomips are integers    
+        # Make sure speed and bogomips are integers
         processor["speed"] = int(round(float(processor["speed"])) - 1)
         processor["bogomips"] = int(round(float(processor["bogomips"])))
+
+        # Adjust other for ppc.  Firmware is empty for VM.
+        if machine[:3] == "ppc" and processor["model_number"][13:-1] == \
+                "emulated by qemu":
+            processor["other"] = processor["model_number"][13:-1]
 
         # Adjust count
         try:
