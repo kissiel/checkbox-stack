@@ -35,11 +35,9 @@ import os
 import re
 import sys
 
+from plainbox.abc import IJobResult
 from plainbox.impl.commands.inv_run import RunInvocation
 from plainbox.impl.exporter import ByteStringStreamTranslator
-from plainbox.impl.exporter import get_all_exporters
-from plainbox.impl.exporter.html import HTMLSessionStateExporter
-from plainbox.impl.exporter.xml import XMLSessionStateExporter
 from plainbox.impl.secure.config import Unset, ValidationError
 from plainbox.impl.secure.origin import CommandLineTextSource
 from plainbox.impl.secure.origin import Origin
@@ -55,6 +53,7 @@ from plainbox.vendor.textland import get_display
 from checkbox_ng.misc import SelectableJobTreeNode
 from checkbox_ng.ui import ScrollableTreeNode
 from checkbox_ng.ui import ShowMenu
+from checkbox_ng.ui import ShowRerun
 from checkbox_ng.ui import ShowWelcome
 
 
@@ -161,9 +160,8 @@ class CliInvocation2(RunInvocation):
 
             For now just look for changes as compared to run.py's version.
         """
-        # Create exporter and transport early so that we can handle bugs
-        # before starting the session.
-        self.create_exporter()
+        # Create transport early so that we can handle bugs before starting the
+        # session.
         self.create_transport()
         if self.is_interactive:
             resumed = self.maybe_resume_session()
@@ -204,6 +202,8 @@ class CliInvocation2(RunInvocation):
         self.maybe_warm_up_authentication()
         self.print_estimated_duration()
         self.run_all_selected_jobs()
+        if self.is_interactive:
+            self.maybe_rerun_jobs()
         self.export_and_send_results()
         if SessionMetaData.FLAG_INCOMPLETE in self.metadata.flags:
             print(self.C.header("Session Complete!", "GREEN"))
@@ -255,8 +255,8 @@ class CliInvocation2(RunInvocation):
                      testplan_selection))
         if not selected_list:
             raise SystemExit(_("No testplan selected, aborting"))
-        self._testplan_list.extend([testplans[selected_index] for
-            selected_index in selected_list])
+        self._testplan_list.extend(
+            [testplans[selected_index] for selected_index in selected_list])
         return [testplans[selected_index].get_qualifier() for selected_index
                 in selected_list]
 
@@ -268,15 +268,6 @@ class CliInvocation2(RunInvocation):
                 unit.Meta.name == 'test plan' and re.search(
                     self.launcher.whitelist_selection, unit.partial_id)])
         return testplans
-
-    def create_exporter(self):
-        """
-        Create the ISessionStateExporter based on the command line options
-
-        This sets the :ivar:`_exporter`.
-        """
-        # TODO:
-        self._exporter = None
 
     def create_transport(self):
         """
@@ -331,10 +322,11 @@ class CliInvocation2(RunInvocation):
     def export_and_send_results(self):
         if self.is_interactive:
             print(self.C.header(_("Results")))
-            exporter = get_all_exporters()['text']()
+            exporter_unit = self.manager.exporter_map[
+                '2013.com.canonical.plainbox::text']
+            exporter = exporter_unit.exporter_cls()
             exported_stream = io.BytesIO()
-            data_subset = exporter.get_session_data_subset(self.manager.state)
-            exporter.dump(data_subset, exported_stream)
+            exporter.dump_from_session_manager(self.manager, exported_stream)
             exported_stream.seek(0)  # Need to rewind the file, puagh
             # This requires a bit more finesse, as exporters output bytes
             # and stdout needs a string.
@@ -348,39 +340,35 @@ class CliInvocation2(RunInvocation):
             "plainbox")
         if not os.path.exists(base_dir):
             os.makedirs(base_dir)
-        results_file = os.path.join(base_dir, 'results.html')
-        submission_file = os.path.join(base_dir, 'submission.xml')
-        exporter_list = [XMLSessionStateExporter, HTMLSessionStateExporter]
-        if 'xlsx' in get_all_exporters():
-            from plainbox.impl.exporter.xlsx import XLSXSessionStateExporter
-            exporter_list.append(XLSXSessionStateExporter)
-        # We'd like these options for our reports.
         exp_options = ['with-sys-info', 'with-summary', 'with-job-description',
-                       'with-text-attachments', 'with-certification-status']
-        for exporter_cls in exporter_list:
+                       'with-text-attachments', 'with-certification-status',
+                       'with-job-defs', 'with-io-log', 'with-comments']
+        print()
+        if self.launcher.exporter is not Unset:
+            exporters = self.launcher.exporter
+        else:
+            exporters = [
+                '2013.com.canonical.plainbox::hexr',
+                '2013.com.canonical.plainbox::html',
+                '2013.com.canonical.plainbox::xlsx',
+                '2013.com.canonical.plainbox::json',
+            ]
+        for unit_name in exporters:
+            exporter_unit = self.manager.exporter_map[unit_name]
             # Exporters may support different sets of options, ensure we don't
             # pass an unsupported one (which would cause a crash)
-            actual_options = [opt for opt in exp_options
-                              if opt in exporter_cls.supported_option_list]
-            exporter = exporter_cls(actual_options)
-            data_subset = exporter.get_session_data_subset(self.manager.state)
-            results_path = results_file
-            if exporter_cls is XMLSessionStateExporter:
-                results_path = submission_file
-            # FIXME: replacing extension is ugly
-            if 'xlsx' in get_all_exporters():
-                if exporter_cls is XLSXSessionStateExporter:
-                    results_path = results_path.replace('html', 'xlsx')
+            actual_options = [opt for opt in exp_options if opt in
+                              exporter_unit.exporter_cls.supported_option_list]
+            exporter = exporter_unit.exporter_cls(actual_options,
+                                                  exporter_unit=exporter_unit)
+            extension = exporter_unit.file_extension
+            results_path = os.path.join(base_dir, 'submission.{}'.format(
+                extension))
             with open(results_path, "wb") as stream:
-                exporter.dump(data_subset, stream)
-        print()
-        print(_("Saving submission file to {}").format(submission_file))
-        self.submission_file = submission_file
-        print(_("View results") + " (HTML): file://{}".format(results_file))
-        if 'xlsx' in get_all_exporters():
-            # FIXME: replacing extension is ugly
-            print(_("View results") + " (XLSX): file://{}".format(
-                results_file.replace('html', 'xlsx')))
+                exporter.dump_from_session_manager(self.manager, stream)
+            print(_("View results") + " ({}): file://{}".format(extension,
+                                                                results_path))
+        self.submission_file = os.path.join(base_dir, 'submission.xml')
         if self.launcher.submit_to is not Unset:
             if self.launcher.submit_to == 'certification':
                 # If we supplied a submit_url in the launcher, it
@@ -503,3 +491,31 @@ class CliInvocation2(RunInvocation):
                             ": {0}").format(result))
             except TransportError as exc:
                 print(str(exc))
+
+    def maybe_rerun_jobs(self):
+        def rerun_predicate(job_state):
+            return job_state.result.outcome in (
+                IJobResult.OUTCOME_FAIL, IJobResult.OUTCOME_CRASH)
+        # create a list of jobs that qualify for rerunning
+        rerun_candidates = []
+        for job in self.manager.state.run_list:
+            if rerun_predicate(self.manager.state.job_state_map[job.id]):
+                rerun_candidates.append(job)
+        # bail-out early if no job qualifies for rerunning
+        if not rerun_candidates:
+            return
+        tree = SelectableJobTreeNode.create_tree(
+            self.manager.state, rerun_candidates)
+        # deselect all by default
+        tree.set_descendants_state(False)
+        self.display.run(ShowRerun(tree, _("Select jobs to re-run")))
+        wanted_set = frozenset(tree.selection)
+        if not wanted_set:
+            # nothing selected - nothing to run
+            return
+        # reset outcome of jobs that are selected for re-running
+        for job in wanted_set:
+            from plainbox.impl.result import MemoryJobResult
+            self.manager.state.job_state_map[job.id].result = \
+                MemoryJobResult({})
+        self.run_all_selected_jobs()

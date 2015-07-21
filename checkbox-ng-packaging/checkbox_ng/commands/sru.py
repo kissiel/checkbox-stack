@@ -40,7 +40,7 @@ from plainbox.impl.commands.cmd_checkbox import CheckBoxCommandMixIn
 from plainbox.impl.commands.inv_checkbox import CheckBoxInvocationMixIn
 from plainbox.impl.depmgr import DependencyDuplicateError
 from plainbox.impl.exporter import ByteStringStreamTranslator
-from plainbox.impl.exporter.xml import XMLSessionStateExporter
+from plainbox.impl.exporter.jinja2 import Jinja2SessionStateExporter
 from plainbox.impl.runner import JobRunner
 from plainbox.impl.secure.config import ValidationError, Unset
 from plainbox.impl.session import SessionStateLegacyAPI as SessionState
@@ -71,8 +71,6 @@ class _SRUInvocation(CheckBoxInvocationMixIn):
         else:
             self.whitelist = get_whitelist_by_name(self.provider_list, 'sru')
         self.job_list = self.get_job_list(ns)
-        # XXX: maybe allow specifying system_id from command line?
-        self.exporter = XMLSessionStateExporter(system_id=None)
         self.session = None
         self.runner = None
 
@@ -81,7 +79,14 @@ class _SRUInvocation(CheckBoxInvocationMixIn):
         # the selected jobs. Currently we just display each problem
         # Create a session that handles most of the stuff needed to run jobs
         try:
-            self.session = SessionState(self.job_list)
+            unit_list = self.job_list
+            # Add exporters to the list of units in order to get them from the
+            # session manager exporter_map property.
+            for provider in self.provider_list:
+                for unit in provider.unit_list:
+                    if unit.Meta.name == 'exporter':
+                        unit_list.append(unit)
+            self.session = SessionState(unit_list)
         except DependencyDuplicateError as exc:
             # Handle possible DependencyDuplicateError that can happen if
             # someone is using plainbox for job development.
@@ -97,6 +102,11 @@ class _SRUInvocation(CheckBoxInvocationMixIn):
                 self.session.session_dir, self.provider_list,
                 self.session.jobs_io_log_dir, command_io_delegate=self,
                 dry_run=self.ns.dry_run)
+            exporter_unit = self.session.manager.exporter_map[
+                '2013.com.canonical.plainbox::hexr']
+            # XXX: maybe allow specifying system_id from command line?
+            self.exporter = exporter_unit.exporter_cls(
+            system_id=None, exporter_unit=exporter_unit)
             self._run_all_jobs()
             if self.config.fallback_file is not Unset:
                 self._save_results()
@@ -116,10 +126,10 @@ class _SRUInvocation(CheckBoxInvocationMixIn):
 
     def _save_results(self):
         print(_("Saving results to {0}").format(self.config.fallback_file))
-        data = self.exporter.get_session_data_subset(self.session)
         with open(self.config.fallback_file, "wt", encoding="UTF-8") as stream:
             translating_stream = ByteStringStreamTranslator(stream, "UTF-8")
-            self.exporter.dump(data, translating_stream)
+            self.exporter.dump_from_session_manager(self.session.manager,
+                                                    translating_stream)
 
     def _submit_results(self):
         print(_("Submitting results to {0} for secure_id {1}").format(
@@ -128,10 +138,10 @@ class _SRUInvocation(CheckBoxInvocationMixIn):
         # Create the transport object
         transport = CertificationTransport(self.config.c3_url, options_string)
         # Prepare the data for submission
-        data = self.exporter.get_session_data_subset(self.session)
         with tempfile.NamedTemporaryFile(mode='w+b') as stream:
             # Dump the data to the temporary file
-            self.exporter.dump(data, stream)
+            self.exporter.dump_from_session_manager(self.session.manager,
+                                                    stream)
             # Flush and rewind
             stream.flush()
             stream.seek(0)
