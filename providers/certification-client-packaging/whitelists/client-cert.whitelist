@@ -39,13 +39,13 @@ __audio__
 audio/generator_.*
 audio/alsa_info_collect
 audio/alsa_info_attachment
+audio/list_devices
 audio/speaker-headphone-plug-detection
 audio/microphone-plug-detection
-audio/alsa_record_playback_external
-audio/alsa_record_playback_internal
-audio/list_devices
-audio/playback_auto
 audio/playback_headphones
+audio/alsa_record_playback_external
+audio/playback_auto
+audio/alsa_record_playback_internal
 audio/alsa_record_playback_automated
 # See Monitor / Graphic test section for hybrid-graphic monitor audio tests
 __benchmarks__
@@ -329,8 +329,16 @@ suspend/bluetooth_obex_send_after_suspend
 suspend/bluetooth_obex_browse_after_suspend
 suspend/bluetooth_obex_get_after_suspend
 suspend/record_playback_after_suspend
+suspend/speaker-headphone-plug-detection-after-suspend
+suspend/microphone-plug-detection-after-suspend
+suspend/playback_headphones-after-suspend
+suspend/alsa_record_playback_external-after-suspend
+camera/display_after_suspend
+camera/still_after_suspend
 suspend/pointing-after-suspend
 suspend/pointing-after-suspend_.*
+suspend/clicking-after-suspend
+suspend/clicking-after-suspend_.*
 suspend/mmc-insert-after-suspend
 suspend/mmc-storage-after-suspend
 suspend/mmc-remove-after-suspend
@@ -346,6 +354,8 @@ suspend/usb_remove_after_suspend
 suspend/usb3_insert_after_suspend
 suspend/usb3_storage_automated_after_suspend
 suspend/usb3_remove_after_suspend
+suspend/oops_after_suspend
+suspend/oops_results_after_suspend.log
 suspend/wireless_connection_after_suspend_wpa_bg
 suspend/wireless_connection_after_suspend_open_bg
 suspend/wireless_connection_after_suspend_wpa_n
@@ -365,10 +375,10 @@ power-management/reboot-log-attach
 # Automated Tests
 # The following tests are purely automated and/or lenghty stress tests. They
 # have been moved to the end of the test run to improve the testing process.
-firmware/fwts
-firmware/fwts_logs
 firmware/fwts_desktop_diagnosis
-firmware/fwts_desktop_diagnosis_results.log
+firmware/fwts_desktop_diagnosis_hwe
+firmware/fwts_desktop_diagnosis_results.log.gz
+firmware/fwts_desktop_diagnosis_results_hwe.log.gz
 firmware/fwts_wakealarm.*
 firmware/fwts_uefirtvariable.*
 miscellanea/dmitest_client
