@@ -47,13 +47,14 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = [
-        'plainbox >= 0.5.1',
+        'checkbox-support >= 0.2',
+        'plainbox >= 0.5.3',
         'requests >= 1.0',
     ]
 
 setup(
     name="checkbox-ng",
-    version="0.2.2",
+    version="0.3",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     author="Zygmunt Krynicki",
@@ -73,6 +74,8 @@ setup(
         'plainbox.transport': [
             'certification='
             'checkbox_ng.certification:CertificationTransport',
+            'launchpad='
+            'checkbox_ng.launchpad:LaunchpadTransport',
         ],
     },
     include_package_data=True)
