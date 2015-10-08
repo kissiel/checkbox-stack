@@ -132,9 +132,7 @@ pygments_style = 'sphinx'
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme_path = ['_templates']
-html_theme = 'ubuntu1204'
-html_theme_options = {}
+html_theme = 'default'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
