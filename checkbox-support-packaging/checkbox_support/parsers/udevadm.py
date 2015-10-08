@@ -157,12 +157,13 @@ class UdevadmDevice(object):
                 devtype = self._environment["DEVTYPE"]
                 if devtype in ("wlan", "wimax"):
                     return "WIRELESS"
-            # Ralink wireless
+            # Ralink and realtek SDIO wireless
             if "INTERFACE" in self._environment:
                 if (self.driver and
                     self.driver.startswith('rt') and
-                    self._environment["INTERFACE"].startswith('ra')
-                ):
+                    (self._environment["INTERFACE"].startswith('ra') or
+                     self._environment["INTERFACE"].startswith('wlan')
+                     )):
                     return "WIRELESS"
             return "NETWORK"
 
@@ -402,7 +403,7 @@ class UdevadmDevice(object):
         # A few devices may have no self.product but carry PRODUCT data in
         # their environment.
         if ((self.product or self._environment.get("PRODUCT")) and
-                not None in (self.vendor_id, self.product_id)):
+                None not in (self.vendor_id, self.product_id)):
             return "OTHER"
 
         # Limbo of devices I couldn't otherwise categorize. In practice
@@ -766,10 +767,10 @@ class UdevadmParser(object):
                     if self.devices[device._raw_path].category == 'CARDREADER':
                         [
                             setattr(self.devices[device._raw_path],
-                                    key, getattr(device, key))
-                            for key in (
+                                    device_key, getattr(device, device_key))
+                            for device_key in (
                                 "product", "vendor", "product_id", "vendor_id")
-                            if getattr(device, key) is not None
+                            if getattr(device, device_key) is not None
                         ]
                     elif device.category != "OTHER":
                         self.devices[device._raw_path] = device

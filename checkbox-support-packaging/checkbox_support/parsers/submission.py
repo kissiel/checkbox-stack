@@ -43,7 +43,14 @@ from checkbox_support.parsers.dmidecode import DmidecodeParser
 from checkbox_support.parsers.efi import EfiParser
 from checkbox_support.parsers.meminfo import MeminfoParser
 from checkbox_support.parsers.udevadm import UdevadmParser
-
+from checkbox_support.parsers.modprobe import ModprobeParser
+from checkbox_support.parsers.kernel_cmdline import KernelCmdlineParser
+from checkbox_support.parsers.pci_config import PciSubsystemIdParser
+from checkbox_support.parsers.dkms_info import DkmsInfoParser
+from checkbox_support.parsers.modinfo import MultipleModinfoParser
+from checkbox_support.parsers.image_info import (BtoParser,
+                                                 BuildstampParser,
+                                                 RecoveryInfoParser)
 
 logger = logging.getLogger("checkbox_support.parsers.submission")
 
@@ -64,6 +71,47 @@ class DeferredParser(object):
 # from apps/uploads/checkbox_parser.py licensed internally by Canonical under
 # the license of the Chcekbox project.
 class TestRun(object):
+    """
+    The TestRun class is responsible for acting upon information from a
+    submission. It decouples the storage and processing of that information
+    from the parsing process. A TestRun class is passed to the SubmissionParser
+    at run time::
+
+        # stream is the file or submission data
+        parser = SubmissionParser(stream)
+        parser.run(TestRun, <other arguments>)
+
+    The parser will create a TestRun instance and, as it finds elements
+    in the submission, will call methods in the TestRun instance passing them
+    the chunks it has parsed. The TestRun instance can do things like print
+    the data, save it into a list or dict for later use, dump it
+    directly to a database, or anything else.
+
+    The interface that TestRun-compliant classes must implement is not really
+    formalized anywhere; perhaps *this* class is the most authoritative
+    reference of which methods/events may be called.
+
+    This particular TestRun implementation uses "messages" as its storage
+    convention, for historical reasons: it's initialized with an empty
+    list and it will populate it with the data stored in dictionaries of
+    the form::
+
+        { type: "set-$something",
+          "foo": "data-1",
+          "baz": "data-2"}
+
+    The only required key is "type": the rest are dependent on which data
+    item is processed.
+
+    There are a few conventions in naming the "callback" methods:
+
+    - Methods that will be called only once to set a single item are
+      named set\* (example setArchitecture).
+    - Methods that can be called many times due to processing of several
+      similar items (packages, devices) are named add\*
+      (example addDeviceState). Look at the existing methods to see how they
+      append to an existing element of the messages list.
+    """
 
     project = "certification"
 
@@ -82,11 +130,105 @@ class TestRun(object):
             "kernel": kernel})
         logger.debug("Setting Kernel: %s", kernel)
 
+    def addModprobeInfo(self, module, options):
+        if not self.messages or self.messages[-1]["type"] != "add-modprobe-info":
+            self.messages.append({
+                "type": "add-modprobe-info",
+                "modprobe-info": []})
+
+        message = self.messages[-1]
+        logger.debug("ADDING Module options:")
+        logger.debug("%s %s", module, options)
+        message["modprobe-info"].append({
+            "module": module,
+            "options": options})
+
+    def addModuleInfo(self, module, data):
+        if not self.messages or self.messages[-1]["type"] != "add-modinfo":
+            self.messages.append({
+                "type": "add-modinfo",
+                "modinfo": []})
+
+        message = self.messages[-1]
+        logger.debug("ADDING Modinfo data:")
+        logger.debug("%s %s", module, data)
+        message["modinfo"].append({
+            "module": module,
+            "attributes": data})
+
+    def addDkmsInfo(self, package, data):
+        if not self.messages or self.messages[-1]["type"] != "add-dkms-info":
+            self.messages.append({
+                "type": "add-dkms-info",
+                "dkms-info": []})
+
+        message = self.messages[-1]
+        logger.debug("ADDING DKMS package data:")
+        logger.debug("%s %s", package, data)
+        package_dict = {"package": package}
+        package_dict.update(data)
+        message["dkms-info"].append(package_dict)
+
+    def addModInfo(self, module, data):
+        if not self.messages or self.messages[-1]["type"] != "add-modinfo":
+            self.messages.append({
+                "type": "add-modinfo",
+                "modinfo": []})
+
+        message = self.messages[-1]
+        logger.debug("ADDING Modinfo data:")
+        logger.debug("%s %s", module, data)
+        message["modinfo"].append({
+            "module": module,
+            "attributes": data})
+
+    def addBuildstampInfo(self, buildstamp):
+        self.messages.append({
+            "type": "set-buildstamp",
+            "buildstamp": buildstamp})
+        logger.debug("Setting buildstamp: %s", buildstamp)
+
+    def addImageVersionInfo(self, kind, version):
+        my_type = "set-image-version"
+        if not self.messages or self.messages[-1]["type"] != my_type:
+            self.messages.append({
+                "type": my_type,
+                "image-version": {}})
+
+        message = self.messages[-1]
+        logger.debug("ADDING image version:")
+        logger.debug("%s %s", kind, version)
+        message["image-version"][kind] = version
+
+    def addBtoInfo(self, key, data):
+        my_type = "add-bto-info"
+        if not self.messages or self.messages[-1]["type"] != my_type:
+            self.messages.append({
+                "type": my_type,
+                "bto-info": {}})
+
+        message = self.messages[-1]
+        logger.debug("ADDING BTO info:")
+        logger.debug("%s %s", key, data)
+        message["bto-info"][key] = data
+
+    def setKernelCmdline(self, kernel_cmdline):
+        self.messages.append({
+            "type": "set-kernel-cmdline",
+            "kernel-cmdline": kernel_cmdline})
+        logger.debug("Setting Kernel Commandline: %s", kernel_cmdline)
+
     def setDistribution(self, **distribution):
         self.messages.append({
             "type": "set-distribution",
             "distribution": distribution})
         logger.debug("Setting distribution: %s", distribution)
+
+    def setPciSubsystemId(self, subsystem_id):
+        self.messages.append({
+            "type": "set-pci-subsystem-id",
+            "pci-subsystem-id": subsystem_id})
+        logger.debug("Setting PCI subsystem ID: %s", subsystem_id)
 
     def setMemoryState(self, **memory):
         self.messages.append({
@@ -136,6 +278,20 @@ class TestRun(object):
             "vendor_id": device_state["vendor_id"],
             "subvendor_id": device_state["subvendor_id"],
             })
+
+    def addRawDmiDeviceState(self, raw_dmi_device):
+        if (not self.messages or
+                self.messages[-1]["type"] != "add-raw-devices-dmi"):
+            self.messages.append({
+                "type": "add-raw-devices-dmi",
+                "raw-devices-dmi": []})
+
+        message = self.messages[-1]
+        logger.debug("ADDING Raw DMI Device State:")
+        logger.debug(raw_dmi_device)
+        raw_dict = raw_dmi_device.raw_attributes
+        raw_dict['category'] = raw_dmi_device.category
+        message["raw-devices-dmi"].append(raw_dict)
 
     def addPackageVersion(self, **package_version):
         if not self.messages or self.messages[-1]["type"] != "set-packages":
@@ -235,6 +391,7 @@ class ListenerQueue(ListenerList):
         # Once the queue has handler has been called, the queue
         # then behaves like a list using the latest events.
         if self.event_types.issubset(self.kwargs):
+            # This is diabolical: it's reassigning the notify method.
             self.notify = notify = super(ListenerQueue, self).notify
             keys = list(self.kwargs.keys())
             for values in product(*list(self.kwargs.values())):
@@ -473,15 +630,25 @@ class SubmissionResult(object):
         register(("test_run", "attachment",), self.addAttachment)
         register(("test_run", "device",), self.addDeviceState)
         register(("test_run", "dmi_device",), self.addDmiDeviceState)
+        register(("test_run", "raw_dmi_device",), self.addRawDmiDeviceState)
         register(("test_run", "distribution",), self.setDistribution)
         register(("test_run", "package_version",), self.addPackageVersion)
         register(("test_run", "test_result",), self.addTestResult)
+        register(("test_run", "modprobe",), self.addModprobeInfo)
+        register(("test_run", "dkms_info",), self.addDkmsInfo)
+        register(("test_run", "modinfo",), self.addModuleInfo)
+        register(("test_run", "bto_info",), self.addBtoInfo)
+        register(("test_run", "buildstamp_info",), self.setBuildstampInfo)
+        register(("test_run", "image_version_info",), self.addImageVersionInfo)
 
         # Register handlers to set information once
         register(("architecture",), self.setArchitecture, count=1)
         register(
             ("cpuinfo", "machine", "cpuinfo_result",),
             self.setCpuinfo, count=1)
+        register(
+            ("test_run", "kernel_cmdline",),
+            self.setKernelCmdline, count=1)
         register(
             ("meminfo", "meminfo_result",),
             self.setMeminfo, count=1)
@@ -503,6 +670,9 @@ class SubmissionResult(object):
         register(
             ("udevadm", "bits", "udevadm_result",),
             self.setUdevadm, count=1)
+        register(
+            ("test_run", "lspci_data",),
+            self.setPciSubsystemId, count=1)
 
         # Publish events passed as keyword arguments
         if "project" in kwargs:
@@ -525,10 +695,24 @@ class SubmissionResult(object):
             r"dmidecode": DmidecodeParser,
             r"udevadm": self.parseUdevadm,
             r"efi(?!rtvariable)": EfiParser,
+            r"modprobe_attachment": self.parseModprobe,
+            r"kernel_cmdline": self.parseKernelCmdline,
+            "lspci_standard_config": self.parsePciSubsystemId,
+            "dkms_info": self.parseDkmsInfo,
+            r"modinfo_attachment": self.parseModinfo,
+            "dell_bto_xml_attachment": self.parseBtoInfo,
+            "recovery_info_attachment": self.parseImageVersionInfo,
+            "info/buildstamp": self.parseBuildstampInfo,
             }
         for context, parser in context_parsers.items():
             if re.search(context, command):
-                if hasattr(text, "decode"):
+                # Under python 2.7 strs have a "decode" method
+                # and need to be decoded into utf-8 for the StringIO.
+                # Note that unicodes *also* have a "decode" method
+                # but should *not* be decoded (gives UnicodeEncodeError).
+                # Under Python 3.x strings don't have a "decode" method
+                # and unicodes don't exist.
+                if hasattr(text, "decode") and not isinstance(text, unicode):
                     text = text.decode("utf-8")
                 stream = StringIO(text)
                 p = parser(stream)
@@ -569,6 +753,9 @@ class SubmissionResult(object):
         if device.category != "DEVICE":
             self.dispatcher.publishEvent("dmi_device", device)
 
+        if device.category in ("SYSTEM", "BIOS"):
+            self.dispatcher.publishEvent("raw_dmi_device", device)
+
     def addDmiDeviceState(self, test_run, dmi_device):
         test_run.addDeviceState(
             bus_name="dmi", category_name=dmi_device.category,
@@ -576,6 +763,63 @@ class SubmissionResult(object):
             product_id=None, vendor_id=None,
             subproduct_id=None, subvendor_id=None,
             driver_name=None, path=dmi_device.path)
+
+    def addRawDmiDeviceState(self, test_run, raw_dmi_device):
+        test_run.addRawDmiDeviceState(raw_dmi_device)
+
+    def parseDkmsInfo(self, dkms_info):
+        self.dispatcher.publishEvent("dkms_info", dkms_info)
+        return DeferredParser(self.dispatcher, "dkms_info_result")
+
+    def addDkmsInfo(self, test_run, dkms_info):
+        parser = DkmsInfoParser(dkms_info)
+        parser.run(test_run)
+
+    def parseModprobe(self, modprobe):
+        self.dispatcher.publishEvent("modprobe", modprobe)
+        return DeferredParser(self.dispatcher, "modprobe_result")
+
+    def parseModinfo(self, modinfo):
+        self.dispatcher.publishEvent("modinfo", modinfo)
+        return DeferredParser(self.dispatcher, "modinfo_result")
+
+    def parseBtoInfo(self, bto_info):
+        self.dispatcher.publishEvent("bto_info", bto_info)
+        return DeferredParser(self.dispatcher, "bto_info_result")
+
+    def parseBuildstampInfo(self, buildstamp_info):
+        self.dispatcher.publishEvent("buildstamp_info", buildstamp_info)
+        return DeferredParser(self.dispatcher, "buildstamp_info_result")
+
+    def parseImageVersionInfo(self, image_version_info):
+        self.dispatcher.publishEvent("image_version_info",
+                                     image_version_info)
+        return DeferredParser(self.dispatcher,
+                              "image_version_info_result")
+
+    def parsePciSubsystemId(self, lspci_data):
+        self.dispatcher.publishEvent("lspci_data", lspci_data)
+        return DeferredParser(self.dispatcher, "pci_subsystem_id_result")
+
+    def addModprobeInfo(self, test_run, modprobe):
+        parser = ModprobeParser(modprobe)
+        parser.run(test_run)
+
+    def addModuleInfo(self, test_run, modinfo):
+        parser = MultipleModinfoParser(modinfo)
+        parser.run(test_run)
+
+    def setBuildstampInfo(self, test_run, buildstamp_info):
+        parser = BuildstampParser(buildstamp_info)
+        parser.run(test_run)
+
+    def addBtoInfo(self, test_run, bto_info):
+        parser = BtoParser(bto_info)
+        parser.run(test_run)
+
+    def addImageVersionInfo(self, test_run, image_version_info):
+        parser = RecoveryInfoParser(image_version_info)
+        parser.run(test_run)
 
     def addIdentifier(self, identifier):
         try:
@@ -589,6 +833,8 @@ class SubmissionResult(object):
             "name": package["name"],
             "version": package["properties"]["version"],
             }
+        if 'modalias' in package["properties"]:
+            package_version['modalias'] = package['properties']['modalias']
         self.dispatcher.publishEvent("package_version", package_version)
 
     def addPackageVersion(self, test_run, package_version):
@@ -629,6 +875,10 @@ class SubmissionResult(object):
         elif name == "kernel-release":
             self.dispatcher.publishEvent("kernel", value)
 
+    def parseKernelCmdline(self, cmdline):
+        self.dispatcher.publishEvent("kernel_cmdline", cmdline)
+        return DeferredParser(self.dispatcher, "kernel_cmdline_result")
+
     def parseCpuinfo(self, cpuinfo):
         self.dispatcher.publishEvent("cpuinfo", cpuinfo)
         return DeferredParser(self.dispatcher, "cpuinfo_result")
@@ -653,6 +903,10 @@ class SubmissionResult(object):
     def setKernelState(self, test_run, kernel):
         test_run.setKernelState(kernel)
 
+    def setKernelCmdline(self, test_run, kernel_cmdline):
+        parser = KernelCmdlineParser(kernel_cmdline)
+        parser.run(test_run)
+
     def setCpuinfo(self, cpuinfo, machine, cpuinfo_result):
         parser = CpuinfoParser(cpuinfo, machine)
         parser.run(cpuinfo_result)
@@ -675,6 +929,10 @@ class SubmissionResult(object):
 
     def setMemoryState(self, test_run, memory):
         test_run.setMemoryState(**memory)
+
+    def setPciSubsystemId(self, test_run, lspci_data):
+        parser = PciSubsystemIdParser(lspci_data)
+        parser.run(test_run)
 
     def setProcessor(self, processor):
         self.dispatcher.publishEvent("processor", processor)
@@ -975,6 +1233,18 @@ class SubmissionParser(object):
                     "Unsupported tag <%s> in <system>" % child.tag)
 
     def run(self, test_run_factory, **kwargs):
+        """
+        Entry point to start parsing the stream with which the parser
+        was initialized.
+
+        :param test_run_factory: A class from which to instantiate a
+        "test_run" object whose add\*/set\* methods will be called as elements
+        are found in the stream
+
+        :returns: a SubmissionResult instance. This is not really used
+        and seems redundant, as the data will be processed and stored by
+        the TestRun instance (which is, however, also not returned anywhere).
+        """
         parser = etree.XMLParser()
 
         tree = etree.parse(self.file, parser=parser)
