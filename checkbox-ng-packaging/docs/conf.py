@@ -127,20 +127,7 @@ pygments_style = 'sphinx'
 # -- Options for HTML output -------------------------------------------------
 
 # html_theme_path = ['_templates']
-html_theme = 'alabaster'
-html_theme_options = {
-	'github_button': 'false',
-    'page_width': '1040px',
-    'sidebar_width': '320px',
-    'sidebar_link': '#E95420',
-    'sidebar_link_underscore': '#E95420',
-    'link': '#E95420',
-    'link_hover': '#E95420',
-    'font_family': "'Ubuntu', sans-serif",
-    'head_font_family': "'Ubuntu', sans-serif",
-    'code_font_family': "'Ubuntu Mono', monospace",
-    'code_font_size': '1em'
-    }
+html_theme = 'default'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -183,14 +170,7 @@ html_theme_options = {
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',
-        'searchbox.html'
-    ]
-}
+# html_sidebars = {}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
