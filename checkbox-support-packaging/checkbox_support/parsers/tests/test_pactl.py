@@ -1,3 +1,5 @@
+# encoding: UTF-8
+#
 # This file is part of Checkbox.
 #
 # Copyright 2013 Canonical Ltd.
@@ -17,13 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 """
 :mod:`checkbox_support.parsers.tests.test_pactl` -- tests for pactl parser
-==================================================================
+==========================================================================
 """
 
 from math import log10, floor, ceil
 from unittest import TestCase
+from io import open
 
 from pkg_resources import resource_filename
 import pyparsing as p
@@ -31,7 +39,7 @@ import pyparsing as p
 from checkbox_support.parsers import pactl
 
 
-class ParsingMixIn:
+class ParsingMixIn(object):
     """
     Mix-in class for writing tests that parse stuff.
 
@@ -108,7 +116,7 @@ class ParsingMixIn:
                       hl_col * '_' + '^\x1B[0m')
 
 
-class PactlDataMixIn:
+class PactlDataMixIn(object):
     """
     Mix in with a helper method to load sample pactl data
     """
@@ -317,6 +325,20 @@ class AttributeTests(ParsingTestCase):
             '0: -13.40 dB 1: -13.40 dB\n'
             'balance 0.00\n'))
 
+    def test_inf_volume(self):
+        # LP: 1350168
+        attr = self.assertParses(
+            pactl.GenericSimpleAttribute.Syntax, (
+        	'\tVolume: 0:   0% 1:   0%\n'
+	        '\t        0: -inf dB 1: -inf dB\n'
+	        '\t        balance 0.00\n')
+        )['attribute']
+        self.assertEqual(attr.name, 'Volume')
+        self.assertEqual(attr.value, (
+            '0:   0% 1:   0%\n'
+            '0: -inf dB 1: -inf dB\n'
+            'balance 0.00\n'))
+
     def test_volume_with_tabs(self):
         attr = self.assertParses(
             pactl.GenericSimpleAttribute.Syntax, (
@@ -449,9 +471,9 @@ class AttributeTests(ParsingTestCase):
         self.assertEqual(attr.name, 'Profiles')
         self.assertEqual(attr.value[0].name, 'output:analog-stereo')
         self.assertEqual(attr.value[0].label, 'Wyjście Analogowe stereo')
-        self.assertEqual(attr.value[0].priority, 6000) 
-        self.assertEqual(attr.value[-3].label, 'Wyjście Digital Surround 5.1 (HDMI) + Wejście Analogowe stereo') 
-        self.assertEqual(attr.value[-3].priority, 360) 
+        self.assertEqual(attr.value[0].priority, 6000)
+        self.assertEqual(attr.value[-3].label, 'Wyjście Digital Surround 5.1 (HDMI) + Wejście Analogowe stereo')
+        self.assertEqual(attr.value[-3].priority, 360)
         self.assertEqual(attr.value[-1].name, 'off')
 
     def test_format(self):

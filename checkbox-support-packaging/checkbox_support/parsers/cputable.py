@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of Checkbox.
 #
-# Copyright 2014 Canonical Ltd.
+# Copyright 2011 Canonical Ltd.
 #
 # Checkbox is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3,
@@ -22,12 +21,27 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from unittest import TestCase
+import re
 
 
-class TestSubmissionModuleVersion(TestCase):
+CPUTABLE_RE = re.compile(
+    r"^(?!\#)(?P<debian_name>\S+)"
+    r"\s+(?P<gnu_name>\S+)"
+    r"\s+(?P<regex>\S+)"
+    r"\s+(?P<bits>\d+)"
+    r"\s+(?P<endianness>big|little)")
 
-    def testVersion(self):
-        from checkbox_support import parsers
-        ver = getattr(parsers, "__version__")
-        self.assertTrue(ver)
+
+class CputableParser(object):
+    """Parser for the /usr/share/dpkg/cputable file."""
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def run(self, result):
+        for line in self.stream.readlines():
+            match = CPUTABLE_RE.match(line)
+            if match:
+                cpu = match.groupdict()
+                cpu["bits"] = int(cpu["bits"])
+                result.addCpu(cpu)

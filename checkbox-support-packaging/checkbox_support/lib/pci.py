@@ -15,10 +15,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
-#
+
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 
 # See http://pciids.sourceforge.net/pci.ids.bz2
-class Pci:
+class Pci(object):
 
     BASE_CLASS_STORAGE              = 1
     CLASS_STORAGE_SCSI              = 0
@@ -40,7 +46,7 @@ class Pci:
     CLASS_DISPLAY_VGA               = 0
     CLASS_DISPLAY_XGA               = 1
     CLASS_DISPLAY_3D                = 2
-    CLASS_DISPLAY_OTHER             = 80
+    CLASS_DISPLAY_OTHER             = 0x80
 
     BASE_CLASS_MULTIMEDIA           = 4
     CLASS_MULTIMEDIA_VIDEO          = 0
@@ -87,3 +93,6 @@ class Pci:
     CLASS_SERIAL_USB                = 3
     CLASS_SERIAL_FIBER              = 4
     CLASS_SERIAL_SMBUS              = 5
+
+    VENDOR_ID_AMD                   = 0x1002
+    VENDOR_ID_INTEL                 = 0x8086

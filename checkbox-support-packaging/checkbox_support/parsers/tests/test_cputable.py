@@ -24,44 +24,55 @@ from __future__ import unicode_literals
 from io import StringIO
 from unittest import TestCase
 
-from checkbox_support.parsers.efi import EfiParser
+from checkbox_support.parsers.cputable import CputableParser
 
 
-class EfiResult(object):
+class CputableResult(object):
 
     def __init__(self):
-        self.device = None
+        self.cpus = []
 
-    def setEfiDevice(self, device):
-        self.device = device
+    def addCpu(self, cpu):
+        self.cpus.append(cpu)
+
+    def getByDebianName(self, name):
+        for cpu in self.cpus:
+            if cpu["debian_name"] == name:
+                return cpu
+
+        return None
+
+    def getByGnuName(self, name):
+        for cpu in self.cpus:
+            if cpu["gnu_name"] == name:
+                return cpu
+
+        return None
 
 
 class TestCputableParser(TestCase):
 
     def getParser(self, string):
         stream = StringIO(string)
-        return EfiParser(stream)
+        return CputableParser(stream)
 
     def getResult(self, string):
         parser = self.getParser(string)
-        result = EfiResult()
+        result = CputableResult()
         parser.run(result)
         return result
 
     def test_empty(self):
         result = self.getResult("")
-        self.assertEqual(result.device, None)
+        self.assertEqual(result.cpus, [])
 
-    def test_product(self):
+    def test_i386(self):
         result = self.getResult("""
-Foo Bar
+# <Debian name>	<GNU name>	<config.guess regex>	<Bits>	<Endianness>
+i386		i686		(i[3456]86|pentium)	32	little
 """)
-        self.assertEqual(result.device.vendor, None)
-        self.assertEqual(result.device.product, "Foo Bar")
-
-    def test_vendor_product(self):
-        result = self.getResult("""
-Product by Vendor
-""")
-        self.assertEqual(result.device.vendor, "Vendor")
-        self.assertEqual(result.device.product, "Product")
+        debian_cpu = result.getByDebianName("i386")
+        self.assertNotEqual(debian_cpu, None)
+        gnu_cpu = result.getByGnuName("i686")
+        self.assertNotEqual(gnu_cpu, None)
+        self.assertEqual(debian_cpu, gnu_cpu)

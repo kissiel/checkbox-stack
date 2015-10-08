@@ -15,17 +15,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
-#
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from collections import OrderedDict
 import re
 import string
 
-from collections import OrderedDict
-
-from checkbox_support.lib.bit import get_bitmask, test_bit
+from checkbox_support.lib.bit import get_bitmask
+from checkbox_support.lib.bit import test_bit
 from checkbox_support.lib.input import Input
 from checkbox_support.lib.pci import Pci
 from checkbox_support.lib.usb import Usb
-
 
 PCI_RE = re.compile(
     r"^pci:"
@@ -77,15 +81,16 @@ OPENFIRMWARE_RE = re.compile(
     r"N(?P<name>.*?)"
     r"T(?P<type>.*?)"
     r"C(?P<compatible>.*?)")
-CARD_READER_RE = re.compile(r"SD|MMC|CF|MS|SM|xD|Card", re.I)
+CARD_READER_RE = re.compile(r"SD|MMC|CF|MS(?!ata)|SM|xD|Card", re.I)
 GENERIC_RE = re.compile(r"Generic", re.I)
 FLASH_RE = re.compile(r"Flash", re.I)
 FLASH_DISK_RE = re.compile(r"Mass|Storage|Disk", re.I)
 
 
-class UdevadmDevice:
+class UdevadmDevice(object):
     __slots__ = (
         "_environment",
+        "_name",
         "_bits",
         "_stack",
         "_bus",
@@ -95,8 +100,9 @@ class UdevadmDevice:
         "_vendor",
         "_vendor_id",)
 
-    def __init__(self, environment, bits=None, stack=[]):
+    def __init__(self, environment, name, bits=None, stack=[]):
         self._environment = environment
+        self._name = name
         self._bits = bits
         self._stack = stack
         self._bus = None
@@ -112,6 +118,11 @@ class UdevadmDevice:
         return("<{}: bus: {} id [{:x}:{:x}] {}>".format(
             type(self).__name__, self.bus, vid, pid,
             self.product))
+
+    @property
+    def name(self):
+        if self._name is not None:
+            return self._name
 
     @property
     def bus(self):
@@ -148,7 +159,7 @@ class UdevadmDevice:
                     return "WIRELESS"
             # Ralink wireless
             if "INTERFACE" in self._environment:
-                if (
+                if (self.driver and
                     self.driver.startswith('rt') and
                     self._environment["INTERFACE"].startswith('ra')
                 ):
@@ -175,7 +186,19 @@ class UdevadmDevice:
                 else:
                     return "NETWORK"
             if class_id == Pci.BASE_CLASS_DISPLAY:
-                if subclass_id == Pci.CLASS_DISPLAY_VGA:
+                # Not all DISPLAY devices are display adapters. The ones with
+                # subclass OTHER are usually uninteresting devices. As an
+                # exception, some vendors have recently begun to use the
+                # 0x80 (Pci.CLASS_DISPLAY_OTHER) subclass identifier. In order
+                # to correctly identify them special heuristics are needed,
+                # these are encapsulated in the known_to_be_video_device method
+                # (further below).
+                if (subclass_id == Pci.CLASS_DISPLAY_VGA or
+                    subclass_id == Pci.CLASS_DISPLAY_3D or
+                    (subclass_id == Pci.CLASS_DISPLAY_OTHER
+                     and known_to_be_video_device(
+                         self.vendor_id, self.product_id, class_id,
+                         subclass_id))):
                     return "VIDEO"
             if class_id == Pci.BASE_CLASS_SERIAL \
                and subclass_id == Pci.CLASS_SERIAL_USB:
@@ -285,8 +308,20 @@ class UdevadmDevice:
             if self.driver.startswith("rtsx"):
                 return "CARDREADER"
             if ((self._environment.get("DEVTYPE") not in ("disk", "partition")
-                    or 'ID_DRIVE_FLASH_SD' in self._environment)
+                    or 'ID_DRIVE_FLASH_SD' in self._environment
+                    or ('ID_MODEL' in self._environment
+                        and self._environment['ID_MODEL'] == 'Card_Reader'))
                     and self.driver == "sd" and self.product):
+                # The condition:
+                #     'ID_MODEL' in self._environment
+                #     and
+                #     self._environment['ID_MODEL'] == 'Card_Reader'
+                # is a workaround specific to LP: #1334224
+                # Otherwise, the card reader,
+                # 058f:6366 Alcor Micro Corp. Multi Flash Reader,
+                # of the system,
+                # CID 201009-6503 Dell Inspiron One 2310,
+                # will be given the category attribute 'DISK' by udev_resource
                 if any(FLASH_RE.search(k) for k in self._environment.keys()):
                     return "CARDREADER"
                 if any(d.bus == 'usb' for d in self._stack):
@@ -318,6 +353,16 @@ class UdevadmDevice:
                     return "CDROM"
                 if "ID_DRIVE_FLOPPY" in self._environment:
                     return "FLOPPY"
+                if self.driver == 'virtio_blk' and self.bus == 'virtio':
+                    # A QEMU/KVM virtual disk, but should be treated
+                    # as DISK nonetheless
+                    return "DISK"
+                if self.driver == 'nvme' and self.bus == 'pci':
+                    # NVMe device in PCIe bus, this should also be
+                    # treated as DISK as it presents block devices
+                    # we need to test, and is a valid disk device
+                    # we need to report.
+                    return "DISK"
             if devtype == "scsi_device":
                 match = SCSI_RE.match(self._environment.get("MODALIAS", ""))
                 type = int(match.group("type"), 16) if match else -1
@@ -601,12 +646,12 @@ class UdevadmDevice:
     def as_json(self):
         attributes = ("path", "bus", "category", "driver", "product_id",
                       "vendor_id", "subproduct_id", "subvendor_id", "product",
-                      "vendor", "interface",)
+                      "vendor", "interface", "name")
 
         return {a: getattr(self, a) for a in attributes if getattr(self, a)}
 
 
-class UdevadmParser:
+class UdevadmParser(object):
     """Parser for the udevadm command."""
 
     device_factory = UdevadmDevice
@@ -620,6 +665,23 @@ class UdevadmParser:
         # Ignore devices without bus information
         if not device.bus:
             return True
+
+        # Do not ignore devices with bus == net and ID_NET_NAME_MAC
+        # These can be virtual network interfaces which don't have PCI
+        # product/vendor ID, yet still constitute valid ethX interfaces.
+        if device.bus == "net" and "ID_NET_NAME_MAC" in device._environment:
+            return False
+        # Do not ignore nvme devices on the pci bus, these are to be treated
+        # as disks (categorization is done elsewhere). Note that the *parent*
+        # device will have no category, though it's not ignored per se.
+        if device.bus == 'pci' and device.driver == 'nvme':
+            return False
+
+        # Do not ignore QEMU/KVM virtio disks
+        if ("ID_PART_TABLE_TYPE" in device._environment and
+           device.bus == "virtio" and
+           device.driver == "virtio_blk"):
+            return False
 
         # Ignore devices without product AND vendor information
         if (device.product is None and device.product_id is None and
@@ -650,7 +712,7 @@ class UdevadmParser:
         multi_pattern = re.compile(r"(?P<key>[^=]+)=(?P<value>.*)")
 
         stack = []
-        if isinstance(self.stream_or_string, str):
+        if isinstance(self.stream_or_string, type("")):
             output = self.stream_or_string
         else:
             output = self.stream_or_string.read()
@@ -660,8 +722,9 @@ class UdevadmParser:
             if not record:
                 continue
 
-            # Determine path and environment
+            # Determine path, name and environment
             path = None
+            name = None
             element = None
             environment = {}
             for line in record.splitlines():
@@ -677,6 +740,8 @@ class UdevadmParser:
 
                 if key == "P":
                     path = value
+                elif key == "N":
+                    name = value
                 elif key == "E":
                     key_match = multi_pattern.match(value)
                     if not key_match:
@@ -694,7 +759,8 @@ class UdevadmParser:
             # Set default DEVPATH
             environment.setdefault("DEVPATH", path)
 
-            device = self.device_factory(environment, self.bits, list(stack))
+            device = self.device_factory(
+                environment, name, self.bits, list(stack))
             if not self._ignoreDevice(device):
                 if device._raw_path in self.devices:
                     if self.devices[device._raw_path].category == 'CARDREADER':
@@ -760,7 +826,28 @@ def decode_id(id):
     return decoded_id.strip()
 
 
-class UdevResult:
+def known_to_be_video_device(vendor_id, product_id, pci_class, pci_subclass):
+    # Usually a video device has a PCI subclass_id of Pci.CLASS_DISPLAY_VGA or
+    # Pci.CLASS_DISPLAY_3d. However, some manufacturers which hadn't previously
+    # used a subclass_id of Pci.CLASS_DISPLAY_OTHER (0x80 or decimal 128) have
+    # begun to do so (as of 2013-2014); and others which previously used this
+    # class for uninteresting devices are now using it for actual video
+    # devices. This method encapsulates heuristics to decide if a device is a
+    # valid video adapter, based on product/vendor and pci class/subclass
+    # information.
+    if vendor_id == Pci.VENDOR_ID_AMD:
+        # AMD hadn't used subclass OTHER before, so all AMD devices we get
+        # asked about are VIDEO.
+        return True
+    if vendor_id == Pci.VENDOR_ID_INTEL:
+        # Intel recently (2014) started using subclass OTHER erratically, some
+        # older GPUs have subdevices with OTHER which are uninteresting. If
+        # Intel, we only consider OTHER devices as VIDEO if they are in this
+        # explicit list
+        return product_id in [0x0152, 0x0412, 0x0402]
+
+
+class UdevResult(object):
     def __init__(self):
         self.devices = {"device_list": []}
 
