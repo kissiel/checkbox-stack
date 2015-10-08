@@ -30,6 +30,7 @@ from gettext import gettext as _
 from logging import getLogger
 import re
 
+from plainbox.impl.secure.config import Unset
 from plainbox.impl.transport import TransportBase
 from plainbox.impl.transport import TransportError
 import requests
@@ -64,8 +65,22 @@ class CertificationTransport(TransportBase):
 
         The options string may contain 'secure_id' which must be
         a 15- or 18-character alphanumeric ID for the system.
+
+        It may also contain a submit_to_hexr boolean, set to 1
+        to enable submission to hexr.
         """
         super().__init__(where, options)
+        # Interpret this setting here
+        submit_to_hexr = self.options.get('submit_to_hexr')
+        self._submit_to_hexr = False
+        try:
+            if submit_to_hexr and (submit_to_hexr.lower() in
+                                  ('yes', 'true') or
+                                  int(submit_to_hexr) == 1):
+                self._submit_to_hexr = True
+        except ValueError:
+            # Just leave it at False
+            pass
         self._secure_id = self.options.get('secure_id')
         if self._secure_id is not None:
             self._validate_secure_id(self._secure_id)
@@ -102,7 +117,7 @@ class CertificationTransport(TransportBase):
             If the server returned a non-success result code
         """
         proxies = None
-        if config:
+        if config and config.environment is not Unset:
             proxies = {
                 proto[:-len("_proxy")]: config.environment[proto]
                 for proto in ['http_proxy', 'https_proxy']
@@ -119,8 +134,26 @@ class CertificationTransport(TransportBase):
         if secure_id is None:
             raise InvalidSecureIDError(_("Secure ID not specified"))
         self._validate_secure_id(secure_id)
-        logger.debug("Sending to %s, hardware id is %s", self.url, secure_id)
+        logger.debug(
+            _("Sending to %s, hardware id is %s"), self.url, secure_id)
         headers = {"X_HARDWARE_ID": secure_id}
+        # Similar handling for submit_to_hexr
+        submit_to_hexr = False
+        if config is not None and hasattr(config, 'submit_to_hexr'):
+            submit_to_hexr = config.submit_to_hexr
+            logger.debug(_("submit_to_hexr set to %s by config"),
+                         submit_to_hexr)
+        if self._submit_to_hexr:
+            submit_to_hexr = self._submit_to_hexr
+            logger.debug(_("submit_to_hexr set to %s by UI"), submit_to_hexr)
+        # We could always set this header since hexr will only process a value
+        # of 'True', but this avoids injecting that extraneous knowledge into
+        # the tests.
+        # Note that hexr will only process a submission with this header's
+        # value set to 'True', so this boolean conversion should be ok.
+        if submit_to_hexr:
+            headers["X-Share-With-HEXR"] = submit_to_hexr
+
         # Requests takes care of properly handling a file-like data.
         form_payload = {"data": data}
         try:

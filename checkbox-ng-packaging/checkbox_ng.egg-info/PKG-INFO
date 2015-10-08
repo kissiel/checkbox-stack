@@ -1,8 +1,8 @@
 Metadata-Version: 1.0
 Name: checkbox-ng
-Version: 0.3.1
-Summary: CheckBox / Next Generation
-Home-page: https://launchpad.net/checkbox/
+Version: 0.18
+Summary: Checkbox - Command Line Test Runner
+Home-page: https://launchpad.net/checkbox-ng/
 Author: Zygmunt Krynicki
 Author-email: zygmunt.krynicki@canonical.com
 License: GPLv3
@@ -15,12 +15,10 @@ Description: CheckBoxNG
         
         CheckBoxNG *replaces* CheckBox, where applicable. 
         
-        
         Installation
         ============
         
-        Installation is a bit tricky. You need to have python3-plainbox installed first
-        (which may come from the checkbox daily ppa) or you need to (recommended, for
-        the time being) develop plainbox.
+        CheckBoxNG is pre-installed on Ubuntu 14.04. It is also available in Debian (as
+        checkbox-ng) Testing.
         
 Platform: UNKNOWN

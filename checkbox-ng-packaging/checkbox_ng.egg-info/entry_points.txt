@@ -1,10 +1,10 @@
 [console_scripts]
-canonical-certification-server = checkbox_ng.main:cert_server
-canonical-driver-test-suite-cli = checkbox_ng.main:cdts_cli
-checkbox-cli = checkbox_ng.main:checkbox_cli
+checkbox-submit = checkbox_ng.main:submit
+checkbox-launcher = checkbox_ng.main:launcher
+checkbox-gui-service = checkbox_ng.main:service
 checkbox = checkbox_ng.main:main
 
 [plainbox.transport]
-launchpad = checkbox_ng.launchpad:LaunchpadTransport
 certification = checkbox_ng.certification:CertificationTransport
+launchpad = checkbox_ng.launchpad:LaunchpadTransport
 

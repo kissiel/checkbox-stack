@@ -43,28 +43,29 @@ class TestSru(TestCase):
         expected = """
         usage: checkbox sru [-h] [--check-config] --secure-id SECURE-ID
                             [--fallback FILE] [--destination URL] [--staging] [-n]
-                            [-i PATTERN] [-x PATTERN] [-w WHITELIST]
+                            [-T TEST-PLAN-ID] [-i PATTERN] [-x PATTERN] [-w WHITELIST]
 
         optional arguments:
           -h, --help            show this help message and exit
-          --check-config        Run plainbox check-config before starting
+          --check-config        run check-config before starting
 
         sru-specific options:
           --secure-id SECURE-ID
-                                Associate submission with a machine using this SECURE-
+                                associate submission with a machine using this SECURE-
                                 ID (unset)
-          --fallback FILE       If submission fails save the test report as FILE
+          --fallback FILE       if submission fails save the test report as FILE
                                 (unset)
           --destination URL     POST the test report XML to this URL (https://certific
                                 ation.canonical.com/submissions/submit/)
-          --staging             Override --destination to use the staging
+          --staging             override --destination to use the staging
                                 certification website
 
         execution options:
-          -n, --dry-run         Skip all usual jobs. Only local, resource and
-                                attachment jobs are started
+          -n, --dry-run         don't really run most jobs
 
-        job definition options:
+        test selection options:
+          -T TEST-PLAN-ID, --test-plan TEST-PLAN-ID
+                                load the specified test plan
           -i PATTERN, --include-pattern PATTERN
                                 include jobs matching the given regular expression
           -x PATTERN, --exclude-pattern PATTERN

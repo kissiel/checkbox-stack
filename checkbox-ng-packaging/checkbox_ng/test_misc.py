@@ -26,12 +26,11 @@ Test definitions for checkbox_ng.commands.cli module
 
 from unittest import TestCase
 
-from plainbox.impl.job import JobOutputTextSource, JobDefinition
-from plainbox.impl.secure.rfc822 import Origin
-from plainbox.impl.secure.rfc822 import RFC822Record
+from plainbox.impl.job import JobDefinition
 from plainbox.impl.testing_utils import make_job
+from plainbox.impl.session import SessionState
 
-from checkbox_ng.commands.cli import SelectableJobTreeNode
+from checkbox_ng.misc import SelectableJobTreeNode
 
 
 class TestSelectableJobTreeNode(TestCase):
@@ -40,27 +39,21 @@ class TestSelectableJobTreeNode(TestCase):
         self.A = make_job('a', name='A')
         self.B = make_job('b', name='B', plugin='local', description='foo')
         self.C = make_job('c', name='C')
-        self.D = self.B.create_child_job_from_record(
-            RFC822Record(
-                data={'id': 'd', 'name': 'D', 'plugin': 'shell'},
-                origin=Origin(source=JobOutputTextSource(self.B),
-                              line_start=1,
-                              line_end=1)))
-        self.E = self.B.create_child_job_from_record(
-            RFC822Record(
-                data={'id': 'e', 'name': 'E', 'plugin': 'shell'},
-                origin=Origin(source=JobOutputTextSource(self.B),
-                              line_start=1,
-                              line_end=1)))
+        self.D = make_job('d', name='D', plugin='shell')
+        self.E = make_job('e', name='E', plugin='shell')
         self.F = make_job('f', name='F', plugin='resource', description='baz')
-        self.tree = SelectableJobTreeNode.create_tree([
+        state = SessionState([self.A, self.B, self.C, self.D, self.E, self.F])
+        # D and E are a child of B
+        state.job_state_map[self.D.id].via_job = self.B
+        state.job_state_map[self.E.id].via_job = self.B
+        self.tree = SelectableJobTreeNode.create_tree(state, [
             self.A,
             self.B,
             self.C,
             self.D,
             self.E,
             self.F
-        ], legacy_mode=True)
+        ])
 
     def test_create_tree(self):
         self.assertIsInstance(self.tree, SelectableJobTreeNode)
@@ -86,36 +79,36 @@ class TestSelectableJobTreeNode(TestCase):
 
     def test_render(self):
         expected = ['[X] - foo',
-                    '[X]      D',
-                    '[X]      E',
-                    '[X]   A',
-                    '[X]   C']
+                    '[X]      d',
+                    '[X]      e',
+                    '[X]   a',
+                    '[X]   c']
         self.assertEqual(self.tree.render(), expected)
 
     def test_render_deselected_all(self):
         self.tree.set_descendants_state(False)
         expected = ['[ ] - foo',
-                    '[ ]      D',
-                    '[ ]      E',
-                    '[ ]   A',
-                    '[ ]   C']
+                    '[ ]      d',
+                    '[ ]      e',
+                    '[ ]   a',
+                    '[ ]   c']
         self.assertEqual(self.tree.render(), expected)
 
     def test_render_reselected_all(self):
         self.tree.set_descendants_state(False)
         self.tree.set_descendants_state(True)
         expected = ['[X] - foo',
-                    '[X]      D',
-                    '[X]      E',
-                    '[X]   A',
-                    '[X]   C']
+                    '[X]      d',
+                    '[X]      e',
+                    '[X]   a',
+                    '[X]   c']
         self.assertEqual(self.tree.render(), expected)
 
     def test_render_with_child_collapsed(self):
         self.tree.categories[0].expanded = False
         expected = ['[X] + foo',
-                    '[X]   A',
-                    '[X]   C']
+                    '[X]   a',
+                    '[X]   c']
         self.assertEqual(self.tree.render(), expected)
 
     def test_set_ancestors_state(self):
@@ -125,19 +118,19 @@ class TestSelectableJobTreeNode(TestCase):
         node.update_selected_state()
         node.set_ancestors_state(node.selected)
         expected = ['[X] - foo',
-                    '[ ]      D',
-                    '[X]      E',
-                    '[ ]   A',
-                    '[ ]   C']
+                    '[ ]      d',
+                    '[X]      e',
+                    '[ ]   a',
+                    '[ ]   c']
         self.assertEqual(self.tree.render(), expected)
         node.selected = not(node.selected)
         node.set_ancestors_state(node.selected)
         node.set_descendants_state(node.selected)
         expected = ['[ ] - foo',
-                    '[ ]      D',
-                    '[ ]      E',
-                    '[ ]   A',
-                    '[ ]   C']
+                    '[ ]      d',
+                    '[ ]      e',
+                    '[ ]   a',
+                    '[ ]   c']
         self.assertEqual(self.tree.render(), expected)
 
     def test_selection(self):
