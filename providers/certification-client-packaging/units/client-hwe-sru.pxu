@@ -5,7 +5,6 @@ include:
     ## This test plan is intended to check HWE SRU patches.
     # This category will group all resources to keep the display less cluttered
     __resource__
-    2013.com.canonical.plainbox::collect-manifest
     display
     #Info attachment jobs
     graphics_card_resource
@@ -52,6 +51,7 @@ include:
     audio/1_playback_displayport_.*                        certification-status=blocker
     monitor/1_hdmi.*                                       certification-status=blocker
     audio/1_playback_hdmi_.*                               certification-status=blocker
+    keys/video-out                                         certification-status=blocker
     monitor/1_thunderbolt.*
     monitor/1_dim_brightness.*                             certification-status=blocker
     # Automated tests
@@ -79,6 +79,7 @@ include:
     audio/2_playback_displayport_.*                        certification-status=blocker
     monitor/2_hdmi.*                                       certification-status=blocker
     audio/2_playback_hdmi_.*                               certification-status=blocker
+    suspend/keys_after_suspend/video-out
     monitor/2_thunderbolt.*
     monitor/2_dim_brightness.*                             certification-status=blocker
     graphics/2_maximum_resolution_.*                       certification-status=blocker
@@ -110,6 +111,7 @@ include:
     suspend/display_after_suspend                          certification-status=blocker
     suspend/cycle_resolutions_after_suspend                certification-status=blocker
 mandatory_include:
+    2013.com.canonical.plainbox::collect-manifest
     # A meta-job that includes the resources needed for a valid submission.
     # Please do not remove without good reason.
     miscellanea/submission-resources
