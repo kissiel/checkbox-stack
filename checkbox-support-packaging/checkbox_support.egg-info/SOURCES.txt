@@ -86,6 +86,7 @@ checkbox_support/parsers/tests/fixtures/submission_packages.xml
 checkbox_support/parsers/tests/fixtures/submission_packages_modaliases.xml
 checkbox_support/parsers/tests/fixtures/submission_processors.xml
 checkbox_support/parsers/tests/fixtures/submission_questions.xml
+checkbox_support/parsers/tests/fixtures/submission_snap_packages.xml
 checkbox_support/parsers/tests/fixtures/submission_udev.xml
 checkbox_support/parsers/tests/fixtures/submission_udev_armhf.xml
 checkbox_support/parsers/tests/fixtures/xinput_quantal.txt
