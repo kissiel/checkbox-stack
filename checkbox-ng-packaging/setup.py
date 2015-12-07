@@ -48,13 +48,14 @@ if on_rtd:
 else:
     install_requires = [
         'checkbox-support >= 0.2',
+        'guacamole >= 0.9',
         'plainbox >= 0.5.3',
         'requests >= 1.0',
     ]
 
 setup(
     name="checkbox-ng",
-    version="0.20.1",
+    version="0.22",
     url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",
@@ -70,7 +71,6 @@ setup(
             'checkbox=checkbox_ng.main:main',
             'checkbox-submit=checkbox_ng.main:submit',
             'checkbox-launcher=checkbox_ng.main:launcher',
-            'checkbox-gui-service=checkbox_ng.main:service',
         ],
         'plainbox.transport': [
             'certification='
