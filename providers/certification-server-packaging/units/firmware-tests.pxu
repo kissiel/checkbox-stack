@@ -1,11 +1,11 @@
-id: storage-only
-_name: Storage Only Test Plan (Only tests storage devices)
+id: firmware-tests
+_name: Firmware Tests
 unit: test plan
 _description:
-    This test plan is intended to be used for retesting of storage devices
-    only.  It does not provide any testing of other hardware and should only be
-    run at the direction of the Cert Team when re-testing of storage devices is
-    required.
+    This whitelist is intended to be used for firmware testing on certain
+    hardware.  It will run several checks of firmware and DMI data.  This
+    whitelist is meant to provide the hardware vendor with information on
+    their system firmware.
 mandatory_include:
     # Meta-job to include required resources, please don't remove
     miscellanea/submission-resources
@@ -27,13 +27,12 @@ mandatory_include:
     miscellanea/get_make_and_model
     miscellanea/get_maas_version
     miscellanea/boot_mode
+    miscellanea/cpus_are_not_samples
+    miscellanea/dmitest_server
     info/disk_partitions
 include:
-    info/hdparm_.*.txt
-    benchmarks/disk/hdparm-read_.*
-    benchmarks/disk/hdparm-cache-read_.*
-    disk/detect
-    disk/stats_.*
-    disk/read_performance_.*
-    disk/smart_.*
-    disk/storage_device_.*
+    miscellanea/ipmi_test
+    miscellanea/bmc_info
+    miscellanea/fwts_test
+    miscellanea/fwts_results.log
+    memory/info

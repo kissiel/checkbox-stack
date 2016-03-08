@@ -1,14 +1,15 @@
-id: storage-only
-_name: Storage Only Test Plan (Only tests storage devices)
+id: 16.04-network-only
+_name: 16.04 Network Only Test Plan (Only tests network devices)
 unit: test plan
 _description:
-    This test plan is intended to be used for retesting of storage devices
+    This test plan is intended to be used for retesting of network devices
     only.  It does not provide any testing of other hardware and should only be
-    run at the direction of the Cert Team when re-testing of storage devices is
-    required.
+    run at the direction of the Cert Team when re-testing of network devices is
+    requried.
 mandatory_include:
     # Meta-job to include required resources, please don't remove
     miscellanea/submission-resources
+    #Info attachment jobs
     cpuinfo_attachment
     dmesg_attachment
     dmi_attachment
@@ -27,13 +28,9 @@ mandatory_include:
     miscellanea/get_make_and_model
     miscellanea/get_maas_version
     miscellanea/boot_mode
-    info/disk_partitions
 include:
-    info/hdparm_.*.txt
-    benchmarks/disk/hdparm-read_.*
-    benchmarks/disk/hdparm-cache-read_.*
-    disk/detect
-    disk/stats_.*
-    disk/read_performance_.*
-    disk/smart_.*
-    disk/storage_device_.*
+    ethernet/detect
+    ethernet/info_automated
+    ethernet/ethtool_info
+    ethernet/ethertool_check_.*
+    ethernet/multi_iperf3_nic_.*

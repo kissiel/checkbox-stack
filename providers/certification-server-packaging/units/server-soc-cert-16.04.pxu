@@ -1,20 +1,15 @@
-id: 14.04-server-functional
-_name: 14.04 Server Certification Functional
+id: 16.04-server-soc-cert
+_name: 16.04 System On Chip Certification (For SoC Testing)
 unit: test plan
 _description:
-    This whitelist is intended to be used for OEM self-testing.
-    The tests contained here should work in any test lab environment.
-    This test plan runs all server certification tests except for the really
-    demanding or lengthy ones.
+    This whitelist is intended to be used for testing Server SoCs.  The tests
+    contained here should work in any test lab envrionement. Please use this 
+    whitelist for the Ubuntu Certification self-testing programme.
 mandatory_include:
     # Meta-job to include required resources, please don't remove
     miscellanea/submission-resources
-    # Info Attachment
-    __info__
     cpuinfo_attachment
     dmesg_attachment
-    dmi_attachment
-    dmidecode_attachment
     efi_attachment
     lspci_attachment
     lshw_attachment
@@ -34,8 +29,6 @@ mandatory_include:
     info/disk_partitions
 include:
     info/hdparm_.*.txt
-    miscellanea/ipmi_test
-    miscellanea/bmc_info
     benchmarks/disk/hdparm-read_.*
     benchmarks/disk/hdparm-cache-read_.*
     cpu/clocktest
@@ -54,13 +47,11 @@ include:
     ethernet/info_automated
     ethernet/ethtool_info
     ethernet/ethertool_check_.*
-    ethernet/multi_nic_.*
+    ethernet/multi_iperf3_nic_.*
     memory/info
-    memory/check
     memory/memory_stress_ng
-    optical/detect
-    optical/read-automated_.*
     power-management/rtc
+    stress/cpu_stress_ng_test
     usb/detect
     usb/storage-preinserted
     usb3/storage-preinserted

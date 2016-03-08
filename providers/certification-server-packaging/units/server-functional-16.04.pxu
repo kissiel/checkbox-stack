@@ -1,5 +1,5 @@
-id: 14.04-server-functional
-_name: 14.04 Server Certification Functional
+id: 16.04-server-functional
+_name: 16.04 Server Certification Functional
 unit: test plan
 _description:
     This whitelist is intended to be used for OEM self-testing.
@@ -9,8 +9,6 @@ _description:
 mandatory_include:
     # Meta-job to include required resources, please don't remove
     miscellanea/submission-resources
-    # Info Attachment
-    __info__
     cpuinfo_attachment
     dmesg_attachment
     dmi_attachment
@@ -54,10 +52,8 @@ include:
     ethernet/info_automated
     ethernet/ethtool_info
     ethernet/ethertool_check_.*
-    ethernet/multi_nic_.*
+    ethernet/multi_iperf3_nic_.*
     memory/info
-    memory/check
-    memory/memory_stress_ng
     optical/detect
     optical/read-automated_.*
     power-management/rtc
