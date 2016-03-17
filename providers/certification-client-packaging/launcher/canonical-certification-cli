@@ -1,0 +1,9 @@
+#!/usr/bin/env checkbox-cli
+[launcher]
+app_id = 2013.com.canonical.certification:certification-client
+launcher_version = 1
+stock_reports = text, submissions_files, certification
+
+[test plan]
+unit = 2013.com.canonical.certification::client-cert-14-04
+filter = *
