@@ -1,0 +1,71 @@
+id: 14.04-server-full
+_name: 14.04 Server Certification Full
+unit: test plan
+_description:
+    This whitelist is intended to be used for server certification.
+    the tests contained here should work in any test lab envrionement.
+    Please use this whitelist for the Ubuntu Certification self-testing
+    programme.
+mandatory_include:
+    # Meta-job to include required resources, please don't remove
+    miscellanea/submission-resources
+    cpuinfo_attachment
+    dmesg_attachment
+    dmi_attachment
+    dmidecode_attachment
+    efi_attachment
+    lspci_attachment
+    lshw_attachment
+    lsusb_attachment
+    meminfo_attachment
+    modprobe_attachment
+    modules_attachment
+    sysctl_attachment
+    sysfs_attachment
+    udev_attachment
+    lsmod_attachment
+    miscellanea/get_make_and_model
+    miscellanea/get_maas_version
+    miscellanea/boot_mode
+    miscellanea/cpus_are_not_samples
+    miscellanea/dmitest_server
+    info/disk_partitions
+include:
+    info/hdparm_.*.txt
+    miscellanea/fwts_test
+    miscellanea/fwts_results.log
+    miscellanea/ipmi_test
+    miscellanea/bmc_info
+    benchmarks/disk/hdparm-read_.*
+    benchmarks/disk/hdparm-cache-read_.*
+    cpu/clocktest
+    cpu/scaling_test
+    cpu/scaling_test-log-attach
+    cpu/maxfreq_test
+    cpu/maxfreq_test-log-attach
+    cpu/offlining_test
+    cpu/topology
+    disk/detect
+    disk/stats_.*
+    disk/read_performance_.*
+    disk/smart_.*
+    disk/storage_device_.*
+    ethernet/detect
+    ethernet/info_automated
+    ethernet/ethtool_info
+    ethernet/ethertool_check_.*
+    ethernet/multi_nic_.*
+    memory/info
+    memory/memory_stress_ng
+    optical/detect
+    optical/read-automated_.*
+    power-management/rtc
+    stress/cpu_stress_ng_test
+    usb/detect
+    usb/storage-preinserted
+    usb3/storage-preinserted
+    virtualization/kvm_check_vm
+    info/kvm_output
+bootstrap_include:
+    device
+    fwts

@@ -1,0 +1,42 @@
+id: storage-only
+_name: Storage Only Test Plan (Only tests storage devices)
+unit: test plan
+_description:
+    This test plan is intended to be used for retesting of storage devices
+    only.  It does not provide any testing of other hardware and should only be
+    run at the direction of the Cert Team when re-testing of storage devices is
+    required.
+mandatory_include:
+    # Meta-job to include required resources, please don't remove
+    miscellanea/submission-resources
+    cpuinfo_attachment
+    dmesg_attachment
+    dmi_attachment
+    dmidecode_attachment
+    efi_attachment
+    lspci_attachment
+    lshw_attachment
+    lsusb_attachment
+    meminfo_attachment
+    modprobe_attachment
+    modules_attachment
+    sysctl_attachment
+    sysfs_attachment
+    udev_attachment
+    lsmod_attachment
+    miscellanea/get_make_and_model
+    miscellanea/get_maas_version
+    miscellanea/boot_mode
+    info/disk_partitions
+include:
+    info/hdparm_.*.txt
+    benchmarks/disk/hdparm-read_.*
+    benchmarks/disk/hdparm-cache-read_.*
+    disk/detect
+    disk/stats_.*
+    disk/read_performance_.*
+    disk/smart_.*
+    disk/storage_device_.*
+bootstrap_include:
+    device
+    fwts

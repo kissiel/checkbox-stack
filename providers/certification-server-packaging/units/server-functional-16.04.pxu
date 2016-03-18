@@ -1,0 +1,67 @@
+id: 16.04-server-functional
+_name: 16.04 Server Certification Functional
+unit: test plan
+_description:
+    This whitelist is intended to be used for OEM self-testing.
+    The tests contained here should work in any test lab environment.
+    This test plan runs all server certification tests except for the really
+    demanding or lengthy ones.
+mandatory_include:
+    # Meta-job to include required resources, please don't remove
+    miscellanea/submission-resources
+    cpuinfo_attachment
+    dmesg_attachment
+    dmi_attachment
+    dmidecode_attachment
+    efi_attachment
+    lspci_attachment
+    lshw_attachment
+    lsusb_attachment
+    meminfo_attachment
+    modprobe_attachment
+    modules_attachment
+    sysctl_attachment
+    sysfs_attachment
+    udev_attachment
+    lsmod_attachment
+    miscellanea/get_make_and_model
+    miscellanea/get_maas_version
+    miscellanea/boot_mode
+    miscellanea/cpus_are_not_samples
+    miscellanea/dmitest_server
+    info/disk_partitions
+include:
+    info/hdparm_.*.txt
+    miscellanea/ipmi_test
+    miscellanea/bmc_info
+    benchmarks/disk/hdparm-read_.*
+    benchmarks/disk/hdparm-cache-read_.*
+    cpu/clocktest
+    cpu/scaling_test
+    cpu/scaling_test-log-attach
+    cpu/maxfreq_test
+    cpu/maxfreq_test-log-attach
+    cpu/offlining_test
+    cpu/topology
+    disk/detect
+    disk/stats_.*
+    disk/read_performance_.*
+    disk/smart_.*
+    disk/storage_device_.*
+    ethernet/detect
+    ethernet/info_automated
+    ethernet/ethtool_info
+    ethernet/ethertool_check_.*
+    ethernet/multi_iperf3_nic_.*
+    memory/info
+    optical/detect
+    optical/read-automated_.*
+    power-management/rtc
+    usb/detect
+    usb/storage-preinserted
+    usb3/storage-preinserted
+    virtualization/kvm_check_vm
+    info/kvm_output
+bootstrap_include:
+    device
+    fwts
