@@ -9,6 +9,7 @@ _description:
 mandatory_include:
     # Meta-job to include required resources, please don't remove
     miscellanea/submission-resources
+    config_file_attachment
     cpuinfo_attachment
     dkms_info_attachment
     dmesg_attachment
@@ -26,21 +27,23 @@ mandatory_include:
     sysctl_attachment
     sysfs_attachment
     udev_attachment
+    udev-summary_attachment
     lsmod_attachment
     miscellanea/get_make_and_model
     miscellanea/get_maas_version
-    miscellanea/boot_mode
+    miscellanea/efi_boot_mode                  certification-status=blocker
     info/disk_partitions
     kernel_cmdline_attachment
 include:
-    info/hdparm_.*.txt
-    benchmarks/disk/hdparm-read_.*
-    benchmarks/disk/hdparm-cache-read_.*
-    disk/detect
-    disk/stats_.*
-    disk/read_performance_.*
-    disk/smart_.*
-    disk/storage_device_.*
+    info/hdparm_.*.txt                         certification-status=non-blocker
+    benchmarks/disk/hdparm-read_.*             certification-status=blocker
+    benchmarks/disk/hdparm-cache-read_.*       certification-status=blocker
+    disk/detect                                certification-status=blocker
+    disk/stats_.*                              certification-status=blocker
+    disk/read_performance_.*                   certification-status=blocker
+    disk/smart_.*                              certification-status=non-blocker
+    disk/storage_device_.*                     certification-status=blocker
+    mediacard/sd-preinserted                   certification-status=blocker
 bootstrap_include:
     device
     fwts

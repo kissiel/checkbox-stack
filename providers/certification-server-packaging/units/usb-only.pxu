@@ -9,6 +9,7 @@ _description:
 mandatory_include:
     # Meta-job to include required resources, please don't remove
     miscellanea/submission-resources
+    config_file_attachment
     cpuinfo_attachment
     dkms_info_attachment
     dmesg_attachment
@@ -26,6 +27,7 @@ mandatory_include:
     sysctl_attachment
     sysfs_attachment
     udev_attachment
+    udev-summary_attachment
     lsmod_attachment
     miscellanea/get_make_and_model
     miscellanea/get_maas_version
