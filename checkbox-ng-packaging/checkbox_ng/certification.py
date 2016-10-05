@@ -31,22 +31,14 @@ from logging import getLogger
 import re
 
 from plainbox.impl.secure.config import Unset
+from plainbox.impl.transport import InvalidSecureIDError
+from plainbox.impl.transport import SECURE_ID_PATTERN
 from plainbox.impl.transport import TransportBase
 from plainbox.impl.transport import TransportError
 import requests
 
-from checkbox_ng.config import SECURE_ID_PATTERN
-
 
 logger = getLogger("checkbox.ng.certification")
-
-
-class InvalidSecureIDError(ValueError):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
 
 
 class CertificationTransport(TransportBase):
@@ -64,7 +56,7 @@ class CertificationTransport(TransportBase):
         Initialize the Certification Transport.
 
         The options string may contain 'secure_id' which must be
-        a 15- or 18-character alphanumeric ID for the system.
+        a 15-character (or longer)  alphanumeric ID for the system.
 
         It may also contain a submit_to_hexr boolean, set to 1
         to enable submission to hexr.
@@ -135,7 +127,7 @@ class CertificationTransport(TransportBase):
             raise InvalidSecureIDError(_("Secure ID not specified"))
         self._validate_secure_id(secure_id)
         logger.debug(
-            _("Sending to %s, hardware id is %s"), self.url, secure_id)
+            _("Sending to %s, Secure ID is %s"), self.url, secure_id)
         headers = {"X_HARDWARE_ID": secure_id}
         # Similar handling for submit_to_hexr
         submit_to_hexr = False
@@ -186,4 +178,4 @@ class CertificationTransport(TransportBase):
     def _validate_secure_id(self, secure_id):
         if not re.match(SECURE_ID_PATTERN, secure_id):
             raise InvalidSecureIDError(
-                _("secure_id must be 15 or 18-character alphanumeric string"))
+                _("secure_id must be 15-character (or more) alphanumeric string"))
