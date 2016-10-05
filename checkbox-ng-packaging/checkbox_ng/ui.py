@@ -77,12 +77,13 @@ class ShowMenu(IApplication):
     """
     Display the appropriate menu and return the selected options
     """
-    def __init__(self, title, menu, selection=[0]):
+    def __init__(self, title, menu, selection=[0], multiple_allowed=True):
         self.image = TextImage(Size(0, 0))
         self.title = title
         self.menu = menu
         self.option_count = len(menu)
         self.position = 0  # Zero-based index of the selected menu option
+        self.multiple_allowed = multiple_allowed
         if self.option_count:
             self.selection = selection
         else:
@@ -110,6 +111,8 @@ class ShowMenu(IApplication):
                     self.selection.remove(self.position)
                 elif self.position < self.option_count:
                     self.selection.append(self.position)
+                    if not self.multiple_allowed:
+                        self.selection = [self.position]
         self.repaint(event)
         return self.image
 
@@ -130,7 +133,7 @@ class ShowMenu(IApplication):
             ctx.move_to(4, 3 + i)
             ctx.print("[{}] - {}".format(
                 'X' if i in self.selection else ' ',
-                self.menu[i].replace('ihv-', '').capitalize()))
+                self.menu[i].replace('ihv-', '')))
 
         # Display "OK" at bottom of menu
         ctx.attributes.style = NORMAL
@@ -151,6 +154,7 @@ class ScrollableTreeNode(IApplication):
         self.title = title
         self.top = 0  # Top line number
         self.highlight = 0  # Highlighted line number
+        self.summary = True
 
     def consume_event(self, event: Event):
         if event.kind == EVENT_RESIZE:
@@ -169,6 +173,8 @@ class ScrollableTreeNode(IApplication):
                 self.tree.set_descendants_state(True)
             elif event.data.key in 'dD':
                 self.tree.set_descendants_state(False)
+            elif event.data.key in 'iI':
+                self.summary = not self.summary
             elif event.data.key in 'tT':
                 raise StopIteration
         self.repaint(event)
@@ -215,7 +221,8 @@ class ScrollableTreeNode(IApplication):
         ctx.move_to(73 + extra_cols, self.image.size.height - 1)
         ctx.attributes.style = NORMAL
         ctx.print("esting")
-        for i, line in enumerate(self.tree.render(cols - 3)[self.top:bottom]):
+        for i, line in enumerate(self.tree.render(cols - 3,
+                                    as_summary=self.summary)[self.top:bottom]):
             ctx.move_to(2, i + 2)
             if i != self.highlight:
                 ctx.attributes.style = NORMAL
@@ -250,7 +257,7 @@ class ScrollableTreeNode(IApplication):
             node.expanded = not(node.expanded)
 
     def _scroll(self, direction):
-        visible_length = len(self.tree.render())
+        visible_length = len(self.tree.render(as_summary=self.summary))
         # Scroll the tree view
         if (direction == "up" and
                 self.highlight == 0 and self.top != 0):

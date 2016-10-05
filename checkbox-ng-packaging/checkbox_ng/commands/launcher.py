@@ -32,9 +32,9 @@ from checkbox_ng.commands import CheckboxCommand
 from checkbox_ng.commands.newcli import CliInvocation2
 from checkbox_ng.commands.submit import SubmitCommand
 from checkbox_ng.config import CheckBoxConfig
-from checkbox_ng.launcher import LauncherDefinition
 
 from plainbox.impl.commands.cmd_checkbox import CheckBoxCommandMixIn
+from plainbox.impl.launcher import LauncherDefinition
 
 logger = logging.getLogger("checkbox.ng.commands.launcher")
 
@@ -63,7 +63,9 @@ class LauncherCommand(CheckboxCommand, CheckBoxCommandMixIn, SubmitCommand):
         except IOError as exc:
             logger.error(_("Unable to load launcher definition: %s"), exc)
             return 1
-        launcher = LauncherDefinition()
+        generic_launcher = LauncherDefinition()
+        generic_launcher.read_string(text)
+        launcher = generic_launcher.get_concrete_launcher()
         launcher.read_string(text)
         if launcher.problem_list:
             logger.error(_("Unable to start launcher because of errors:"))

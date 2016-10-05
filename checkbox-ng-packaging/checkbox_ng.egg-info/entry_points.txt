@@ -1,9 +1,9 @@
 [console_scripts]
 checkbox = checkbox_ng.main:main
-checkbox-submit = checkbox_ng.main:submit
 checkbox-launcher = checkbox_ng.main:launcher
+checkbox-submit = checkbox_ng.main:submit
 
 [plainbox.transport]
-launchpad = checkbox_ng.launchpad:LaunchpadTransport
 certification = checkbox_ng.certification:CertificationTransport
+launchpad = checkbox_ng.launchpad:LaunchpadTransport
 

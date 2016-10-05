@@ -33,6 +33,7 @@ import io
 import operator
 import os
 import re
+import subprocess
 import sys
 
 from plainbox.abc import IJobResult
@@ -85,6 +86,9 @@ class CliInvocation2(RunInvocation):
         self._qualifier_list = []
         self._testplan_list = []
         self.select_qualifier_list()
+        # MAAS-deployed server images need "tput reset" to keep ugliness
+        # from happening....
+        subprocess.check_call(['tput', 'reset'])
 
     @property
     def launcher(self):
@@ -400,8 +404,8 @@ class CliInvocation2(RunInvocation):
                                 self.config.secure_id = input(_("Secure ID: "))
                             except ValidationError:
                                 print(
-                                    _("ERROR: Secure ID must be 15 or "
-                                      "18-character alphanumeric string"))
+                                    _("ERROR: Secure ID must be 15-character "
+                                      "(or more) alphanumeric string"))
                             else:
                                 again = False
                                 self.submit_certification_results()
@@ -436,7 +440,7 @@ class CliInvocation2(RunInvocation):
             self.config.email_address)
         transport = transport_cls(self.config.lp_url, options_string)
         # TRANSLATORS: Do not translate the {} format markers.
-        print(_("Submitting results to {0} for email_address {1})").format(
+        print(_("Submitting results to {0} for email_address {1}").format(
             self.config.lp_url, self.config.email_address))
         with open(self.submission_file, encoding='utf-8') as stream:
             try:
@@ -461,7 +465,7 @@ class CliInvocation2(RunInvocation):
         from checkbox_ng.certification import InvalidSecureIDError
         transport_cls = get_all_transports().get('certification')
         # TRANSLATORS: Do not translate the {} format markers.
-        print(_("Submitting results to {0} for secure_id {1})").format(
+        print(_("Submitting results to {0} for secure_id {1}").format(
             self.config.c3_url, self.config.secure_id))
         option_chunks = []
         option_chunks.append("secure_id={0}".format(self.config.secure_id))
@@ -476,7 +480,7 @@ class CliInvocation2(RunInvocation):
         except InvalidSecureIDError as exc:
             print(exc)
             return False
-        with open(self.submission_file) as stream:
+        with open(self.submission_file, "r", encoding='utf-8') as stream:
             try:
                 # Send the data, reading from the fallback file
                 result = transport.send(stream, self.config)

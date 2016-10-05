@@ -30,6 +30,7 @@ from unittest import TestCase
 
 from pkg_resources import resource_string
 from plainbox.impl.applogic import PlainBoxConfig
+from plainbox.impl.transport import InvalidSecureIDError
 from plainbox.impl.transport import TransportError
 from plainbox.vendor import mock
 from plainbox.vendor.mock import MagicMock
@@ -37,7 +38,6 @@ from requests.exceptions import ConnectionError, InvalidSchema, HTTPError
 import requests
 
 from checkbox_ng.certification import CertificationTransport
-from checkbox_ng.certification import InvalidSecureIDError
 
 
 class CertificationTransportTests(TestCase):
@@ -71,11 +71,11 @@ class CertificationTransportTests(TestCase):
         self.assertTrue(transport._submit_to_hexr is True)
 
     def test_invalid_length_secure_id_are_rejected(self):
-        for length in (14, 16, 20):
-            dummy_id = "a" * length
-            option_string = "secure_id={}".format(dummy_id)
-            with self.assertRaises(InvalidSecureIDError):
-                CertificationTransport(self.valid_url, option_string)
+        length = 14
+        dummy_id = "a" * length
+        option_string = "secure_id={}".format(dummy_id)
+        with self.assertRaises(InvalidSecureIDError):
+            CertificationTransport(self.valid_url, option_string)
 
     def test_invalid_characters_in_secure_id_are_rejected(self):
         option_string = "secure_id=aA0#"
