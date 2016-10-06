@@ -187,13 +187,19 @@ class TestSubmissionParser(TestCase):
         """Attachments are in info elements."""
         result = self.getResult("submission_attachment.xml")
         self.assertTrue("attachments" in result)
-        self.assertEqual(len(result["attachments"]), 1)
+        self.assertEqual(len(result["attachments"]), 2)
 
     def test_device_udev(self):
         """Device states can be in the udev element."""
         result = self.getResult("submission_udev.xml")
         self.assertTrue("device_states" in result)
-        self.assertEqual(len(result["device_states"]), 80)
+        self.assertEqual(len(result["device_states"]), 79)
+
+    def test_device_udev_without_lsblk(self):
+        """Device states can be in the udev element (without lsblk)"""
+        result = self.getResult("submission_udev_without_lsblk.xml")
+        self.assertTrue("device_states" in result)
+        self.assertEqual(len(result["device_states"]), 79)
 
     def test_device_udev_armhf(self):
         """ Ensure that device states from udev are also obtained
@@ -208,7 +214,7 @@ class TestSubmissionParser(TestCase):
         """Device states can be in a udevadm info element."""
         result = self.getResult("submission_info_udevadm.xml")
         self.assertTrue("device_states" in result)
-        self.assertEqual(len(result["device_states"]), 80)
+        self.assertEqual(len(result["device_states"]), 79)
 
     def test_modprobe(self):
         """modprobe_attachment info element can contain options for drivers."""
@@ -337,6 +343,17 @@ class TestSubmissionParser(TestCase):
     def test_snap_package_versions(self):
         """Snap Package versions are in the snap_packages element."""
         result = self.getResult("submission_snap_packages.xml")
+        self.assertTrue("snap_package_versions" in result)
+        self.assertEqual(len(result["snap_package_versions"]), 1)
+
+        package_version = result["snap_package_versions"][0]
+        self.assertEqual(package_version["name"], "ubuntu-core")
+        self.assertEqual(package_version["version"], "14")
+        self.assertEqual(package_version["developer"], "ubuntu")
+
+    def test_snap_package_versions_with_date(self):
+        """Snap Package parses correctly with optional date element."""
+        result = self.getResult("submission_snap_packages_with_date.xml")
         self.assertTrue("snap_package_versions" in result)
         self.assertEqual(len(result["snap_package_versions"]), 1)
 
