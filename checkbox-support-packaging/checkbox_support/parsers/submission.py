@@ -682,7 +682,7 @@ class SubmissionResult(object):
             ("test_run", "processor",),
             self.setProcessorState, count=1)
         register(
-            ("udevadm", "bits", "udevadm_result",),
+            ("udevadm", "lsblk", "bits", "udevadm_result",),
             self.setUdevadm, count=1)
         register(
             ("test_run", "lspci_data",),
@@ -708,6 +708,7 @@ class SubmissionResult(object):
             r"meminfo": self.parseMeminfo,
             r"dmidecode": DmidecodeParser,
             r"udevadm": self.parseUdevadm,
+            r"lsblk_attachment": self.parseLsblk,
             r"efi(?!rtvariable)": EfiParser,
             r"modprobe_attachment": self.parseModprobe,
             r"kernel_cmdline": self.parseKernelCmdline,
@@ -856,10 +857,10 @@ class SubmissionResult(object):
 
     def addSnapPackage(self, snap_package):
         snap_package_version = {
-            "name": snap_package["name"],
-            "date": snap_package["properties"]["date"],
-            "version": snap_package["properties"]["version"],
-            "developer": snap_package["properties"]["developer"],
+            "name": snap_package.get("name"),
+            "version": snap_package.get("properties", {}).get("version"),
+            "date": snap_package.get("properties", {}).get("date"),
+            "developer": snap_package.get("properties", {}).get("developer"),
             }
         self.dispatcher.publishEvent(
             "snap_package_version", snap_package_version)
@@ -917,6 +918,10 @@ class SubmissionResult(object):
     def parseUdevadm(self, udevadm):
         self.dispatcher.publishEvent("udevadm", udevadm)
         return DeferredParser(self.dispatcher, "udevadm_result")
+
+    def parseLsblk(self, lsblk):
+        self.dispatcher.publishEvent("lsblk", lsblk)
+        return DeferredParser(self.dispatcher, "lsblk_result")
 
     def setArchitecture(self, architecture):
         string = resource_string(parsers.__name__, "cputable")
@@ -980,8 +985,8 @@ class SubmissionResult(object):
             **self.test_run_kwargs)
         self.dispatcher.publishEvent("test_run", test_run)
 
-    def setUdevadm(self, udevadm, bits, udevadm_result):
-        parser = UdevadmParser(udevadm, bits)
+    def setUdevadm(self, udevadm, lsblk, bits, udevadm_result):
+        parser = UdevadmParser(udevadm, lsblk, bits)
         parser.run(udevadm_result)
 
 
@@ -1016,26 +1021,28 @@ class SubmissionParser(object):
     def _getValueAsType(self, node):
         """Return value of a node as the type attribute."""
         type_ = node.get("type")
-        if type_ in ("bool",):
-            value = node.text.strip()
-            assert value in ("True", "False",), \
-                "Unexpected boolean value '%s' in <%s>" % (value, node.tag)
-            return value == "True"
-        elif type_ in ("str",):
-            return str(node.text.strip())
-        elif type_ in ("int", "long",):
-            return int(node.text.strip())
-        elif type_ in ("float",):
-            return float(node.text.strip())
-        elif type_ in ("list",):
-            return [self._getValueAsType(child)
-                    for child in node.getchildren()]
-        elif type_ in ("dict",):
-            return {child.get("name"): self._getValueAsType(child)
-                    for child in node.getchildren()}
-        else:
-            raise AssertionError(
-                "Unexpected type '%s' in <%s>" % (type_, node.tag))
+        try:
+            if type_ in ("bool",):
+                value = node.text.strip()
+                assert value in ("True", "False",), \
+                    "Unexpected boolean value '%s' in <%s>" % (value, node.tag)
+                return value == "True"
+            elif type_ in ("str",):
+                return str(node.text.strip())
+            elif type_ in ("int", "long",):
+                return int(node.text.strip())
+            elif type_ in ("float",):
+                return float(node.text.strip())
+            elif type_ in ("list",):
+                return [self._getValueAsType(child)
+                        for child in node.getchildren()]
+            elif type_ in ("dict",):
+                return {child.get("name"): self._getValueAsType(child)
+                        for child in node.getchildren()}
+        except (TypeError, AttributeError):
+            return ''
+        raise AssertionError(
+                    "Unexpected type '%s' in <%s>" % (type_, node.tag))
 
     def _getValueAsBoolean(self, node):
         """Return the value of the attribute "value" as a boolean."""
@@ -1056,6 +1063,7 @@ class SubmissionParser(object):
     def parseContext(self, result, node):
         """Parse the <context> part of a submission."""
         duplicates = set()
+        lsblk_tag = False
         for child in node.getchildren():
             assert child.tag == "info", \
                 "Unexpected tag <%s>, expected <info>" % child.tag
@@ -1066,9 +1074,13 @@ class SubmissionParser(object):
                 if text is None:
                     text = ""
                 result.addContext(text, command)
+                if command == "lsblk_attachment":
+                    lsblk_tag = True
             else:
                 self.logger.debug(
                     "Duplicate command found in tag <info>: %s" % command)
+        if not lsblk_tag:
+            result.addContext("", "lsblk_attachment")
 
     def parseHardware(self, result, node):
         """Parse the <hardware> section of a submission."""
@@ -1262,15 +1274,20 @@ class SubmissionParser(object):
             "software": self.parseSoftware,
             "summary": self.parseSummary,
             }
+        context_tag = False
 
         # Iterate over the root children, "summary" first
         for child in node.getchildren():
             parser = parsers.get(child.tag)
+            if child.tag == "context":
+                context_tag = True
             if parser:
                 parser(result, child)
             else:
                 self.logger.debug(
                     "Unsupported tag <%s> in <system>" % child.tag)
+        if not context_tag:
+            result.addContext("", "lsblk_attachment")
 
     def run(self, test_run_factory, **kwargs):
         """

@@ -1,7 +1,7 @@
 #
 # This file is part of Checkbox.
 #
-# Copyright 2011-2013 Canonical Ltd.
+# Copyright 2011-2016 Canonical Ltd.
 #
 # Checkbox is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3,
@@ -87,30 +87,68 @@ FLASH_RE = re.compile(r"Flash", re.I)
 FLASH_DISK_RE = re.compile(r"Mass|Storage|Disk", re.I)
 
 
+def slugify(_string):
+    """Transform any string to one that can be used in job IDs."""
+    valid_chars = frozenset(
+        "-_.{}{}".format(string.ascii_letters, string.digits))
+    return ''.join(c if c in valid_chars else '_' for c in _string)
+
+
+def find_pkname_is_root_mountpoint(devname, lsblk=None):
+    """Check for partition mounted as root for a DISK device."""
+    if lsblk:
+        try:
+            lsblk = lsblk.read()
+        except AttributeError:
+            pass
+        for line in lsblk.splitlines():
+            if (
+                line.endswith('MOUNTPOINT="/"') and
+                line.startswith('KNAME="{}'.format(devname))
+            ):
+                return True
+            if (
+                line.endswith('MOUNTPOINT="/writable"') and
+                line.startswith('KNAME="{}'.format(devname))
+            ):
+                return True
+    return False
+
+
 class UdevadmDevice(object):
     __slots__ = (
         "_environment",
         "_name",
+        "_lsblk",
         "_bits",
         "_stack",
         "_bus",
         "_interface",
         "_product",
         "_product_id",
+        "_subproduct_id",
+        "_product_slug",
         "_vendor",
-        "_vendor_id",)
+        "_vendor_id",
+        "_subvendor_id",
+        "_vendor_slug",)
 
-    def __init__(self, environment, name, bits=None, stack=[]):
+    def __init__(self, environment, name, lsblk=None, bits=None, stack=[]):
         self._environment = environment
         self._name = name
+        self._lsblk = lsblk
         self._bits = bits
         self._stack = stack
         self._bus = None
         self._interface = None
         self._product = None
         self._product_id = None
+        self._subproduct_id = None
+        self._product_slug = None
         self._vendor = None
         self._vendor_id = None
+        self._subvendor_id = None
+        self._vendor_slug = None
 
     def __repr__(self):
         vid = int(self.vendor_id) if self.vendor_id else 0
@@ -301,8 +339,21 @@ class UdevadmDevice(object):
         if self.driver:
             if self.driver.startswith("sdhci"):
                 return "CARDREADER"
+            # Only consider eMMC internal drives as DISK.
+            # As it's not possible to distinguish them from simple MMC
+            # removable storage, only those with a partition mounted as /
+            # will be considered.
+            # To avoid categorizing SD cards as main storage and run heavy
+            # tests on them (e.g on a pandaboard) only devices with the udev
+            # property MMC_TYPE == MMC are accepted.
             if self.driver.startswith("mmc"):
-                return "CARDREADER"
+                if (
+                    self._mmc_type == 'MMC' and
+                    find_pkname_is_root_mountpoint(self.name, self._lsblk)
+                ):
+                    return "DISK"
+                else:
+                    return "CARDREADER"
             if self.driver == "rts_pstor":
                 return "CARDREADER"
             # See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=702145
@@ -325,14 +376,18 @@ class UdevadmDevice(object):
                 # will be given the category attribute 'DISK' by udev_resource
                 if any(FLASH_RE.search(k) for k in self._environment.keys()):
                     return "CARDREADER"
-                if any(d.bus == 'usb' for d in self._stack):
-                    if (self.product is not None and
-                            CARD_READER_RE.search(self.product)):
-                        return "CARDREADER"
-                    if (self.vendor is not None and
-                            GENERIC_RE.search(self.vendor) and
-                            not FLASH_DISK_RE.search(self.product)):
-                        return "CARDREADER"
+            if any(d.bus == 'usb' for d in self._stack):
+                if (self.product is not None and
+                        CARD_READER_RE.search(self.product)):
+                    return "CARDREADER"
+                if (self.vendor is not None and
+                        GENERIC_RE.search(self.vendor) and
+                        not FLASH_DISK_RE.search(self.product)):
+                    return "CARDREADER"
+            # A rare gem, this driver reported by udev is actually an ID_MODEL:
+            # E: DRIVER=Realtek PCIe card reader
+            if re.search(r'card.*reader', self.driver, re.I):
+                return "CARDREADER"
 
         if "ID_TYPE" in self._environment:
             id_type = self._environment["ID_TYPE"]
@@ -413,6 +468,13 @@ class UdevadmDevice(object):
         return None
 
     @property
+    def major(self):
+        # See http://pad.lv/1559189
+        # We need the Major to identify IBM s390 disk devices (DASDs)
+        if "MAJOR" in self._environment:
+            return self._environment["MAJOR"]
+
+    @property
     def driver(self):
         if "DRIVER" in self._environment:
             return self._environment["DRIVER"]
@@ -441,6 +503,22 @@ class UdevadmDevice(object):
         return self._environment.get("DEVPATH")
 
     @property
+    def _mmc_type(self):
+        """
+        Return the MMC type available in the stack.
+
+        This is used internally by UdevadmParser only
+        """
+        if "MMC_TYPE" in self._environment:
+            return self._environment["MMC_TYPE"]
+        # Check parent device for driver
+        if self._stack:
+            parent = self._stack[-1]
+            if "MMC_TYPE" in parent._environment:
+                return parent._environment["MMC_TYPE"]
+        return None
+
+    @property
     def product_id(self):
         if self._product_id is not None:
             return self._product_id
@@ -463,6 +541,10 @@ class UdevadmDevice(object):
         match = INPUT_RE.match(self._environment.get("MODALIAS", ""))
         if match:
             return int(match.group("product_id"), 16)
+        # disk
+        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+            parent = self._stack[-1]
+            return parent.product_id
         return None
 
     @product_id.setter
@@ -491,6 +573,10 @@ class UdevadmDevice(object):
             if vendor_id and vendor_id < 9:
                 vendor_id = 9
             return vendor_id
+        # disk
+        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+            parent = self._stack[-1]
+            return parent.vendor_id
         return None
 
     @vendor_id.setter
@@ -499,18 +585,56 @@ class UdevadmDevice(object):
 
     @property
     def subproduct_id(self):
+        if self._subproduct_id is not None:
+            return self._subproduct_id
         if "PCI_SUBSYS_ID" in self._environment:
             pci_subsys_id = self._environment["PCI_SUBSYS_ID"]
             subvendor_id, subproduct_id = pci_subsys_id.split(":")
             return int(subproduct_id, 16)
+        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+            parent = self._stack[-1]
+            return parent.subproduct_id
         return None
+
+    @subproduct_id.setter
+    def subproduct_id(self, value):
+        self._subproduct_id = value
 
     @property
     def subvendor_id(self):
+        if self._subvendor_id is not None:
+            return self._subvendor_id
         if "PCI_SUBSYS_ID" in self._environment:
             pci_subsys_id = self._environment["PCI_SUBSYS_ID"]
             subvendor_id, subproduct_id = pci_subsys_id.split(":")
             return int(subvendor_id, 16)
+        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+            parent = self._stack[-1]
+            return parent.subvendor_id
+        return None
+
+    @subvendor_id.setter
+    def subvendor_id(self, value):
+        self._subvendor_id = value
+
+    @property
+    def product_slug(self):
+        """Returns a version of the product name trimmed from any weird characters."""
+        if self._product_slug is not None:
+            return self._product_slug
+        if self.product is not None:
+            return slugify(self.product)
+
+        return None
+
+    @property
+    def vendor_slug(self):
+        """Returns a version of the vendor name trimmed from any weird characters."""
+        if self._vendor_slug is not None:
+            return self._vendor_slug
+        if self.vendor is not None:
+            return slugify(self.vendor)
+
         return None
 
     @property
@@ -525,6 +649,19 @@ class UdevadmDevice(object):
         elif (self._environment.get("DEVTYPE") == "disk" and
                 "ID_MODEL_ENC" in self._environment):
             return decode_id(self._environment["ID_MODEL_ENC"])
+        elif self.driver == "nvme" and self.bus == 'pci' and self._stack:
+            parent = self._stack[-1]
+            if parent.product:
+                return parent.product
+            else:
+                return self.name
+        elif (
+            self._environment.get("DEVTYPE") == "disk" and
+            self.driver == 'virtio_blk' and self.bus == 'virtio'):
+            return self.name
+        elif self.major == "94":
+            # See http://pad.lv/1559189
+            return "IBM s390 Virtual Disk"
 
         # floppy
         if self.driver == "floppy":
@@ -567,6 +704,13 @@ class UdevadmDevice(object):
             if "ID_MODEL_ENC" in self._environment:
                 return decode_id(self._environment["ID_MODEL_ENC"])
 
+        if self.driver == 'mmcblk':
+            # Check parent device for MMC name
+            if self._stack:
+                parent = self._stack[-1]
+                if "MMC_NAME" in parent._environment:
+                    return parent._environment["MMC_NAME"]
+
         for element in ("NAME", "POWER_SUPPLY_MODEL_NAME"):
             if element in self._environment:
                 return self._environment[element].strip('"')
@@ -603,6 +747,9 @@ class UdevadmDevice(object):
 
         if "ID_VENDOR_FROM_DATABASE" in self._environment:
             return self._environment["ID_VENDOR_FROM_DATABASE"]
+        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+            parent = self._stack[-1]
+            return parent.vendor
 
         # bluetooth (if USB base class is vendor specific)
         if self.bus == 'bluetooth':
@@ -635,9 +782,11 @@ class UdevadmDevice(object):
     def interface(self):
         if self._interface is not None:
             return self._interface
-        if (self.category in ("NETWORK", "WIRELESS") and
-                "INTERFACE" in self._environment):
-            return self._environment["INTERFACE"]
+        if self.category in ("NETWORK", "WIRELESS"):
+            if "INTERFACE" in self._environment:
+                return self._environment["INTERFACE"]
+            else:
+                return 'UNKNOWN'
         return None
 
     @interface.setter
@@ -647,7 +796,7 @@ class UdevadmDevice(object):
     def as_json(self):
         attributes = ("path", "bus", "category", "driver", "product_id",
                       "vendor_id", "subproduct_id", "subvendor_id", "product",
-                      "vendor", "interface", "name")
+                      "vendor", "interface", "name", "product_slug", "vendor_slug")
 
         return {a: getattr(self, a) for a in attributes if getattr(self, a)}
 
@@ -657,12 +806,21 @@ class UdevadmParser(object):
 
     device_factory = UdevadmDevice
 
-    def __init__(self, stream_or_string, bits=None):
+    def __init__(self, stream_or_string, lsblk=None, bits=None):
         self.stream_or_string = stream_or_string
+        self.lsblk = lsblk
         self.bits = bits
         self.devices = OrderedDict()
 
     def _ignoreDevice(self, device):
+        # See http://pad.lv/1559189
+        # s390 LPARs and zVM DASDs provide very little info via udev so we
+        # need to handle them before anything else, otherwise they'll never
+        # appear. These devices all have Major number 94, so this is the
+        # easiest way to locate them.
+        if device.major == "94":
+            return False
+
         # Ignore devices without bus information
         if not device.bus:
             return True
@@ -677,9 +835,13 @@ class UdevadmParser(object):
         # device will have no category, though it's not ignored per se.
         if device.bus == 'pci' and device.driver == 'nvme':
             return False
-
-        # Do not ignore QEMU/KVM virtio disks
+        # Do not ignore eMMC drives (pad.lv/1522768)
         if ("ID_PART_TABLE_TYPE" in device._environment and
+           device.driver == 'mmcblk' and
+           device._mmc_type == 'MMC'):
+            return False
+        # Do not ignore QEMU/KVM virtio disks
+        if ("DEVTYPE" in device._environment and
            device.bus == "virtio" and
            device.driver == "virtio_blk"):
             return False
@@ -697,8 +859,27 @@ class UdevadmParser(object):
                 and device.subvendor_id is None)):
             return True
 
+        # Ignore FLOPPY, DISK and CDROM devices without a DEVNAME
+        # (See pad.lv/1539041)
+        if (
+            (device.category in ('CDROM', 'DISK', 'FLOPPY')) and
+            "DEVNAME" not in device._environment):
+            return True
+
         # Ignore ACPI devices
         if device.bus == "acpi":
+            return True
+
+        # Ignore virtual devices created by Dell iDRAC manager
+        # See pad.lv/1308702
+        if device.vendor == "iDRAC":
+            return True
+
+        # Ignore virtual devices created by Cisco CIMC manager
+        # See pad.lv/1585802
+        if (device.product == "Virtual FDD/HDD" or
+            device.product == "Virtual Floppy" or
+            device.product == "Virtual CD/DVD"):
             return True
 
         return False
@@ -761,7 +942,7 @@ class UdevadmParser(object):
             environment.setdefault("DEVPATH", path)
 
             device = self.device_factory(
-                environment, name, self.bits, list(stack))
+                environment, name, self.lsblk, self.bits, list(stack))
             if not self._ignoreDevice(device):
                 if device._raw_path in self.devices:
                     if self.devices[device._raw_path].category == 'CARDREADER':
@@ -816,6 +997,8 @@ class UdevadmParser(object):
                     dev_interface.bus = device.bus
                     dev_interface.product_id = device.product_id
                     dev_interface.vendor_id = device.vendor_id
+                    dev_interface.subproduct_id = device.subproduct_id
+                    dev_interface.subvendor_id = device.subvendor_id
                     self.devices.pop(device._raw_path, None)
 
         [result.addDevice(device) for device in self.devices.values()]
@@ -856,14 +1039,14 @@ class UdevResult(object):
         self.devices["device_list"].append(device)
 
 
-def parse_udevadm_output(output, bits=None):
+def parse_udevadm_output(output, lsblk=None, bits=None):
     """
     Parse output of `LANG=C udevadm info --export-db`
 
     :returns: :class:`UdevadmParser` object that corresponds to the
     parsed input
     """
-    udev = UdevadmParser(output, bits)
+    udev = UdevadmParser(output, lsblk, bits)
     result = UdevResult()
     udev.run(result)
     return result.devices

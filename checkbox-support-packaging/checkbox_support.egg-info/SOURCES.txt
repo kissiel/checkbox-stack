@@ -87,8 +87,10 @@ checkbox_support/parsers/tests/fixtures/submission_packages_modaliases.xml
 checkbox_support/parsers/tests/fixtures/submission_processors.xml
 checkbox_support/parsers/tests/fixtures/submission_questions.xml
 checkbox_support/parsers/tests/fixtures/submission_snap_packages.xml
+checkbox_support/parsers/tests/fixtures/submission_snap_packages_with_date.xml
 checkbox_support/parsers/tests/fixtures/submission_udev.xml
 checkbox_support/parsers/tests/fixtures/submission_udev_armhf.xml
+checkbox_support/parsers/tests/fixtures/submission_udev_without_lsblk.xml
 checkbox_support/parsers/tests/fixtures/xinput_quantal.txt
 checkbox_support/parsers/tests/fixtures/xinput_toshiba.txt
 checkbox_support/parsers/tests/pactl_data/cards-desktop-precise-0.txt
@@ -101,6 +103,7 @@ checkbox_support/parsers/tests/pactl_data/desktop-precise-xps1340.txt
 checkbox_support/parsers/tests/pactl_data/desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/desktop-raring-t430s-dp-available.txt
 checkbox_support/parsers/tests/pactl_data/desktop-raring-t430s.txt
+checkbox_support/parsers/tests/pactl_data/desktop-trusty-bt-headset.txt
 checkbox_support/parsers/tests/pactl_data/modules-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/modules-desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/samples-desktop-precise.txt
@@ -108,6 +111,7 @@ checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise-1.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise.txt
 checkbox_support/parsers/tests/udevadm_data/CALXEDA_HIGHBANK.txt
+checkbox_support/parsers/tests/udevadm_data/DELL_IDRAC.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON3521_TOUCHSCREEN.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON_3048.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON_7737_NVIDIA.txt
@@ -119,6 +123,7 @@ checkbox_support/parsers/tests/udevadm_data/DELL_VOSTRO3460_FINGERPRINT.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_VOSTROV131.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_VOSTRO_270.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_XPS1340.txt
+checkbox_support/parsers/tests/udevadm_data/EMMC_AS_MAIN_DRIVE.txt
 checkbox_support/parsers/tests/udevadm_data/HOME_MADE.txt
 checkbox_support/parsers/tests/udevadm_data/HP_400_G2.txt
 checkbox_support/parsers/tests/udevadm_data/HP_ENVY_15_MEDIATEK_BT.txt
@@ -127,13 +132,17 @@ checkbox_support/parsers/tests/udevadm_data/HP_PAVILIONSLEEKBOOK14_ACCELEROMETER
 checkbox_support/parsers/tests/udevadm_data/HP_PRO2110.txt
 checkbox_support/parsers/tests/udevadm_data/HP_PROBOOK6550B_ACCELEROMETER.txt
 checkbox_support/parsers/tests/udevadm_data/IBM_PSERIES_POWER7.txt
+checkbox_support/parsers/tests/udevadm_data/INTEL_NUC_SNAPPY.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_E431.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_E445.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_T420.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_T430S.txt
+checkbox_support/parsers/tests/udevadm_data/ONE_CDROM_ONLY.txt
 checkbox_support/parsers/tests/udevadm_data/PANDABOARD.txt
 checkbox_support/parsers/tests/udevadm_data/QEMU_KVM.txt
+checkbox_support/parsers/tests/udevadm_data/REALTEK_CARD_READER_AND_NVME.txt
 checkbox_support/parsers/tests/udevadm_data/SAMSUNG_N310.txt
+checkbox_support/parsers/tests/udevadm_data/VM_WITH_FLOPPY.txt
 checkbox_support/parsers/tests/udevadm_data/XEON.txt
 checkbox_support/scripts/__init__.py
 checkbox_support/scripts/audio_settings.py
