@@ -1,0 +1,12 @@
+Metadata-Version: 1.0
+Name: plainbox-provider-checkbox
+Version: 0.3
+Summary: CheckBox provider
+Home-page: https://launchpad.net/checkbox/
+Author: Sylvain Pineau
+Author-email: sylvain.pineau@canonical.com
+License: GPLv3
+Description: CheckBox provider is a collection of tests for system testing.
+        It is used together alongside with PlainBox
+        
+Platform: UNKNOWN
