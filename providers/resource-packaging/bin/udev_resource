@@ -2,7 +2,7 @@
 #
 # This file is part of Checkbox.
 #
-# Copyright 2011 Canonical Ltd.
+# Copyright 2011-2016 Canonical Ltd.
 #
 # Checkbox is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3,
@@ -20,16 +20,21 @@
 import argparse
 import shlex
 
+from collections import OrderedDict
 from subprocess import check_output, CalledProcessError
 
 from checkbox_support.parsers.udevadm import UdevadmParser
 
+categories = ("ACCELEROMETER", "AUDIO", "BLUETOOTH", "CAPTURE", "CARDREADER",
+              "DISK", "KEYBOARD", "MOUSE", "NETWORK", "OTHER", "TOUCHPAD",
+              "TOUCHSCREEN", "USB", "VIDEO", "WIRELESS")
 
-class UdevResult:
+
+class UdevResultDump:
 
     attributes = ("path", "name", "bus", "category", "driver", "product_id",
                   "vendor_id", "subproduct_id", "subvendor_id", "product",
-                  "vendor", "interface",)
+                  "vendor", "interface", "product_slug", "vendor_slug")
 
     def addDevice(self, device):
         for attribute in self.attributes:
@@ -40,23 +45,63 @@ class UdevResult:
         print()
 
 
+class UdevResultLister:
+
+    def __init__(self, categories):
+        self.categories = categories
+        self._data = OrderedDict()
+        for c in categories:
+            self._data[c] = []
+
+    def display(self):
+        for c, devices in self._data.items():
+            print("{} ({}):".format(c, len(devices)))
+            for d in devices:
+                print(" - {}".format(d))
+            print()
+
+    def addDevice(self, device):
+        c = getattr(device, "category", None)
+        if c in self.categories:
+            p = getattr(device, "product", "Unknow product")
+            v = getattr(device, "vendor", "Unknow vendor")
+            self._data[c].append("{} {}".format(v, p))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--command", action='store', type=str,
                         default="udevadm info --export-db",
                         help="""Command to execute to get udevadm information.
                               Only change it if you know what you're doing.""")
+    parser.add_argument("-d", "--lsblkcommand", action='store', type=str,
+                        default="lsblk -i -n -P -o KNAME,TYPE,MOUNTPOINT",
+                        help="""Command to execute to get lsblk information.
+                              Only change it if you know what you're doing.""")
+    parser.add_argument('-l','--list', nargs='+', choices=categories,
+                        metavar=("CATEGORY"),
+                        help="""List devices found under the requested
+                        categories.
+                        Acceptable categories to list are: 
+                        {}""".format(', '.join(categories)))
     args = parser.parse_args()
     try:
         output = check_output(shlex.split(args.command))
+        lsblk = check_output(shlex.split(args.lsblkcommand))
     except CalledProcessError as exc:
         raise SystemExit(exc)
     # Set the error policy to 'ignore' in order to let tests depending on this
     # resource to properly match udev properties
     output = output.decode("UTF-8", errors='ignore')
-    udev = UdevadmParser(output)
-    result = UdevResult()
-    udev.run(result)
+    lsblk = lsblk.decode("UTF-8", errors='ignore')
+    udev = UdevadmParser(output, lsblk=lsblk)
+    if args.list:
+        result = UdevResultLister(args.list)
+        udev.run(result)
+        result.display()
+    else:
+        result = UdevResultDump()
+        udev.run(result)
 
 
 if __name__ == "__main__":

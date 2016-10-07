@@ -20,7 +20,14 @@
 import argparse
 import subprocess
 import shlex
+import string
 
+
+def slugify(_string):
+    """Transform any string to one that can be used in job IDs."""
+    valid_chars = frozenset(
+        "-_.{}{}".format(string.ascii_letters, string.digits))
+    return ''.join(c if c in valid_chars else '_' for c in _string)
 
 def subprocess_lines_generator(command):
     """
@@ -82,6 +89,14 @@ def parse_args():
     return parser.parse_args()
 
 
+def bus_ordering(record):
+    if record.get('bus') == "pci":
+        # We are looking for this ---------------v
+        # /devices/pci0000:00/0000:00:02.1/0000:01:00.0
+        return int(record.get('path').split(':')[-2])
+    return 0
+
+
 def main():
     """
     graphics_card_resource was done as a script to be able to reuse it in
@@ -89,8 +104,8 @@ def main():
     It does two things in addition to what filtering the resources by
     category=VIDEO would achieve:
     1- It enumerates them and adds an index attribute
-    2- If the device has no product attribute, "fake" it with the PCI ID
-       (so we can visually distinguish them even if they have no name
+    2- If the device has no product/vendor attributes, "fake" them with the
+       PCI ID (so we can visually distinguish them even if they have no name
        because they are too new or not on the pci.ids database)
     """
 
@@ -99,14 +114,20 @@ def main():
 
     udev_output = subprocess_lines_generator(udev_command)
 
-    # udev_devices generates one dict per device, the generator shown
+    # udev_devices generates one dict per device, the list shown
     # below filters that to only VIDEO ones
-    video_devices_generator = (r for r in udev_devices(udev_output)
+    video_devices = list(r for r in udev_devices(udev_output)
                                if r.get("category", "") == 'VIDEO')
-    # Lazily add index to each video device (enumerate on a generator)
+    video_devices.sort(key=lambda r: bus_ordering(r))
+
+    # Lazily add index to each video device
     try:
-        for index, record in enumerate(video_devices_generator, 1):
+        for index, record in enumerate(video_devices, 1):
             record['index'] = index
+            if not subprocess.call(['dpkg-query', '-W', 'amdgpu-pro'],
+                                   stderr=subprocess.STDOUT,
+                                   stdout=subprocess.DEVNULL):
+                record['driver'] = 'amdgpu-pro'
             if 'product' not in record:
                 # Fake a product name with the product_id
                 try:
@@ -115,6 +136,16 @@ def main():
                 except ValueError:
                     fake_product = "PCI ID unknown"
                 record['product'] = fake_product
+                record['product_slug'] = slugify(fake_product)
+            if 'vendor' not in record:
+                # Fake a vendor name with the vendor_id
+                try:
+                    vendor_id = int(record.get('vendor_id', 0))
+                    fake_vendor = "PCI ID 0x{:x}".format(vendor_id)
+                except ValueError:
+                    fake_vendor = "PCI ID unknown"
+                record['vendor'] = fake_vendor
+                record['vendor_slug'] = slugify(fake_vendor)
             # Finally, print the record
             items = ["{key}: {value}".format(key=k, value=record[k])
                      for k in sorted(record.keys())]
