@@ -1,7 +1,7 @@
 plugin: shell
 id: usb/detect
 estimated_duration: 1.0
-command: lsusb | sed 's/.*\(ID .*\)/\1/' | head -n 4 || echo "No USB devices were detected" >&2
+command: set -o pipefail; lsusb 2>/dev/null | sed 's/.*\(ID .*\)/\1/' | head -n 4 || echo "No USB devices were detected" >&2
 _description: Detects and shows USB devices attached to this system.
 
 plugin: user-interact-verify
@@ -67,7 +67,7 @@ _description:
  STEPS:
      1. Click "Test" and insert a USB 3.0 storage device, preferably a HDD,
         in a USB 3.0 port. Although a USB 3.0 pen drive may be used it might
-        cause performance related tests to fail. (Note: this test will 
+        cause performance related tests to fail. (Note: this test will
         time-out after 20 seconds.)
      2. Do not unplug the device after the test.
  VERIFICATION:
@@ -160,7 +160,7 @@ requires:
 depends: usb3/insert
 user: root
 estimated_duration: 45.0
-command: removable_storage_test -s 268400000 -m 500000000 -p 7 usb
+command: removable_storage_test -s 268400000 -m 500000000 usb --driver xhci_hcd
 _description:
  This test is automated and executes after the usb3/insert test is run.
 
@@ -180,7 +180,7 @@ user: root
 requires:
  usb.usb3 == 'supported'
 estimated_duration: 45.0
-command: removable_storage_test -l usb && removable_storage_test -s 268400000 -m 500000000 -p 7 usb
+command: removable_storage_test -l usb && removable_storage_test -s 268400000 -m 500000000 usb --driver xhci_hcd
 _description:
  This is an automated version of usb3/storage-automated and assumes that the
  server has usb 3.0 storage devices plugged in prior to checkbox execution. It
@@ -217,8 +217,8 @@ requires:
 depends: usb3/insert
 user: root
 estimated_duration: 45.00
-command: removable_storage_test -s 268400000 -m 500000000 -p 60 usb
+command: removable_storage_test -s 268400000 -m 500000000 usb --driver xhci_hcd
 _description:
- This test will check that your USB 3.0 port transfers data at a
- minimum expected speed in accordance with the specification of
- USB 3.0 SuperSpeed mode.
+ This test will check that your USB 3.0 port could be recognized
+ as SuperSpeed USB device using xhci_hcd driver and transfers data correctly.
+

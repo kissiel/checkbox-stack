@@ -1,4 +1,3 @@
-
 plugin: shell
 id: bluetooth/detect-output
 estimated_duration: 1.2
@@ -61,41 +60,47 @@ plugin: user-interact-verify
 id: bluetooth/audio-a2dp
 depends: bluetooth/detect-output
 estimated_duration: 120.0
-command: audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings; audio_settings set --device=pci --volume=50; gst_pipeline_test -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'; EXIT_CODE=$?; audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings; exit $EXIT_CODE
+command:
+  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  idx=`pactl list cards short | awk '/bluez/{print $1}'`
+  bt_sink=`pactl list sinks short | awk '/bluez/{print $2}'`
+  pactl set-card-profile $idx a2dp
+  pactl set-default-sink $bt_sink
+  gst_pipeline_test -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+  EXIT_CODE=$?
+  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  exit $EXIT_CODE
 _description:
  PURPOSE:
-     This test will check that you can record and hear audio using a bluetooth audio device
+     This test will check the High Fidelity Playback (A2DP) capability of your Bluetooth device,
+     to see if you can hear audio from it.
  STEPS:
-     1. Enable the bluetooth headset
-     2. Click on the sound icon
-     3. Click "Sound Settings"
-     4. Look for the device in the list and select it
-     5. Set Quality to A2DP
-     6. Click "Test" to record for five seconds and reproduce in the bluetooth device
+     1. Enable and pair the bluetooth headset
+     2. Click "Test" to play a brief tone on your Bluetooth device, if it failed to set the Mode to A2DP,
+        please select the device and change it manually in the "Sound Settings"
  VERIFICATION:
-     Did you hear the sound?
+     Did you hear the tone?
 
 plugin: user-interact-verify
 id: bluetooth/audio
 depends: bluetooth/detect-output
 estimated_duration: 120.0
-command: arecord -d 5 -D bluetooth -f S16_LE | aplay -D bluetooth -f S16_LE
+command: audio_bluetooth_loopback_test
 _description:
  PURPOSE:
-     This test will check that you can record and hear audio using a bluetooth audio device
+     This test will check the Telephony Duplex capability of your bluetooth device,
+     to see if you can record and hear audio from it simultaneously.
  STEPS:
      1. Enable the bluetooth headset
      2. Click on the bluetooth icon in the menu bar
-     3. Select 'Setup new device'
-     4. Look for the device in the list and select it
-     5. In the device write the PIN code automatically chosen by the wizard
-     6. The device should pair with the computer
-     7. Click the sound icon
-     8. Click "Sound Settings"
-     9. Select device and ensure Quality is set to "HSP/HFP"
-     10. Click "Test" to record for five seconds and reproduce in the bluetooth device
+     3. Select "Setup new device"
+     4. Look for the device in the list and pair it
+     5. Click the sound icon
+     6. Click "Sound Settings"
+     7. Select device and ensure Mode is set to "Telephony Duplex (HSP/HFP)"
+     8. Click "Test" to record and play for five seconds in the bluetooth device
  VERIFICATION:
-     Did you hear the sound you recorded in the bluetooth
+     Did you hear the sound you recorded in the bluetooth with a slight intended delay?
 
 plugin: user-interact-verify
 id: bluetooth/HID
@@ -114,3 +119,34 @@ _description:
      6. For keyboards, click the Test button to lauch a small tool. Enter some text into the tool and close it.
  VERIFICATION:
      Did the device work as expected?
+
+plugin: shell
+id: bluetooth/file_transfer_stress
+estimated_duration: 300.0
+requires:
+ package.name == 'bluez'
+ package.name == 'obexftp'
+ device.category == 'BLUETOOTH'
+command:
+  if [ -z "$BTDEVADDR" ]
+  then
+    echo "btdevaddr option not set to device address of Bluetooth target in plainbox.conf"
+    exit 1
+  fi
+  if rfkill list bluetooth | grep -q 'Hard blocked: yes'
+  then
+    echo "rfkill list shows BT is hard blocked"
+  fi
+  if rfkill list bluetooth | grep -q 'Soft blocked: yes'
+  then
+    echo "rfkill list shows BT is soft blocked, removing before testing"
+    rfkill unblock bluetooth
+    sleep 3
+  fi
+  bluetooth_transfer_stress $BTDEVADDR
+_description:
+ This is an automated Bluetooth file transfer test. It sends a large file
+ to the device specified by the BTDEVADDR environment variable, then
+ retrieves it again using Bluetooth and verifies the checksum to ensure the
+ transfer didn't corrupt the file.
+

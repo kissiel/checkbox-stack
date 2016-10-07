@@ -54,6 +54,13 @@ command:
   shopt -s extglob
   cat $PLAINBOX_PROVIDER_DATA/../jobs/disk.txt?(.in)
 
+id: __dock__
+plugin: local
+_description: Docking tests
+command:
+  shopt -s extglob
+  cat $PLAINBOX_PROVIDER_UNITS/dock.pxu
+
 id: __ethernet__
 plugin: local
 _description: Ethernet Device tests
@@ -101,7 +108,7 @@ plugin: local
 _description: Graphics tests
 command:
   shopt -s extglob
-  cat $PLAINBOX_PROVIDER_DATA/../jobs/graphics.txt?(.in)
+  cat $PLAINBOX_PROVIDER_DATA/../jobs/graphics.txt?(.in) $PLAINBOX_PROVIDER_DATA/../jobs/graphics-legacy.txt?(.in) 
 
 id: __hibernate__
 plugin: local
@@ -229,13 +236,6 @@ command:
   shopt -s extglob
   cat $PLAINBOX_PROVIDER_DATA/../jobs/peripheral.txt?(.in)
 
-id: __piglit__
-plugin: local
-_description: Piglit tests
-command:
-  shopt -s extglob
-  cat $PLAINBOX_PROVIDER_DATA/../jobs/piglit.txt?(.in)
-
 id: __power-management__
 plugin: local
 _description: Power Management tests
@@ -256,6 +256,13 @@ _description: Suspend tests
 command:
   shopt -s extglob
   cat $PLAINBOX_PROVIDER_DATA/../jobs/suspend.txt?(.in)
+
+id: __thunderbolt__
+plugin: local
+_description: Thunderbolt tests
+command:
+  shopt -s extglob
+  cat $PLAINBOX_PROVIDER_DATA/../jobs/thunderbolt.pxu
 
 id: __touchpad__
 plugin: local
@@ -326,3 +333,4 @@ _description: Sniff Sniffers
 command:
  shopt -s extglob
  cat $PLAINBOX_PROVIDER_DATA/../jobs/sniff.txt?(.in)
+
