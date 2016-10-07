@@ -4,9 +4,11 @@ _name: Thunderbolt Support
 value-type: bool
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::disk
 id: thunderbolt/insert
 imports: from 2013.com.canonical.plainbox import manifest
 requires: manifest.has_thunderbolt == 'True'
+estimated_duration: 20.0
 command: removable_storage_watcher insert --timeout 40 scsi
 _summary: Storage insert detection on Thunderbolt
 _description:
@@ -22,11 +24,13 @@ _description:
      selected result
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::disk
 id: thunderbolt/storage-test
 user: root
 imports: from 2013.com.canonical.plainbox import manifest
 requires: manifest.has_thunderbolt == 'True'
 depends: thunderbolt/insert
+estimated_duration: 45.0
 command: removable_storage_test -s 268400000 scsi
 _summary: Storage test on Thunderbolt
 _description:
@@ -34,10 +38,12 @@ _description:
  Thunderbolt HDD
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::disk
 id: thunderbolt/remove
 imports: from 2013.com.canonical.plainbox import manifest
 requires: manifest.has_thunderbolt == 'True'
 depends: thunderbolt/insert
+estimated_duration: 10.0
 command: removable_storage_watcher remove scsi
 _summary: Storage removal detection on Thunderbolt
 _description:
@@ -52,9 +58,11 @@ _description:
      selected result
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::disk
 id: thunderbolt/daisy-chain
 imports: from 2013.com.canonical.plainbox import manifest
 requires: manifest.has_thunderbolt == 'True'
+estimated_duration: 45.0
 command: removable_storage_test -s 268400000 scsi
 _summary: Daisy-chain testing for Thunderbolt storage and display device
 _description:

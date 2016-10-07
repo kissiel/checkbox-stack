@@ -1,10 +1,12 @@
 plugin: shell
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/detect
 estimated_duration: 1.0
 command: set -o pipefail; lsusb 2>/dev/null | sed 's/.*\(ID .*\)/\1/' | head -n 4 || echo "No USB devices were detected" >&2
 _description: Detects and shows USB devices attached to this system.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/disk_detect
 depends: usb/detect
 estimated_duration: 1.0
@@ -21,6 +23,7 @@ _description:
      Were the drives detected?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/HID
 depends: usb/detect
 estimated_duration: 1.0
@@ -31,11 +34,12 @@ _description:
  STEPS:
      1. Enable either a USB mouse or keyboard
      2. For mice, perform actions such as moving the pointer, right and left button clicks and double clicks
-     3. For keyboards, click the Test button to lauch a small tool. Type some text and close the tool.
+     3. For keyboards, commence the test to lauch a small tool. Type some text and close the tool.
  VERIFICATION:
      Did the device work as expected?
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/insert
 depends: usb/detect
 estimated_duration: 10.0
@@ -55,6 +59,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::usb
 id: usb3/insert
 requires:
  usb.usb3 == 'supported'
@@ -75,6 +80,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/remove
 depends: usb/insert
 estimated_duration: 10.0
@@ -91,6 +97,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::usb
 id: usb3/remove
 depends: usb3/insert
 requires:
@@ -109,6 +116,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/storage-transfer
 depends: usb/insert
 user: root
@@ -126,6 +134,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::usb
 id: usb3/storage-transfer
 requires:
  usb.usb3 == 'supported'
@@ -145,6 +154,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/storage-automated
 depends: usb/insert
 user: root
@@ -154,6 +164,7 @@ _description:
  This test is automated and executes after the usb/insert test is run.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::usb
 id: usb3/storage-automated
 requires:
  usb.usb3 == 'supported'
@@ -165,6 +176,7 @@ _description:
  This test is automated and executes after the usb3/insert test is run.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/storage-preinserted
 user: root
 estimated_duration: 45.0
@@ -175,6 +187,7 @@ _description:
  is intended for servers and SRU automated testing.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::usb
 id: usb3/storage-preinserted
 user: root
 requires:
@@ -187,6 +200,7 @@ _description:
  is intended for servers and SRU automated testing.
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/panels
 _description:
  PURPOSE:
@@ -201,6 +215,7 @@ _description:
      Do all USB slots work with the device?
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::usb
 id: usb/performance
 depends: usb/insert
 user: root
@@ -209,16 +224,3 @@ command: removable_storage_test -s 268400000 -p 15 usb
 _description:
  This test will check that your USB 2.0 port transfers data at a
  minimum expected speed.
-
-plugin: shell
-id: usb3/superspeed_performance
-requires:
- usb.usb3 == 'supported'
-depends: usb3/insert
-user: root
-estimated_duration: 45.00
-command: removable_storage_test -s 268400000 -m 500000000 usb --driver xhci_hcd
-_description:
- This test will check that your USB 3.0 port could be recognized
- as SuperSpeed USB device using xhci_hcd driver and transfers data correctly.
-

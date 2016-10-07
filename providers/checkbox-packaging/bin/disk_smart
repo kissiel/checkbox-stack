@@ -114,7 +114,8 @@ def is_smart_enabled(disk):
     command = 'smartctl -i %s' % disk
     diskinfo_bytes = (Popen(command, stdout=PIPE, shell=True)
                       .communicate()[0])
-    diskinfo = diskinfo_bytes.decode().splitlines()
+    diskinfo = (diskinfo_bytes.decode(encoding='utf-8', errors='ignore')
+                .splitlines())
 
     logging.debug('SMART Info for disk %s', disk)
     logging.debug(diskinfo)
@@ -165,7 +166,10 @@ def get_smart_entries(disk, type='selftest'):
             break
 
     # Get lengths from header
-    line = next(stdout_lines)
+    try:
+        line = next(stdout_lines)
+    except StopIteration:
+        logging.info('No entries found in log')
     if not line.startswith('Num'):
         entries.append('No entries found in log yet')
         return entries, returncode

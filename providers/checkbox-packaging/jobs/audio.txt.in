@@ -1,4 +1,5 @@
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/list_devices
 estimated_duration: 1.0
 requires:
@@ -8,6 +9,7 @@ command: cat /proc/asound/cards
 _description: Test to detect audio devices
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/playback_auto
 estimated_duration: 5.0
 depends: audio/list_devices
@@ -30,7 +32,7 @@ _description:
      1. Make sure that no external speakers or headphones are connected
         When testing a desktop, you can skip this test if there is no
         internal speaker, we will test the external output later
-     2. Click the Test button to play a brief tone on your audio device
+     2. Commence the test to play a brief tone on your audio device
  VERIFICATION:
      Did you hear a tone?
 
@@ -48,6 +50,7 @@ command:
  id: audio/`echo ${index}`_playback_hdmi_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  requires: display.hdmi == 'supported'
  plugin: user-interact-verify
+ category_id: 2013.com.canonical.plainbox::audio
  estimated_duration: 30.0
  command:
   audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
@@ -61,7 +64,7 @@ command:
       HDMI audio interface verification
   STEPS:
       1. Plug an external HDMI device with sound (Use only one HDMI/DisplayPort/Thunderbolt interface at a time for this test)
-      2. Click the Test button
+      2. Commence the test
   VERIFICATION:
       Did you hear the sound from the HDMI device?
  EOF
@@ -80,6 +83,7 @@ command:
  id: audio/`echo ${index}`_playback_displayport_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  requires: display.dp == 'supported'
  plugin: user-interact-verify
+ category_id: 2013.com.canonical.plainbox::audio
  estimated_duration: 30.0
  command:
   audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
@@ -93,7 +97,7 @@ command:
       DisplayPort audio interface verification
   STEPS:
       1. Plug an external DisplayPort device with sound (Use only one HDMI/DisplayPort/Thunderbolt interface at a time for this test)
-      2. Click the Test button
+      2. Commence the test
   VERIFICATION:
       Did you hear the sound from the DisplayPort device?
  EOF
@@ -113,7 +117,8 @@ command:
  imports: from 2013.com.canonical.plainbox import manifest
  requires: manifest.has_thunderbolt == 'True'
  plugin: user-interact-verify
- estimated_duration: 30.0
+ category_id: 2013.com.canonical.plainbox::audio
+ estimated_duration: 5.0
  command:
   audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
   audio_settings set --verbose --device=hdmi --volume=50
@@ -126,12 +131,13 @@ command:
       Thunderbolt audio interface verification
   STEPS:
       1. Plug an external Thunderbolt device with sound (Use only one HDMI/DisplayPort/Thunderbolt interface at a time for this test)
-      2. Click the Test button
+      2. Commence the test
   VERIFICATION:
       Did you hear the sound from the Thunderbolt device?
  EOF
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/playback_headphones
 estimated_duration: 20.0
 depends: audio/list_devices
@@ -152,11 +158,12 @@ _description:
      This test will check that headphones connector works correctly
  STEPS:
      1. Connect a pair of headphones to your audio device
-     2. Click the Test button to play a sound to your audio device
+     2. Commence the test to play a sound to your audio device
  VERIFICATION:
      Did you hear a sound through the headphones and did the sound play without any distortion, clicks or other strange noises from your headphones?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/alsa_record_playback_internal
 estimated_duration: 20.0
 depends: audio/playback_auto
@@ -183,6 +190,7 @@ _description:
      Did you hear your speech played back?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/alsa_record_playback_external
 estimated_duration: 20.0
 depends: audio/playback_headphones
@@ -209,6 +217,7 @@ _description:
      Did you hear your speech played back?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/alsa_record_playback_usb
 estimated_duration: 120.0
 requires:
@@ -234,6 +243,7 @@ _description:
      Did you hear your speech played back through the USB headphones?
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/alsa_record_playback_automated
 estimated_duration: 10.0
 requires:
@@ -250,6 +260,7 @@ _description:
  default input.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/alsa_info_collect
 estimated_duration: 2.0
 command: alsa_info --no-dialog --no-upload --output ${PLAINBOX_SESSION_SHARE}/alsa_info.log
@@ -259,6 +270,7 @@ _description:
  under a controlled environment.
 
 plugin: attachment
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/alsa_info_attachment
 depends: audio/alsa_info_collect
 estimated_duration: 1.0
@@ -267,6 +279,7 @@ _description:
  Attaches the audio hardware data collection log to the results.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/channels
 estimated_duration:  20.0
 command: speaker-test -c 2 -l 1 -t wav
@@ -274,11 +287,12 @@ _description:
  PURPOSE:
      Check that the various audio channels are working properly
  STEPS:
-     1. Click the Test button
+     1. Commence the test
  VERIFICATION:
      You should clearly hear a voice from the different audio channels
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/check_volume
 estimated_duration: 1.0
 requires:
@@ -294,6 +308,7 @@ _description:
  volume or mute before running this test.
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/external-lineout
 estimated_duration: 30.0
 _description:
@@ -301,13 +316,14 @@ _description:
       Check that external line out connection works correctly
  STEPS:
       1. Insert cable to speakers (with built-in amplifiers) on the line out port
-      2. Open system sound preferences, 'Output' tab, select 'Line-out' on the connector list. Click the Test button
+      2. Open system sound preferences, 'Output' tab, select 'Line-out' on the connector list. Commence the test
       3. On the system sound preferences, select 'Internal Audio' on the device list and click 'Test Speakers' to check left and right channel
  VERIFICATION:
       1. Do you hear a sound in the speakers? The internal speakers should *not* be muted automatically
       2. Do you hear the sound coming out on the corresponding channel?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/external-linein
 estimated_duration: 120.0
 requires:
@@ -327,12 +343,13 @@ _description:
      Check that external line in connection works correctly
  STEPS:
      1. Use a cable to connect the line in port to an external line out source.
-     2. Open system sound preferences, 'Input' tab, select 'Line-in' on the connector list. Click the Test button
+     2. Open system sound preferences, 'Input' tab, select 'Line-in' on the connector list. Commence the test
      3. After a few seconds, your recording will be played back to you.
  VERIFICATION:
      Did you hear your recording?
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/speaker-headphone-plug-detection
 estimated_duration: 60.0
 requires:
@@ -353,6 +370,7 @@ _description:
      The test times out after 30 seconds (and fails in that case).
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/microphone-plug-detection
 estimated_duration: 60.0
 requires:
@@ -374,6 +392,7 @@ _description:
      The test times out after 30 seconds (and fails in that case).
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/balance_internal_speaker
 estimated_duration: 20.0
 depends: audio/playback_auto
@@ -394,13 +413,14 @@ _description:
      Check that balance control works correctly on internal speakers
  STEPS:
      1. Check that moving the balance slider from left to right works smoothly
-     2. Click the Test button to play an audio tone for 10 seconds.
+     2. Commence the test to play an audio tone for 10 seconds.
      3. Move the balance slider from left to right and back.
      4. Check that actual speaker audio balance follows your setting.
  VERIFICATION:
      Does the slider move smoothly, as well as being followed by the setting by the actual audio output?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/balance_headphones
 depends: audio/playback_headphones
 estimated_duration: 30.0
@@ -421,13 +441,14 @@ _description:
      Check that balance control works correctly on external headphone
  STEPS:
      1. Check that moving the balance slider from left to right works smoothly
-     2. Click the Test button to play an audio tone for 10 seconds.
+     2. Commence the test to play an audio tone for 10 seconds.
      3. Move the balance slider from left to right and back.
      4. Check that actual headphone audio balance follows your setting.
  VERIFICATION:
      Does the slider move smoothly, as well as being followed by the setting by the actual audio output?
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/list_devices_after_suspend_30_cycles
 estimated_duration: 1.0
 depends: power-management/suspend_30_cycles
@@ -438,6 +459,7 @@ command: cat /proc/asound/cards
 _description: Test to detect audio devices after suspending 30 times.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/playback_auto_after_suspend_30_cycles
 estimated_duration: 5.0
 depends: audio/list_devices power-management/suspend_30_cycles
@@ -460,11 +482,12 @@ _description:
      1. Make sure that no external speakers or headphones are connected
         When testing a desktop, you can skip this test if there is no
         internal speaker, we will test the external output later
-     2. Click the Test button to play a brief tone on your audio device
+     2. Commence the test to play a brief tone on your audio device
  VERIFICATION:
      Did you hear a tone?
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/alsa_record_playback_automated_after_suspend_30_cycles
 estimated_duration: 10.0
 depends: power-management/suspend_30_cycles
@@ -482,6 +505,7 @@ _description:
  default input, after suspending 30 times.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/check_volume_after_suspend_30_cycles
 estimated_duration: 1.0
 depends: power-management/suspend_30_cycles
@@ -498,6 +522,7 @@ _description:
  volume or mute before running this test.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::audio
 id: audio/audio_after_suspend_30_cycles
 estimated_duration: 1.0
 depends: power-management/suspend_30_cycles

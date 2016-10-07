@@ -1,4 +1,5 @@
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/network_before_suspend
 depends: ethernet/detect
 estimated_duration: 1.2
@@ -6,6 +7,7 @@ _description: Record the current network before suspending.
 command: set -o pipefail; gateway_ping_test | tee $PLAINBOX_SESSION_SHARE/network_before_suspend.txt
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/resolution_before_suspend
 estimated_duration: 1.2
 _description: Record the current resolution before suspending.
@@ -18,6 +20,7 @@ _summary: Record the current resolution before suspending.
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: shell
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_resolution_before_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: graphics/`echo ${index}`_switch_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  estimated_duration: 1.2
@@ -26,6 +29,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/audio_before_suspend
 estimated_duration: 1.0
 requires:
@@ -35,12 +39,14 @@ _description: Record mixer settings before suspending.
 command: audio_settings store --file=$PLAINBOX_SESSION_SHARE/audio_settings_before_suspend
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/cpu_before_suspend
 estimated_duration: 1.2
 _description: Verify that all the CPUs are online before suspending
 command: cpuinfo_resource > $PLAINBOX_SESSION_SHARE/cpuinfo_before_suspend
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/memory_before_suspend
 estimated_duration: 1.2
 _description:
@@ -48,6 +54,7 @@ _description:
 command: meminfo_resource > $PLAINBOX_SESSION_SHARE/meminfo_before_suspend
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_before_suspend
 depends: wireless/wireless_connection
 requires: device.category == 'WIRELESS'
@@ -57,45 +64,44 @@ _description:
  This test disconnects all connections and then connects to the wireless
  interface. It then checks the connection to confirm it's working as expected.
 
-plugin: local
-id: suspend/iperf_before_suspend_ether_auto
+unit: template
+template-unit: job
+template-resource: device
+template-filter: device.category == 'NETWORK'
+plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/iperf_before_suspend_ether_auto_device{__index__}_{interface}
+depends: ethernet/detect
+estimated_duration: 20.0
 requires:
- device.category == 'NETWORK'
-command: 
- cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=NETWORK" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: shell
- id: suspend/iperf_before_suspend_ether_auto_$2
- depends: ethernet/detect
- estimated_duration: 20.0
- requires: device.path == "$1"
- user: root
- command: network -i $2 -t iperf
- _description:
-  This test executes iperf connection performance/stability against all the ethernet devices found on the system before suspend.
- EOF
+ device.path == '{path}'
+ package.name == 'iperf'
+user: root
+environ: TEST_TARGET_FTP TEST_TARGET_IPERF TEST_USER TEST_PASS
+command: network -i {interface} -t iperf
 _description:
- This is an automated test to gather some info on the current state of your network devices. If no devices are found, the test will exit with an error.
+ This test executes iperf connection performance/stability against device {__index__} ({interface}) before suspend.
 
-plugin: local
-id: suspend/iperf_before_suspend_wifi_auto
+unit: template
+template-unit: job
+template-resource: device
+template-filter: device.category == 'WIRELESS'
+plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/iperf_before_suspend_wifi_auto_device{__index__}_{interface}
+depends: wireless/wireless_connection
+estimated_duration: 20.0
 requires:
- device.category == 'WIRELESS'
-command: 
- cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=WIRELESS" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: shell
- id: suspend/iperf_before_suspend_wifi_auto_$2
- depends: wireless/wireless_connection
- estimated_duration: 20.0
- requires: device.path == "$1"
- user: root
- command: network -i $2 -t iperf
- _description:
-  This test executes iperf connection performance/stability against all the ethernet devices found on the system before suspend.
- EOF
+ device.path == '{path}'
+ package.name == 'iperf'
+user: root
+environ: TEST_TARGET_FTP TEST_TARGET_IPERF TEST_USER TEST_PASS
+command: network -i {interface} -t iperf
 _description:
- This is an automated test to gather some info on the current state of your network devices. If no devices are found, the test will exit with an error.
+ This test executes iperf connection performance/stability against device {__index__} ({interface}) before suspend.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/iperf_before_suspend_mobilebroadband_gsm_auto
 depends: mobilebroadband/gsm_connection
 estimated_duration: 20.0
@@ -109,6 +115,7 @@ _description:
  This test executes iperf connection performance/stability against the broadband device found on the system before suspend.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/iperf_before_suspend_mobilebroadband_cdma_auto
 depends: mobilebroadband/cdma_connection
 estimated_duration: 20.0
@@ -121,35 +128,8 @@ command:
 _description:
  This test executes iperf connection performance/stability against the broadband device found on the system before suspend.
 
-
 plugin: shell
-id: suspend/bluetooth_obex_before_suspend
-estimated_duration: 10.0
-requires:
- package.name == 'bluez'
- package.name == 'obexd-client'
- device.category == 'BLUETOOTH'
-command:
-  if [ -z "$BTDEVADDR" ]
-  then
-    echo "btdevaddr option not set to device address of Bluetooth target in checkbox.ini"
-    exit 1
-  fi
-  if rfkill list bluetooth | grep -q 'Hard blocked: yes'
-  then
-    echo "rfkill shows BT is hard blocked"
-  fi
-  if rfkill list bluetooth | grep -q 'Soft blocked: yes'
-  then
-    echo "rfkill shows BT is soft blocked, removing before testing."
-    rfkill unblock bluetooth
-    sleep 3
-  fi
-  obex_send $BTDEVADDR $PLAINBOX_PROVIDER_DATA/images/JPEG_Color_Image_Ubuntu.jpg
-_description:
- This is an automated Bluetooth file transfer test. It sends an image to the device specified by the BTDEVADDR environment variable.
-
-plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_send_before_suspend
 estimated_duration: 10.0
 requires:
@@ -177,6 +157,7 @@ _description:
  This is an automated Bluetooth file transfer test. It sends an image to the device specified by the BTDEVADDR environment variable.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_browse_before_suspend
 estimated_duration: 10.0
 requires:
@@ -204,6 +185,7 @@ _description:
  This is an automated Bluetooth test. It emulates browsing on a remote device specified by the BTDEVADDR environment variable.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_get_before_suspend
 estimated_duration: 20.0
 requires:
@@ -231,24 +213,7 @@ _description:
  This is an automated Bluetooth test. It receives the given file from a remote host specified by the BTDEVADDR environment variable
 
 plugin: user-interact-verify
-id: suspend/bluetooth_obex_before_suspend_manual
-estimated_duration: 120.0
-requires:
- package.name == 'bluez'
- package.name == 'obexd-client'
- device.category == 'BLUETOOTH'
-command: rfkill unblock bluetooth; obex_send `bluetooth_scan` $PLAINBOX_PROVIDER_DATA/images/JPEG_Color_Image_Ubuntu.jpg
-_description:
- PURPOSE:
-     This test will send the image 'JPEG_Color_Image_Ubuntu.jpg' to a specified device
- STEPS:
-     1. Make sure Bluetooth is enabled by checking the Bluetooth indicator applet
-     2. Click "Test" and you will be prompted to enter the Bluetooth device name of a device that can accept file transfers (It may take a few moments after entering the name for the file to begin sending)
-     3. Accept any prompts that appear on both devices
- VERIFICATION:
-     Was the data correctly transferred?
-
-plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/suspend_advanced
 requires:
  sleep.mem == 'supported'
@@ -284,6 +249,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: user-interact-verify
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  requires:
   sleep.mem == 'supported'
@@ -316,6 +282,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/suspend_advanced_auto
 requires:
     sleep.mem == 'supported'
@@ -334,10 +301,11 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: user-interact-verify
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_hybrid_sleep_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  user: root
  command:
-  set -o pipefail; fwts_test -f none -l $PLAINBOX_SESSION_SHARE/hybrid_sleep_single -s s3 --s3-hybrid --s3-sleep-delay=30 --s3-device-check --s3-device-check-delay=45 --pm-method=pm-utils | tee $PLAINBOX_SESSION_SHARE/hybrid_sleep_single_times.log
+  set -o pipefail; fwts_test -f none -l $PLAINBOX_SESSION_SHARE/`echo ${index}`_hybrid_sleep_single -s s3 --s3-hybrid --s3-sleep-delay=30 --s3-device-check --s3-device-check-delay=45 --pm-method=pm-utils | tee $PLAINBOX_SESSION_SHARE/`echo ${index}`_hybrid_sleep_single_times.log
  estimated_duration: 90.0
  _description:
   PURPOSE:
@@ -352,6 +320,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/suspend-single-log-check
 estimated_duration: 1.2
 command: [ -e $PLAINBOX_SESSION_SHARE/suspend_single.log ] && sleep_test_log_check -v s3 $PLAINBOX_SESSION_SHARE/suspend_single.log
@@ -359,6 +328,7 @@ _description:
  Automated check of the suspend log to look for errors reported by fwts
 
 plugin: attachment
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/suspend-single-log-attach
 command: [ -e $PLAINBOX_SESSION_SHARE/suspend_single.log ] && cat $PLAINBOX_SESSION_SHARE/suspend_single.log
 _description:
@@ -371,6 +341,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: attachment
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_suspend-single-log-attach_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  command: [ -e $PLAINBOX_SESSION_SHARE/`echo ${index}`_suspend_single.log ] && cat $PLAINBOX_SESSION_SHARE/`echo ${index}`_suspend_single.log
@@ -378,12 +349,21 @@ command:
   Attaches the log from the single suspend/resume test to the results
  EOF
 
-plugin: shell
-id: suspend/hybrid-sleep-single-log-check
-estimated_duration: 1.2
-command: [ -e $PLAINBOX_SESSION_SHARE/hybrid_sleep_single.log ] && sleep_test_log_check -v s3 $PLAINBOX_SESSION_SHARE/hybrid_sleep_single.log
-_description:
- Automated check of the hybrid sleep log to look for errors reported by fwts
+id: suspend/generator_hybrid-sleep-single-log-check
+_description: Hybrid sleep log check test
+_summary: Hybrid sleep log check test
+plugin: local
+command:
+ cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
+ plugin: shell
+ category_id: 2013.com.canonical.plainbox::suspend
+ id: suspend/`echo ${index}`_hybrid-sleep-single-log-check
+ depends: suspend/`echo ${index}`_hybrid_sleep_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
+ estimated_duration: 1.2
+ command: [ -e $PLAINBOX_SESSION_SHARE/`echo ${index}`_hybrid_sleep_single.log ] && sleep_test_log_check -v s3 $PLAINBOX_SESSION_SHARE/`echo ${index}`_hybrid_sleep_single.log
+ _description:
+  Automated check of the hybrid sleep log to look for errors reported by fwts
+ EOF
 
 id: suspend/generator_hybrid-sleep-single-log-attach
 _description: Hybrid sleep log attach
@@ -392,6 +372,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: attachment
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_hybrid-sleep-single-log-attach_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_hybrid_sleep_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  command: [ -e $PLAINBOX_SESSION_SHARE/`echo ${index}`_hybrid_sleep_single.log ] && cat $PLAINBOX_SESSION_SHARE/`echo ${index}`_hybrid_sleep_single.log
@@ -400,6 +381,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/suspend-time-check
 estimated_duration: 1.2
 command: [ -e $PLAINBOX_SESSION_SHARE/suspend_single_times.log ] && sleep_time_check $PLAINBOX_SESSION_SHARE/suspend_single_times.log
@@ -413,6 +395,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: shell
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_suspend-time-check_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  estimated_duration: 1.2
@@ -421,6 +404,7 @@ command:
  EOF
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: power-management/usb_wakeup_keyboard
 user: root
 depends: suspend/suspend_advanced
@@ -437,6 +421,7 @@ _description:
      Did the system wake up from suspend mode when you pressed a keyboard key?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: power-management/usb_wakeup_mouse
 user: root
 depends: suspend/suspend_advanced
@@ -453,6 +438,7 @@ _description:
      Did the system wake up from suspend mode when you pressed the mouse button?
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/network_after_suspend
 estimated_duration: 20.0
 depends: suspend/suspend_advanced suspend/network_before_suspend
@@ -460,6 +446,7 @@ _description: Test the network after resuming.
 command: network_wait; gateway_ping_test | diff $PLAINBOX_SESSION_SHARE/network_before_suspend.txt -
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/resolution_after_suspend
 depends: suspend/suspend_advanced suspend/resolution_before_suspend
 estimated_duration: 1.2
@@ -473,6 +460,7 @@ _summary: Resolution consistency check after suspend with the valuse we got befo
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: shell
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_resolution_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  estimated_duration: 1.2
  depends: suspend/`echo ${index}`_resolution_before_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'` suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
@@ -481,6 +469,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/audio_after_suspend
 estimated_duration: 1.0
 requires:
@@ -493,6 +482,7 @@ command:
   diff $PLAINBOX_SESSION_SHARE/audio_settings_before_suspend $PLAINBOX_SESSION_SHARE/audio_settings_after_suspend
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/audio_after_suspend_auto
 estimated_duration: 1.2
 requires:
@@ -504,7 +494,106 @@ command:
   audio_settings store --file=$PLAINBOX_SESSION_SHARE/audio_settings_after_suspend
   diff $PLAINBOX_SESSION_SHARE/audio_settings_before_suspend $PLAINBOX_SESSION_SHARE/audio_settings_after_suspend
 
+plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/speaker-headphone-plug-detection-after-suspend
+depends: suspend/suspend_advanced
+estimated_duration: 60.0
+requires:
+ device.category == 'AUDIO'
+ package.name == 'pulseaudio-utils'
+command: pulse-active-port-change sinks
+_description:
+ PURPOSE:
+     Check that system detects speakers or headphones being plugged in after suspend
+ STEPS:
+     1. Prepare a pair of headphones or speakers with a standard 3.5mm jack
+     2. Locate the speaker / headphone jack on the device under test
+     3. Run the test (you have 30 seconds from now on)
+     4. Plug headphones or speakers into the appropriate jack
+     5. Unplug the device for subsequent tests.
+ VERIFICATION:
+     Verification is automatic, no action is required.
+     The test times out after 30 seconds (and fails in that case).
+
+plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/microphone-plug-detection-after-suspend
+depends: suspend/suspend_advanced
+estimated_duration: 60.0
+requires:
+ device.category == 'AUDIO'
+ package.name == 'pulseaudio-utils'
+command: pulse-active-port-change sources
+_description:
+ PURPOSE:
+     Check that system detects a microphone being plugged in after suspend
+ STEPS:
+     1. Prepare a microphone with a standard 3.5mm jack
+     2. Locate the microphone jack on the device under test.
+        Keep in mind that it may be shared with the headphone jack.
+     3. Run the test (you have 30 seconds from now on)
+     4. Plug the microphone into the appropriate jack
+     5. Unplug the device for subsequent tests.
+ VERIFICATION:
+     Verification is automatic, no action is required.
+     The test times out after 30 seconds (and fails in that case).
+
+plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/playback_headphones-after-suspend
+estimated_duration: 20.0
+depends: audio/list_devices suspend/suspend_advanced
+requires:
+ device.category == 'AUDIO'
+ package.name == 'alsa-base'
+ package.name == 'gir1.2-gst-plugins-base-0.10' or package.name == 'gir1.2-gst-plugins-base-1.0'
+ package.name == 'pulseaudio-utils'
+command:
+  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings set --device=pci --volume=50
+  gst_pipeline_test -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+  EXIT_CODE=$?
+  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  exit $EXIT_CODE
+_description:
+ PURPOSE:
+     This test will check that headphones connector works correctly after suspend
+ STEPS:
+     1. Connect a pair of headphones to your audio device
+     2. Commence the test to play a sound to your audio device
+ VERIFICATION:
+     Did you hear a sound through the headphones and did the sound play without any distortion, clicks or other strange noises from your headphones?
+
+plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/alsa_record_playback_external-after-suspend
+estimated_duration: 20.0
+depends: suspend/playback_headphones-after-suspend suspend/suspend_advanced
+requires:
+ device.category == 'AUDIO'
+ package.name == 'alsa-base'
+ package.name == 'pulseaudio-utils'
+ package.name == 'gstreamer1.0-plugins-good' or package.name == 'gstreamer0.10-plugins-good'
+command:
+ audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings set --device=pci --volume=50
+ alsa_record_playback
+ EXIT_CODE=$?
+ audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ exit $EXIT_CODE
+_description:
+ PURPOSE:
+     This test will check that recording sound using an external microphone works correctly after suspend
+ STEPS:
+     1. Connect a microphone to your microphone port
+     2. Click "Test", then speak into the external microphone
+     3. After a few seconds, your speech will be played back to you
+ VERIFICATION:
+     Did you hear your speech played back?
+
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/cpu_after_suspend
 estimated_duration: 1.2
 depends: suspend/suspend_advanced suspend/cpu_before_suspend
@@ -512,6 +601,7 @@ _description: Verify that all CPUs are online after resuming.
 command: cpuinfo_resource | diff $PLAINBOX_SESSION_SHARE/cpuinfo_before_suspend -
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/cpu_after_suspend_auto
 estimated_duration: 1.2
 depends: suspend/suspend_advanced_auto suspend/cpu_before_suspend
@@ -519,6 +609,7 @@ _description: Verify that all CPUs are online after resuming.
 command: cpuinfo_resource | diff $PLAINBOX_SESSION_SHARE/cpuinfo_before_suspend -
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/memory_after_suspend
 estimated_duration: 1.2
 depends: suspend/suspend_advanced suspend/memory_before_suspend
@@ -527,6 +618,7 @@ _description:
 command: meminfo_resource | diff $PLAINBOX_SESSION_SHARE/meminfo_before_suspend -
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/memory_after_suspend_auto
 estimated_duration: 1.2
 depends: suspend/suspend_advanced_auto suspend/memory_before_suspend
@@ -535,6 +627,7 @@ _description:
 command: meminfo_resource | diff $PLAINBOX_SESSION_SHARE/meminfo_before_suspend -
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/display_after_suspend
 estimated_duration: 120.0
 depends: suspend/suspend_advanced
@@ -554,6 +647,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: manual
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_display_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  _summary: Test display function after suspend for $product
@@ -567,6 +661,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_after_suspend
 depends: suspend/suspend_advanced suspend/wireless_before_suspend
 requires:
@@ -579,6 +674,7 @@ _description:
  connection is working as expected.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_bg
 depends: suspend/suspend_advanced
 estimated_duration: 20.0
@@ -590,9 +686,17 @@ environ: WPA_BG_SSID WPA_BG_PSK
 command:
     trap "nmcli con delete id $WPA_BG_SSID" EXIT
     if create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -601,6 +705,7 @@ _description:
  security and the 802.11b/g protocols after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_bg
 depends: suspend/suspend_advanced
 estimated_duration: 1.2
@@ -612,9 +717,17 @@ environ: OPEN_BG_SSID
 command:
     trap "nmcli con delete id $OPEN_BG_SSID" EXIT
     if create_connection wifi $OPEN_BG_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -623,6 +736,7 @@ _description:
  security and the 802.11b/g protocols after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_n
 depends: suspend/suspend_advanced
 estimated_duration: 1.2
@@ -634,9 +748,17 @@ environ: WPA_N_SSID WPA_N_PSK
 command:
     trap "nmcli con delete id $WPA_N_SSID" EXIT
     if create_connection wifi $WPA_N_SSID --security=wpa --key=$WPA_N_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -645,6 +767,7 @@ _description:
  security and the 802.11n protocol after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_n
 depends: suspend/suspend_advanced
 estimated_duration: 1.2
@@ -656,9 +779,17 @@ environ: OPEN_N_SSID
 command:
     trap "nmcli con delete id $OPEN_N_SSID" EXIT
     if create_connection wifi $OPEN_N_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -667,6 +798,7 @@ _description:
  security and the 802.11n protocol after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_ac
 depends: suspend/suspend_advanced
 estimated_duration: 1.2
@@ -679,9 +811,17 @@ environ: WPA_AC_SSID WPA_AC_PSK
 command:
     trap "nmcli con delete id $WPA_AC_SSID" EXIT
     if create_connection wifi $WPA_AC_SSID --security=wpa --key=$WPA_AC_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -690,6 +830,7 @@ _description:
  security and the 802.11ac protocol after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_ac
 depends: suspend/suspend_advanced
 estimated_duration: 1.2
@@ -702,9 +843,17 @@ environ: OPEN_AC_SSID
 command:
     trap "nmcli con delete id $OPEN_AC_SSID" EXIT
     if create_connection wifi $OPEN_AC_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -713,6 +862,7 @@ _description:
  security and the 802.11ac protocol after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_bg_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 1.2
@@ -724,9 +874,17 @@ environ: WPA_BG_SSID WPA_BG_PSK
 command:
     trap "nmcli con delete id $WPA_BG_SSID" EXIT
     if create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -735,6 +893,7 @@ _description:
  security and the 802.11b/g protocols after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_bg_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 1.2
@@ -746,9 +905,17 @@ environ: OPEN_BG_SSID
 command:
     trap "nmcli con delete id $OPEN_BG_SSID" EXIT
     if create_connection wifi $OPEN_BG_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -757,6 +924,7 @@ _description:
  security and the 802.11b/g protocols after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_n_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 1.2
@@ -768,9 +936,17 @@ environ: WPA_N_SSID WPA_N_PSK
 command:
     trap "nmcli con delete id $WPA_N_SSID" EXIT
     if create_connection wifi $WPA_N_SSID --security=wpa --key=$WPA_N_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -779,6 +955,7 @@ _description:
  security and the 802.11n protocol after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_n_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 1.2
@@ -790,9 +967,17 @@ environ: OPEN_N_SSID
 command:
     trap "nmcli con delete id $OPEN_N_SSID" EXIT
     if create_connection wifi $OPEN_N_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -801,6 +986,7 @@ _description:
  security and the 802.11n protocol after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_ac_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 1.2
@@ -813,9 +999,17 @@ environ: WPA_AC_SSID WPA_AC_PSK
 command:
     trap "nmcli con delete id $WPA_AC_SSID" EXIT
     if create_connection wifi $WPA_AC_SSID --security=wpa --key=$WPA_AC_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -824,6 +1018,7 @@ _description:
  security and the 802.11ac protocol after the system has been suspended.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_ac_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 1.2
@@ -836,9 +1031,17 @@ environ: OPEN_AC_SSID
 command:
     trap "nmcli con delete id $OPEN_AC_SSID" EXIT
     if create_connection wifi $OPEN_AC_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -846,47 +1049,44 @@ _description:
  Tests that the systems wireless hardware can connect to a router using no
  security and the 802.11ac protocol after the system has been suspended.
 
-plugin: local
-id: suspend/iperf_after_suspend_ether_auto
+unit: template
+template-unit: job
+template-resource: device
+template-filter: device.category == 'NETWORK'
+plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/iperf_after_suspend_ether_auto_device{__index__}_{interface}
+depends: suspend/suspend_advanced
 estimated_duration: 30.0
 requires:
- device.category == 'NETWORK'
-command: 
- cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=NETWORK" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: shell
- id: suspend/iperf_after_suspend_ether_auto_$2
- depends: suspend/suspend_advanced
- requires: device.path == "$1"
- user: root
- environ: TEST_TARGET_FTP TEST_TARGET_IPERF TEST_USER TEST_PASS
- command: network test -i $2 -t iperf
- _description:
-  This test executes iperf connection performance/stability against all the ethernet devices found on the system before suspend.
- EOF
+ device.path == '{path}'
+ package.name == 'iperf'
+user: root
+environ: TEST_TARGET_FTP TEST_TARGET_IPERF TEST_USER TEST_PASS
+command: network -i {interface} -t iperf
 _description:
- This is an automated test to gather some info on the current state of your network devices. If no devices are found, the test will exit with an error.
+ This test executes iperf connection performance/stability against device {__index__} ({interface}) after suspend.
 
-plugin: local
-id: suspend/iperf_after_suspend_wifi_auto
+unit: template
+template-unit: job
+template-resource: device
+template-filter: device.category == 'WIRELESS'
+plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
+id: suspend/iperf_after_suspend_wifi_auto_device{__index__}_{interface}
+depends: suspend/suspend_advanced
 estimated_duration: 30.0
 requires:
- device.category == 'WIRELESS'
-command: 
- cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=WIRELESS" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: shell
- id: suspend/iperf_after_suspend_wifi_auto_$2
- depends: suspend/suspend_advanced
- requires: device.path == "$1"
- user: root
- environ: TEST_TARGET_FTP TEST_TARGET_IPERF TEST_USER TEST_PASS
- command: network test -i $2 -t iperf
- _description:
-  This test executes iperf connection performance/stability against all the ethernet devices found on the system after suspend.
- EOF
+ device.path == '{path}'
+ package.name == 'iperf'
+user: root
+environ: TEST_TARGET_FTP TEST_TARGET_IPERF TEST_USER TEST_PASS
+command: network -i {interface} -t iperf
 _description:
- This is an automated test to gather some info on the current state of your network devices. If no devices are found, the test will exit with an error.
+ This test executes iperf connection performance/stability against device {__index__} ({interface}) after suspend.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/iperf_after_suspend_mobilebroadband_gsm_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 20.0
@@ -900,6 +1100,7 @@ _description:
  This test executes iperf connection performance/stability against the broadband device found on the system after suspend.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/iperf_after_suspend_mobilebroadband_cdma_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 20.0
@@ -913,6 +1114,7 @@ _description:
  This test executes iperf connection performance/stability against the broadband device found on the system after suspend.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_bg_manual
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -924,9 +1126,17 @@ environ: ROUTER_SSID ROUTER_PSK
 command:
     trap "nmcli con delete id $ROUTER_SSID" EXIT
     if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -939,11 +1149,12 @@ _description:
      2. Change the settings to only accept connections on the B and G wireless bands
      3. Make sure the SSID is set to ROUTER_SSID
      4. Change the security settings to use WPA2 and ensure the PSK matches that set in ROUTER_PSK
-     5. Click the 'Test' button to create a connection to the router and test the connection
+     5. Commence the test to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_bg_manual
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -955,9 +1166,17 @@ environ: ROUTER_SSID
 command:
     trap "nmcli con delete id $ROUTER_SSID" EXIT
     if create_connection wifi $ROUTER_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -970,11 +1189,12 @@ _description:
      2. Change the settings to only accept connections on the B and G wireless bands
      3. Make sure the SSID is set to ROUTER_SSID
      4. Change the security settings to use no security
-     5. Click the 'Test' button to create a connection to the router and test the connection
+     5. Commence the test to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_n_manual
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -986,9 +1206,17 @@ environ: ROUTER_SSID ROUTER_PSK
 command:
     trap "nmcli con delete id $ROUTER_SSID" EXIT
     if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -1001,11 +1229,12 @@ _description:
      2. Change the settings to only accept connections on the N wireless band
      3. Make sure the SSID is set to ROUTER_SSID
      4. Change the security settings to use WPA2 and ensure the PSK matches that set in ROUTER_PSK
-     5. Click the 'Test' button to create a connection to the router and test the connection
+     5. Commence the test to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_n_manual
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1017,9 +1246,17 @@ environ: ROUTER_SSID
 command:
     trap "nmcli con delete id $ROUTER_SSID" EXIT
     if create_connection wifi $ROUTER_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -1032,11 +1269,12 @@ _description:
      2. Change the settings to only accept connections on the N wireless band
      3. Make sure the SSID is set to ROUTER_SSID
      4. Change the security settings to use no security
-     5. Click the 'Test' button to create a connection to the router and test the connection
+     5. Commence the test to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_wpa_ac_manual
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1048,9 +1286,17 @@ environ: ROUTER_SSID ROUTER_PSK
 command:
     trap "nmcli con delete id $ROUTER_SSID" EXIT
     if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -1063,11 +1309,12 @@ _description:
      2. Change the settings to only accept connections on the 802.11ac protocol.
      3. Make sure the SSID is set to ROUTER_SSID
      4. Change the security settings to use WPA2 and ensure the PSK matches that set in ROUTER_PSK
-     5. Click the 'Test' button to create a connection to the router and test the connection
+     5. Commence the test to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wireless_connection_after_suspend_open_ac_manual
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1079,9 +1326,17 @@ environ: ROUTER_SSID
 command:
     trap "nmcli con delete id $ROUTER_SSID" EXIT
     if create_connection wifi $ROUTER_SSID; then
+        connect_wireless # lp:1471663
         INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
         iw dev $INTERFACE link
         gateway_ping_test --interface=$INTERFACE
+        STATUS=$?
+        # We reconnect the Ethernet connection if any (lp:1471663)
+        WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
+        if [[ ! -z $WIRED ]]; then
+            nmcli c up uuid $WIRED
+        fi
+        exit $STATUS
     else
         exit 1
     fi
@@ -1094,11 +1349,12 @@ _description:
      2. Change the settings to only accept connections on the 802.11ac protocol.
      3. Make sure the SSID is set to ROUTER_SSID
      4. Change the security settings to use no security
-     5. Click the 'Test' button to create a connection to the router and test the connection
+     5. Commence the test to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_detect_after_suspend
 depends: suspend/suspend_advanced bluetooth/detect-output
 estimated_duration: 1.2
@@ -1124,62 +1380,7 @@ _description:
  This test grabs the hardware address of the bluetooth adapter after suspend and compares it to the address grabbed before suspend.
 
 plugin: shell
-id: suspend/bluetooth_obex_after_suspend
-depends: suspend/suspend_advanced suspend/bluetooth_obex_before_suspend
-estimated_duration: 10.0
-requires:
- package.name == 'bluez'
- package.name == 'obexd-client'
- device.category == 'BLUETOOTH'
-command:
-  if [ -z "$BTDEVADDR" ]
-  then
-    echo "btdevaddr option not set to device address of Bluetooth target in checkbox.ini"
-    exit 1
-  fi
-  if rfkill list bluetooth | grep -q 'Hard blocked: yes'
-  then
-    echo "rfkill shows BT is hard blocked"
-  fi
-  if rfkill list bluetooth | grep -q 'Soft blocked: yes'
-  then
-    echo "rfkill shows BT is soft blocked, removing before testing."
-    rfkill unblock bluetooth
-    sleep 3
-  fi
-  obex_send $BTDEVADDR $PLAINBOX_PROVIDER_DATA/images/JPEG_Color_Image_Ubuntu.jpg
-_description:
- This is an automated Bluetooth file transfer test. It sends an image to the device specified by the BTDEVADDR environment variable.
-
-plugin: shell
-id: suspend/bluetooth_obex_after_suspend_auto
-depends: suspend/suspend_advanced_auto suspend/bluetooth_obex_before_suspend
-estimated_duration: 10.0
-requires:
- package.name == 'bluez'
- package.name == 'obexd-client'
- device.category == 'BLUETOOTH'
-command:
-  if [ -z "$BTDEVADDR" ]
-  then
-    echo "btdevaddr option not set to device address of Bluetooth target in checkbox.ini"
-    exit 1
-  fi
-  if rfkill list bluetooth | grep -q 'Hard blocked: yes'
-  then
-    echo "rfkill shows BT is hard blocked"
-  fi
-  if rfkill list bluetooth | grep -q 'Soft blocked: yes'
-  then
-    echo "rfkill shows BT is soft blocked, removing before testing."
-    rfkill unblock bluetooth
-    sleep 3
-  fi
-  obex_send $BTDEVADDR $PLAINBOX_PROVIDER_DATA/images/JPEG_Color_Image_Ubuntu.jpg
-_description:
- This is an automated Bluetooth file transfer test. It sends an image to the device specified by the BTDEVADDR environment variable.
-
-plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_send_after_suspend
 depends: suspend/suspend_advanced
 estimated_duration: 10.0
@@ -1208,6 +1409,7 @@ _description:
  This is an automated Bluetooth file transfer test. It sends an image to the device specified by the BTDEVADDR environment variable.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_send_after_suspend_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 10.0
@@ -1236,6 +1438,7 @@ _description:
  This is an automated Bluetooth file transfer test. It sends an image to the device specified by the BTDEVADDR environment variable.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_browse_after_suspend
 depends: suspend/suspend_advanced
 estimated_duration: 10.0
@@ -1264,6 +1467,7 @@ _description:
  This is an automated Bluetooth test. It emulates browsing on a remote device specified by the BTDEVADDR environment variable.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_browse_after_suspend_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 20.0
@@ -1292,6 +1496,7 @@ _description:
  This is an automated Bluetooth test. It emulates browsing on a remote device specified by the BTDEVADDR environment variable.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_get_after_suspend
 estimated_duration: 20.0
 depends: suspend/suspend_advanced
@@ -1320,6 +1525,7 @@ _description:
  This is an automated Bluetooth test. It receives the given file from a remote host specified by the BTDEVADDR environment variable
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/bluetooth_obex_get_after_suspend_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 20.0
@@ -1348,24 +1554,7 @@ _description:
  This is an automated Bluetooth test. It receives the given file from a remote host specified by the BTDEVADDR environment variable
 
 plugin: user-interact-verify
-id: suspend/bluetooth_obex_after_suspend_manual
-depends: suspend/suspend_advanced suspend/bluetooth_obex_before_suspend_manual
-estimated_duration: 120.0
-requires:
- package.name == 'bluez'
- package.name == 'obexd-client'
- device.category == 'BLUETOOTH'
-command: rfkill unblock bluetooth; obex_send `bluetooth_scan` $PLAINBOX_PROVIDER_DATA/images/JPEG_Color_Image_Ubuntu.jpg
-_description:
- PURPOSE:
-     This test will send the image 'JPEG_Color_Image_Ubuntu.jpg' to a specified device
- STEPS:
-     1. Click "Test" and you will be prompted to enter the Bluetooth device name of a device that can accept file transfers (It may take a few moments after entering the name for the file to begin sending)
-     2. Accept any prompts that appear on both devices
- VERIFICATION:
-     Was the data correctly transferred?
-
-plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/cycle_resolutions_after_suspend
 estimated_duration: 120.0
 requires: package.name == 'xorg'
@@ -1387,6 +1576,7 @@ _summary: Cycle resolution after suspend tests
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: user-interact-verify
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_cycle_resolutions_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  requires: package.name == 'xorg'
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
@@ -1402,6 +1592,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/cycle_resolutions_after_suspend_auto
 estimated_duration: 1.2
 requires: package.name == 'xorg'
@@ -1412,9 +1603,10 @@ _description:
 command: xrandr_cycle --keyword=after_suspend --screenshot-dir $PLAINBOX_SESSION_SHARE
 
 plugin: attachment
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/xrandr_screens_after_suspend.tar.gz
 depends: suspend/cycle_resolutions_after_suspend
-command: [ -e $PLAINBOX_SESSION_SHARE/xrandr_screens_after_suspend.tgz ] && cat $PLAINBOX_SESSION_SHARE/xrandr_screens_after_suspend.tgz
+command: [ -f $PLAINBOX_SESSION_SHARE/xrandr_screens_after_suspend.tgz ] && base64 $PLAINBOX_SESSION_SHARE/xrandr_screens_after_suspend.tgz
 _description: This attaches screenshots from the suspend/cycle_resolutions_after_suspend test to the results submission.
 
 plugin: local
@@ -1424,13 +1616,15 @@ _summary: Attach screenshots from the suspend/cycle_resolution_after_suspend tes
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: attachment
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_xrandr_screens_after_suspend.tar.gz
  depends: suspend/`echo ${index}`_cycle_resolutions_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
- command: [ -e $PLAINBOX_SESSION_SHARE/`echo ${index}`_xrandr_screens_after_suspend.tgz ] && cat $PLAINBOX_SESSION_SHARE/`echo ${index}`_xrandr_screens_after_suspend.tgz
+ command: [ -f $PLAINBOX_SESSION_SHARE/`echo ${index}`_xrandr_screens_after_suspend.tgz ] && base64 $PLAINBOX_SESSION_SHARE/`echo ${index}`_xrandr_screens_after_suspend.tgz
  _description: This attaches screenshots from the suspend/cycle_resolutions_after_suspend test to the results submission.
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/record_playback_after_suspend
 estimated_duration: 10.0
 depends: suspend/suspend_advanced
@@ -1447,6 +1641,7 @@ _description:
  This will check to make sure that your audio device works properly after a suspend and resume.  This may work fine with speakers and onboard microphone, however, it works best if used with a cable connecting the audio-out jack to the audio-in jack.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/record_playback_after_suspend_auto
 estimated_duration: 10.0
 depends: suspend/suspend_advanced_auto
@@ -1463,12 +1658,14 @@ _description:
  This will check to make sure that your audio device works properly after a suspend and resume.  This may work fine with speakers and onboard microphone, however, it works best if used with a cable connecting the audio-out jack to the audio-in jack.
 
 plugin: attachment
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/suspend-auto-single-log-attach
 command: [ -e $PLAINBOX_SESSION_SHARE/suspend_auto_single_log ] && cat $PLAINBOX_SESSION_SHARE/suspend_auto_single_log
 _description:
  Attaches the log from the single suspend/resume test to the results
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/screenshot_after_suspend
 estimated_duration: 10.0
 depends: suspend/suspend_advanced_auto
@@ -1483,12 +1680,14 @@ _description:
      Review attachment manually later
 
 plugin: attachment
+category_id: 2013.com.canonical.plainbox::suspend
 id: screenshot_after_suspend.jpg
 depends: suspend/screenshot_after_suspend
 command: base64 ${PLAINBOX_SESSION_SHARE}/screenshot_after_suspend.jpg
 _description: Attaches the screenshot captured in graphics/screenshot.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/gpu_lockup_after_suspend
 estimated_duration: 10.0
 requires:
@@ -1508,6 +1707,7 @@ _description:
      After a 60s workload, check kern.log for reported GPU errors
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wifi_resume_time
 depends: suspend/suspend_advanced
 requires:
@@ -1519,6 +1719,7 @@ _description:
  after a suspend/resume cycle.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/wifi_resume_time_auto
 estimated_duration: 1.2
 depends: suspend/suspend_advanced_auto
@@ -1530,6 +1731,7 @@ _description:
  after a suspend/resume cycle.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/network_resume_time
 depends: suspend/suspend_advanced
 estimated_duration: 1.2
@@ -1541,6 +1743,7 @@ _description:
   after a suspend/resume cycle.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/network_resume_time_auto
 depends: suspend/suspend_advanced_auto
 estimated_duration: 1.2
@@ -1552,6 +1755,7 @@ _description:
   after a suspend/resume cycle.
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/power
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1564,6 +1768,7 @@ _description:
      Does the power LED remain on after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/battery-charging
 estimated_duration: 120.0
 depends: suspend/suspend_advanced
@@ -1577,6 +1782,7 @@ _description:
      Did the battery indicator LED still turn orange after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/battery-charged
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1591,6 +1797,7 @@ _description:
      Does the orange battery LED still shut off when system is fully charged after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/battery-low
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1604,6 +1811,7 @@ _description:
      Does the LED light orange when battery is low after resuming from suspend?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/hdd
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1618,6 +1826,7 @@ _description:
      Did the HDD LED still blink with HDD activity after resuming from suspend?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/numeric-keypad
 estimated_duration: 120.0
 depends: suspend/suspend_advanced
@@ -1634,6 +1843,7 @@ _description:
      2. Numbers should only be entered in the keyboard verification window when the LED is on
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/caps-lock
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1647,6 +1857,7 @@ _description:
      Did the Cap Keys LED light as expected after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/wlan
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1660,6 +1871,7 @@ _description:
      Did the WLAN LED light as expected after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/wlan-disabled
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1675,6 +1887,7 @@ _description:
      Did the LED turn off then WLAN is disabled after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/bluetooth
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1690,6 +1903,7 @@ _description:
      Did the bluetooth LED turn off and on twice after resuming from suspend?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/camera
 estimated_duration: 120.0
 depends:
@@ -1706,6 +1920,7 @@ _description:
      Did the camera LED still turn on and off after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/touchpad
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1721,6 +1936,7 @@ _description:
      3. When the LED is off, the mouse pointer should not move on touchpad usage
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/led_after_suspend/wireless
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1738,10 +1954,11 @@ _description:
      Did the WLAN/Bluetooth LED light as expected after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/brightness
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
-requires: dmi.product in ['Notebook','Laptop','Portable']
+requires: dmi.product in ['Notebook','Laptop','Portable','All In One','All-In-One','AIO']
 _description:
  PURPOSE:
      This test will test the brightness key after resuming from suspend
@@ -1751,6 +1968,7 @@ _description:
      Did the brightness change following to your key presses after resuming from suspend?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/volume
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1769,6 +1987,7 @@ _description:
      Did the volume change following to your key presses?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/mute
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1786,6 +2005,7 @@ _description:
      Did the volume mute following your key presses?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/sleep
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1801,6 +2021,7 @@ _description:
      Did the system go to sleep after pressing the sleep key after resuming from suspend?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/battery-info
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1819,6 +2040,7 @@ _description:
      Did the Battery Info key work as expected after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/wireless
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1833,6 +2055,7 @@ _description:
      Did the wireless go off on the first press and on again on the second after resuming from suspend?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/media-control
 estimated_duration: 120.0
 depends: suspend/suspend_advanced
@@ -1851,6 +2074,7 @@ _description:
      Do the keys work as expected after resuming from suspend?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/super
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1868,6 +2092,7 @@ _description:
      Does the super key work as expected after resuming from suspend?
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/video-out
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1882,6 +2107,7 @@ _description:
      Check that the video signal can be mirrored, extended, displayed on external or onboard only, after resuming from suspend.
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/keys_after_suspend/touchpad
 depends: suspend/suspend_advanced
 estimated_duration: 120.0
@@ -1897,6 +2123,7 @@ _description:
      Verify the touchpad has been disabled and re-enabled.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb_insert_after_suspend
 estimated_duration: 30.0
 depends:
@@ -1915,6 +2142,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb3_insert_after_suspend
 estimated_duration: 30.0
 requires:
@@ -1935,6 +2163,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb_remove_after_suspend
 estimated_duration: 30.0
 depends:
@@ -1952,6 +2181,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb3_remove_after_suspend
 estimated_duration: 30.0
 depends:
@@ -1971,6 +2201,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb_storage_automated_after_suspend
 estimated_duration: 1.2
 depends: suspend/usb_insert_after_suspend
@@ -1981,6 +2212,7 @@ _description:
  test is run.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb3_storage_automated_after_suspend
 estimated_duration: 1.2
 requires:
@@ -1993,6 +2225,7 @@ _description:
  test is run.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb_storage_preinserted_after_suspend
 estimated_duration: 1.2
 user: root
@@ -2004,6 +2237,7 @@ _description:
  is intended for servers and SRU automated testing.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb3_storage_preinserted_after_suspend
 estimated_duration: 1.2
 user: root
@@ -2017,6 +2251,7 @@ _description:
  is intended for servers and SRU automated testing.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb_performance_after_suspend
 depends: suspend/usb_insert_after_suspend
 user: root
@@ -2027,6 +2262,7 @@ _description:
  minimum expected speed.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/usb3_superspeed_performance_after_suspend
 requires:
  usb.usb3 == 'supported'
@@ -2039,6 +2275,7 @@ _description:
  as SuperSpeed USB device using xhci_hcd driver and transfers data correctly.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/mmc-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2057,6 +2294,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/mmc-storage-after-suspend
 depends: suspend/mmc-insert-after-suspend
 estimated_duration: 10.0
@@ -2067,6 +2305,7 @@ _description:
  is run. It tests reading and writing to the MMC card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/mmc-remove-after-suspend
 depends: suspend/mmc-insert-after-suspend
 estimated_duration: 30.0
@@ -2083,6 +2322,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/sd-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2102,6 +2342,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/sd-storage-after-suspend
 estimated_duration: 10.0
 depends: suspend/sd-insert-after-suspend
@@ -2112,6 +2353,7 @@ _description:
  is run. It tests reading and writing to the SD card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/sd-remove-after-suspend
 estimated_duration: 30.0
 depends: suspend/sd-insert-after-suspend
@@ -2129,6 +2371,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/sdhc-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2148,6 +2391,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/sdhc-storage-after-suspend
 estimated_duration: 10.0
 depends: suspend/sdhc-insert-after-suspend
@@ -2158,6 +2402,7 @@ _description:
  is run. It tests reading and writing to the SDHC card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/sdhc-remove-after-suspend
 estimated_duration: 30.0
 depends: suspend/sdhc-insert-after-suspend
@@ -2174,6 +2419,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/cf-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2192,6 +2438,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/cf-storage-after-suspend
 estimated_duration: 10.0
 depends: mediacard/cf-insert-after-suspend
@@ -2202,6 +2449,7 @@ _description:
  is run. It tests reading and writing to the CF card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/cf-remove-after-suspend
 estimated_duration: 30.0
 depends: mediacard/cf-insert-after-suspend
@@ -2218,6 +2466,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/sdxc-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2236,6 +2485,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/sdxc-storage-after-suspend
 estimated_duration: 10.0
 depends: mediacard/sdxc-insert-after-suspend
@@ -2246,6 +2496,7 @@ _description:
  is run. It tests reading and writing to the SDXC card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/sdxc-remove-after-suspend
 depends: mediacard/sdxc-insert-after-suspend
 estimated_duration: 30.0
@@ -2263,6 +2514,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/ms-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2281,6 +2533,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/ms-storage-after-suspend
 estimated_duration: 10.0
 depends: mediacard/ms-insert-after-suspend
@@ -2291,6 +2544,7 @@ _description:
  is run. It tests reading and writing to the MS card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/ms-remove-after-suspend
 estimated_duration: 30.0
 depends: mediacard/ms-insert-after-suspend
@@ -2307,6 +2561,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/msp-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2325,6 +2580,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/msp-storage-after-suspend
 estimated_duration: 10.0
 depends: mediacard/msp-insert-after-suspend
@@ -2335,6 +2591,7 @@ _description:
  is run. It tests reading and writing to the MSP card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/msp-remove-after-suspend
 estimated_duration: 30.0
 depends: mediacard/msp-insert-after-suspend
@@ -2351,6 +2608,7 @@ _description:
      automatically selected result.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/xd-insert-after-suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -2369,6 +2627,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/xd-storage-after-suspend
 estimated_duration: 10.0
 depends: mediacard/xd-insert-after-suspend
@@ -2379,6 +2638,7 @@ _description:
  is run. It tests reading and writing to the xD card after the system has been suspended.
 
 plugin: user-interact
+category_id: 2013.com.canonical.plainbox::suspend
 id: mediacard/xd-remove-after-suspend
 estimated_duration: 30.0
 depends: mediacard/xd-insert-after-suspend
@@ -2395,6 +2655,7 @@ _description:
      automatically selected result.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: touchpad/touchpad_after_suspend
 depends: suspend/suspend_advanced_auto
 requires:
@@ -2406,7 +2667,10 @@ _description:
  Determine if the touchpad is still functioning after suspend/resume.
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::suspend
 id: touchscreen/touchscreen_after_suspend
+imports: from 2013.com.canonical.plainbox import manifest
+requires: manifest.has_touchscreen == 'True'
 depends: suspend/suspend_advanced_auto
 estimated_duration: 30.0
 _description:
@@ -2418,6 +2682,7 @@ _description:
      Does tap recognition work?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: camera/display_after_suspend
 estimated_duration: 120.0
 depends: suspend/suspend_advanced
@@ -2433,6 +2698,7 @@ _description:
      Did you see the video capture?
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: camera/still_after_suspend
 estimated_duration: 120.0
 depends: camera/display_after_suspend
@@ -2451,6 +2717,7 @@ _description:
      Did you see the image?
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: camera/multiple_resolution_after_suspend
 estimated_duration: 1.2
 depends: camera/still_after_suspend
@@ -2471,6 +2738,7 @@ _description: Pointing device tests after suspend.
 command:
  cat <<'EOF' | run_templates -t -s 'udev_resource | filter_templates -w "category=MOUSE" -w "category=TOUCHPAD" -w "category=TOUCHSCREEN"'
  plugin: manual
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/pointing-after-suspend_`echo "${product}_${category}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`_`basename $path`
  depends: suspend/suspend_advanced
  requires: device.path == "$path"
@@ -2483,6 +2751,34 @@ command:
       Did the cursor move?
  EOF
 
+plugin: local
+_summary: Create click tests for pointing devices after suspend.
+id: suspend/clicking-after-suspend
+estimated_duration: 1.0
+requires:
+ device.category == 'MOUSE' or device.category == 'TOUCHPAD'
+_description: Click tests for pointing devices after suspend.
+command:
+ cat <<'EOF' | run_templates -t -s 'udev_resource | filter_templates -w "category=MOUSE" -w "category=TOUCHPAD"'
+ plugin: manual
+ category_id: 2013.com.canonical.plainbox::suspend
+ estimated_duration: 30.0
+ id: suspend/clicking-after-suspend_`echo "${product}_${category}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`_`basename $path`
+ depends: suspend/suspend_advanced
+ requires: device.path == "$path"
+ _summary: Check post suspend button functionality for $product
+ _description:
+  PURPOSE:
+      This will test the buttons of your $product device after suspend
+  STEPS:
+      1. Click the left button with your $product.
+      2. Click the right button with your $product.
+      3. Click the middle button with your $product (if available).
+      4. Double-click the left button with your $product.
+  VERIFICATION:
+      Did these buttons work as expected?
+ EOF
+
 id: suspend/generator_compiz_check_after_suspend
 requires: device.category == 'VIDEO'
 _description: Compiz support tests after suspend
@@ -2491,6 +2787,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: shell
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_compiz_check_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  requires: package.name == 'nux-tools'
@@ -2501,6 +2798,7 @@ command:
  EOF
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/compiz_check_after_suspend
 depends: suspend/suspend_advanced
 requires: package.name == 'nux-tools'
@@ -2517,6 +2815,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: user-interact-verify
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_glxgears_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  requires: package.name == 'mesa-utils'
@@ -2534,6 +2833,7 @@ command:
  EOF
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 id: suspend/glxgears_after_suspend
 depends: suspend/suspend_advanced
 requires:
@@ -2561,6 +2861,7 @@ command:
  id: suspend/`echo ${index}`_video_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  plugin: user-interact-verify
+ category_id: 2013.com.canonical.plainbox::suspend
  requires:
   package.name == 'xorg'
   package.name == 'gir1.2-gst-plugins-base-0.10' or package.name == 'gir1.2-gst-plugins-base-1.0'
@@ -2577,6 +2878,7 @@ command:
 
 id: suspend/video_after_suspend
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::suspend
 depends: suspend/suspend_advanced
 requires:
  device.category == 'VIDEO'
@@ -2600,6 +2902,7 @@ plugin: local
 command:
  cat <<'EOF' | run_templates -t -s 'graphics_card_resource'
  plugin: shell
+ category_id: 2013.com.canonical.plainbox::suspend
  id: suspend/`echo ${index}`_driver_version_after_suspend_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  depends: suspend/`echo ${index}`_suspend_after_switch_to_card_`echo "${product}" | sed 's/ /_/g;s/[^_a-zA-Z0-9-]//g'`
  command: graphics_driver
@@ -2612,8 +2915,30 @@ id: suspend/driver_version_after_suspend
 requires: device.category == 'VIDEO'
 depends: suspend/suspend_advanced
 plugin: shell
+category_id: 2013.com.canonical.plainbox::suspend
 command: graphics_driver
 estimated_duration: 0.500
 _description: Parses Xorg.0.Log and discovers the running X driver and version after suspend
 _summary: Test X driver/version after suspend
+
+id: suspend/oops_after_suspend
+depends: suspend/suspend_advanced
+plugin:shell
+estimated_duration: 10.0
+requires:
+  package.name == 'fwts'
+user: root
+_description:
+ Run Firmware Test Suite (fwts) oops tests after suspend.
+environ: PLAINBOX_SESSION_SHARE
+command:
+ fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_oops_results_after_s3.log -t oops
+
+id: suspend/oops_results_after_suspend.log
+plugin: attachment
+category_id: 2013.com.canonical.plainbox::suspend
+estimated_duration: 0.5
+command:
+ [ -e ${PLAINBOX_SESSION_SHARE}/fwts_oops_results_after_s3.log ] && cat ${PLAINBOX_SESSION_SHARE}/fwts_oops_results_after_s3.log
+_description: Attaches the FWTS oops results log to the submission after suspend
 
