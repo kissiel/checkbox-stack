@@ -1,4 +1,5 @@
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/submission-resources
 depends:
  cpuinfo
@@ -17,6 +18,7 @@ _description:
     A meta-job depending on the resources needed for a valid submission.
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/tester-info
 _description:
  PURPOSE:
@@ -31,6 +33,7 @@ _description:
      Nothing to verify for this test
 
 plugin: user-interact-verify
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/chvt
 requires:
  package.name == 'kbd'
@@ -45,6 +48,7 @@ _description:
      Did your screen change temporarily to a text console and then switch back to your current session?
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/fwts_test
 estimated_duration: 1.2
 requires:
@@ -57,12 +61,23 @@ command:
  fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_results.log
 
 plugin: attachment
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/fwts_results.log
 command:
  [[ -e ${PLAINBOX_SESSION_SHARE}/fwts_results.log ]] && cat ${PLAINBOX_SESSION_SHARE}/fwts_results.log
 _description: Attaches the FWTS results log to the submission
 
+plugin: attachment
+category_id: 2013.com.canonical.plainbox::miscellanea
+estimated_duration: 0.5
+id: miscellanea/fwts_results_hwe.log.gz
+command:
+ [ -f $PLAINBOX_SESSION_SHARE/fwts_results_hwe.log ] && gzip -c $PLAINBOX_SESSION_SHARE/fwts_results_hwe.log | base64
+_description: Attaches the FWTS results log to the submission (to HWE)
+_summary: Attach FWTS log to submission (to HWE)
+
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/ipmi_test
 requires: package.name == 'ipmitool'
 user: root
@@ -71,8 +86,11 @@ _description:
  This will run some basic connectivity tests against a BMC, verifying that IPMI works.
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 estimated_duration: 0.5
 id: miscellanea/boot_mode
+requires:
+ cpuinfo.platform in ("i386", "x86_64", "aarch64")
 _summary: EFI-mode boot test
 _description: Succeeds when booted in EFI mode; fails otherwise
 command:
@@ -84,6 +102,7 @@ command:
   fi
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/bmc_info
 requires: package.name == 'ipmitool'
 estimated_duration: 0.5
@@ -95,6 +114,19 @@ _summary:
  Gather BMC Identification info
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
+id: miscellanea/cpus_are_not_samples
+requires: package.name == 'dmidecode'
+estimated_duration: 0.5
+user: root
+command: dmitest cpu-check
+_description:
+ Sanity check of CPU information; fails if CPU is an engineering sample
+_summary:
+ CPU sanity check
+
+plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/dmitest_server
 requires: package.name == 'dmidecode'
 estimated_duration: 0.5
@@ -106,6 +138,7 @@ _summary:
  DMI ID sanity check (servers)
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/dmitest_client
 requires: package.name == 'dmidecode'
 estimated_duration: 0.5
@@ -117,6 +150,7 @@ _summary:
  DMI ID sanity check (desktops/laptops)
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/is_laptop
 user: root
 _description:
@@ -124,6 +158,7 @@ _description:
 command: check_is_laptop
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/apport-directory
 requires: package.name == 'apport'
 command: if [ -d /var/crash ]; then if [ $(find /var/crash -type f | grep -v .lock | wc -l) -eq 0 ]; then echo "/var/crash is empty"; else echo `ls /var/crash`; false; fi; else echo "/var/crash does not exist"; fi
@@ -131,52 +166,50 @@ _description:
  Test that the /var/crash directory doesn't contain anything. Lists the files contained within if it does, or echoes the status of the directory (doesn't exist/is empty)
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/sources-list
 command: sources_test $SOURCES_LIST "$REPOSITORIES"
 _description: Checks that a specified sources list file contains the requested repositories
 
-plugin: local
-_summary: Automated job to generate the PXE verification test for each NIC.
-id: miscellanea/pxe_boot
-requires: device.category == 'NETWORK'
-_description: Automated job to generate the PXE verification test for each NIC.
-command:
- cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=NETWORK" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: manual
- id: miscellanea/pxe_boot_$2
- description:
-  PURPOSE:
-    This test will verify that you have attempted to PXE boot this machine from
-    the network device $2.
-  STEPS:
-    1. Prior to running this test, you should have attempted to boot this system via PXE on every Network Port available.
-  VERIFICATION:
-    1. Select Yes if you successfully used PXE boot this system using the NIC $2
-    2. Select No if you did not attempt to PXE boot this system using the NIC $2
-    3. Select No if you attempted to PXE boot via $2 and it failed for some reason.
- EOF
+unit: template
+template-unit: job
+template-resource: device
+template-filter: device.category == 'NETWORK'
+plugin: manual
+category_id: 2013.com.canonical.plainbox::miscellanea
+id: miscellanea/pxe_boot_device{__index__}_{interface}
+_summary: PXE verification test of device {__index__} ({interface})
+estimated_duration: 30.0
+_purpose:
+ This test will verify that you have attempted to PXE boot this machine from
+ the network device {__index__} ({interface}).
+_steps:
+ 1. Prior to running this test, you should have attempted to boot this system via PXE on every Network Port available.
+_verification:
+ 1. Select Yes if you successfully used PXE boot this system using the NIC {interface}
+ 2. Select No if you did not attempt to PXE boot this system using the NIC {interface}
+ 3. Select No if you attempted to PXE boot via {interface} and it failed for some reason.
 
-plugin: local
-_summary: Automated job to generate the Remote Shared IPMI verification test for each NIC.
-id: miscellanea/remote_shared_ipmi
-requires: device.category == 'NETWORK'
-_description: Automated job to generate the Remote Shared IPMI verification test for each NIC.
-command:
- cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=NETWORK" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: manual
- id: miscellanea/remote_shared_ipmi_$2
- description:
-  PURPOSE:
-    This test will verify that you have attempted IPMI control of this machine from the network device $2.
-  STEPS:
-    1. Prior to running this test, you should have configured and used IPMI to power this machine off and on using every Network Port available.
-  VERIFICATION:
-    1. Select Yes if you successfully used IPMI to remotely power this system off and on using the NIC $2
-    2. Select No if you did not attempt to use IPMI to remotely power this sytem off and on via the NIC $2
-    3. Select No if you attempted to use IPMI to remotely power off/on this system via $2 and it failed for some reason.
- EOF
+unit: template
+template-unit: job
+template-resource: device
+template-filter: device.category == 'NETWORK'
+plugin: manual
+category_id: 2013.com.canonical.plainbox::miscellanea
+id: miscellanea/remote_shared_ipmi_device{__index__}_{interface}
+_summary: Remote Shared IPMI verification test for device {__index__} ({interface})
+estimated_duration: 30.0
+_purpose:
+ This test will verify that you have attempted IPMI control of this machine from the network device {__index__} ({interface}).
+_steps:
+ 1. Prior to running this test, you should have configured and used IPMI to power this machine off and on using every Network Port available.
+_verification:
+ 1. Select Yes if you successfully used IPMI to remotely power this system off and on using the NIC {interface}
+ 2. Select No if you did not attempt to use IPMI to remotely power this sytem off and on via the NIC {interface}
+ 3. Select No if you attempted to use IPMI to remotely power off/on this system via {interface} and it failed for some reason.
 
 plugin: manual
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/remote_dedicated_ipmi
 _description:
  PURPOSE:
@@ -201,6 +234,7 @@ command:
  fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_oops_results.log -t oops
 
 plugin: attachment
+category_id: 2013.com.canonical.plainbox::miscellanea
 estimated_duration: 0.5
 id: miscellanea/oops_results.log
 command:
@@ -208,6 +242,7 @@ command:
 _description: Attaches the FWTS oops results log to the submission
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 estimated_duration: 0.1
 id: miscellanea/get_maas_version
 command:
@@ -221,6 +256,7 @@ _description: If system was installed via MAAS from a cert server, the MAAS vers
 _summary: Gets the version of MAAS used to deploy the SUT
 
 plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 estimated_duration: 30.0
 id: miscellanea/get_make_and_model
 user: root
