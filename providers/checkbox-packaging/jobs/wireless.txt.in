@@ -588,7 +588,6 @@ _description:
   respond to requests on the 802.11b protocol.
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter:
  device.category == 'WIRELESS'
@@ -597,7 +596,6 @@ category_id: 2013.com.canonical.plainbox::wireless
 id: wireless/stress_performance_device{__index__}_{interface}
 estimated_duration: 330.0
 requires:
- device.path == '{path}'
  package.name == 'iperf'
 environ: TEST_TARGET_IPERF
 user: root
@@ -645,14 +643,12 @@ _description:
  Test that the MAC80211 modules are loaded and wireless extensions are working.
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter: device.category == 'WIRELESS'
 plugin: shell
 category_id: 2013.com.canonical.plainbox::wireless
 id: wireless/iwconfig_check_device{__index__}_{interface}
 estimated_duration: 1.2
-requires: device.path == '{path}'
 command: iwconfig {interface}
 _description:
  This test executes iwconfig requests against wireless device {__index__} ({interface}).
@@ -674,7 +670,6 @@ _description:
      Did the hard or soft blocks show on in the dialog?
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter: device.category == 'WIRELESS'
 plugin: user-interact-verify
@@ -682,7 +677,6 @@ category_id: 2013.com.canonical.plainbox::wireless
 id: wireless/maximum_bandwidth_device{__index__}_{interface}
 estimated_duration: 120.0
 requires:
- device.path == '{path}'
  package.name == 'zenity'
  package.name == 'iperf'
 environ: TEST_TARGET_IPERF

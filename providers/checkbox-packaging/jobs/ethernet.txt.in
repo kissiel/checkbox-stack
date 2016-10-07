@@ -1,16 +1,18 @@
 unit: packaging meta-data
 os-id: debian
-Depends: module-init-tools
+Depends: kmod
 
 plugin: shell
 category_id: 2013.com.canonical.plainbox::ethernet
 id: ethernet/detect
 requires:
  device.category == 'NETWORK' or device.category == 'WIRELESS'
- package.name == 'module-init-tools'
+ package.name == 'kmod' or package.name == 'module-init-tools'
  package.name == 'pciutils'
 command: network_device_info
 estimated_duration: 1.2
+_summary:
+ Report info about available network devices
 _description: 
  Test to detect and return information about available network controllers on
  the system under test.
@@ -23,6 +25,8 @@ requires:
  device.category == 'NETWORK'
 command: udev_resource | filter_templates -w "category=NETWORK" | awk "/interface: / { print \$2 }" | xargs -n 1 network_info
 estimated_duration: 30.0
+_summary:
+ Gather info on current state of network devices
 _description:
  Gathers some info on the current state of your network devices. If no devices
  are found, the test will exit with an error.
@@ -43,49 +47,44 @@ _description:
      Did a notification show and was the connection correctly established?
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter: device.category == 'NETWORK'
 plugin: shell
 category_id: 2013.com.canonical.plainbox::ethernet
 id: ethernet/multi_nic_device{__index__}_{interface}
-_summary: Multi-NIC Iperf testing for NIC {interface}
+_summary: Multi-NIC Iperf stress testing for NIC {interface}
 estimated_duration: 7400.0
 requires:
- device.path == '{path}'
  package.name == 'iperf'
  package.name == 'ethtool'
  package.name == 'nmap'
 user: root
 environ: TEST_TARGET_IPERF
-command: network test -i {interface} -t iperf --fail-threshold 80 --datasize 200 --num_runs 4
+command: network test -i {interface} -t iperf --scan-timeout 3600 --fail-threshold 80 --runtime 900 --num_runs 4
 _description:
  This test uses iperf to ensure network devices pass data at an acceptable
  minimum percentage of advertized speed.
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter: device.category == 'NETWORK'
 plugin: shell
 category_id: 2013.com.canonical.plainbox::ethernet
 id: ethernet/multi_iperf3_nic_device{__index__}_{interface}
-_summary: Multi-NIC Iperf3 testing for NIC {interface}
+_summary: Multi-NIC Iperf3 stress testing for NIC {interface}
 estimated_duration: 7400.0
 requires:
- device.path == '{path}'
  package.name == 'iperf3'
  package.name == 'ethtool'
  package.name == 'nmap'
 user: root
 environ: TEST_TARGET_IPERF
-command: network test -i {interface} -t iperf --iperf3 --fail-threshold 80 --cpu-load-fail-threshold 90 --datasize 200 --num_runs 4
+command: network test -i {interface} -t iperf --iperf3 --scan-timeout 3600 --fail-threshold 80 --cpu-load-fail-threshold 90 --runtime 900 --num_runs 4
 _description:
  This test uses iperf3 to ensure network devices pass data at an acceptable
  minimum percentage of advertized speed.
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter: device.category == 'NETWORK'
 plugin: shell
@@ -94,14 +93,12 @@ id: ethernet/ethertool_check_device{__index__}_{interface}
 _summary: ethtool check for NIC {interface}
 estimated_duration: 330.0
 requires:
- device.path == '{path}'
  package.name == 'ethtool'
 command: ethtool {interface}
 _description:
  This test executes ethtool requests against ethernet device {__index__} ({interface}).
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter: device.category == 'NETWORK'
 plugin: user-interact-verify
@@ -110,7 +107,6 @@ id: ethernet/maximum_bandwidth_device{__index__}_{interface}
 _summary: Maximum bandwidth test of device {__index__} ({interface})
 estimated_duration: 330.0
 requires:
- device.path == '{path}'
  package.name == 'zenity'
  package.name == 'iperf'
 user: root
@@ -127,7 +123,6 @@ _verification:
  Was the reported throughput acceptable for the type and maximum speed of this interface?
 
 unit: template
-template-unit: job
 template-resource: device
 template-filter: device.category == 'NETWORK'
 plugin: shell
@@ -136,7 +131,6 @@ id: ethernet/stress_performance_device{__index__}_{interface}
 _summary: Stress and performance test of ethernet device {__index__} ({interface})
 estimated_duration: 330.0
 requires:
- device.path == '{path}'
  package.name == 'ethtool'
 command: network test -i {interface} -t stress
 _description:

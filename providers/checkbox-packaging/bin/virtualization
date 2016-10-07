@@ -44,12 +44,10 @@ import tempfile
 import tarfile
 import time
 import urllib.request
+from urllib.parse import urlparse
 
 DEFAULT_TIMEOUT = 500
 
-
-class XENTest(object):
-    pass
 
 # The "TAR" type is a tarball that contains both
 # a disk image and a kernel binary. This is useful
@@ -88,7 +86,7 @@ QEMU_ARCH_CONFIG = {
     },
     'amd64': {
         'cloudimg_type': CLOUD_IMAGE_TYPE_DISK,
-        'cloudimg_arch': 'i386',
+        'cloudimg_arch': 'amd64',
         'qemu_bin': 'qemu-system-x86_64',
         'qemu_disk_type': QEMU_DISK_TYPE_VIRTIO,
         'qemu_extra_args': [
@@ -110,7 +108,19 @@ QEMU_ARCH_CONFIG = {
         'qemu_bin': 'qemu-system-ppc64',
         'qemu_disk_type': QEMU_DISK_TYPE_VIRTIO,
         'qemu_extra_args': [
-            '-machine', 'pseries',
+            '-enable-kvm',
+            '-machine', 'pseries,usb=off',
+            '-cpu', 'POWER8',
+        ],
+    },
+    's390x': {
+        'cloudimg_type': CLOUD_IMAGE_TYPE_DISK,
+        'cloudimg_arch': 's390x',
+        'qemu_bin': 'qemu-system-s390x',
+        'qemu_disk_type': QEMU_DISK_TYPE_VIRTIO,
+        'qemu_extra_args': [
+            '-enable-kvm',
+            '-machine', 's390-ccw-virtio-2.5',
         ],
     },
 }
@@ -124,7 +134,7 @@ class QemuRunner(object):
         # Parameters common to all architectures
         self.params = [
             self.config['qemu_bin'],
-            "-m", "256",
+            "-m", "1024",
             "-display", "none",
             "-nographic",
             "-net", "nic",
@@ -133,11 +143,8 @@ class QemuRunner(object):
         # If arch is arm64, add the machine type for gicv3, or default to old
         # type
         if self.arch == 'arm64':
-            if glob("/sys/firmware/devicetree/base/interrupt-controller@*/compatible"):
-                self.config['qemu_extra_args'].extend(
-                    ['-machine', 'virt,gic_version=3'])
-            else:
-                self.config['qemu_extra_args'].extend(['-machine', 'virt'])
+            (self.config['qemu_extra_args'].
+             extend(['-machine', 'virt,gic_version=host']))
         # Add any architecture-specific parameters
         if 'qemu_extra_args' in self.config:
             self.params = self.params + self.config['qemu_extra_args']
@@ -191,35 +198,68 @@ class KVMTest(object):
         self.arch = check_output(['dpkg', '--print-architecture'],
                                  universal_newlines=True).strip()
         self.qemu_config = QEMU_ARCH_CONFIG[self.arch]
+        self.release = lsb_release.get_lsb_information()["CODENAME"]
 
-    def download_image(self):
+    def url_to_path(self, image_path):
+        """
+        Test the provided image path to determine if it's a URL or or a simple
+        file path
+        """
+        url = urlparse(image_path)
+        if url.scheme == '' or url.scheme == 'file':
+            # Gives us path wheter we specify a filesystem path or a file URL
+            logging.debug("Cloud image exists locally at %s" % url.path)
+            return url.path
+        elif url.scheme == 'http' or url.scheme == 'ftp':
+            # Gives us the stuff needed to build the URL to download the image
+            return self.download_image(image_path)
+
+    def construct_cloud_filename(self):
+        """
+        Build a URL for official Ubuntu images hosted either at
+        cloud-images.ubuntu.com or on a maas server hosting a mirror of
+        cloud-images.ubuntu.com
+        """
+        if self.qemu_config['cloudimg_type'] == CLOUD_IMAGE_TYPE_TAR:
+            cloud_iso = "%s-server-cloudimg-%s.tar.gz" % (
+                        self.release, self.qemu_config['cloudimg_arch'])
+        elif self.qemu_config['cloudimg_type'] == CLOUD_IMAGE_TYPE_DISK:
+            cloud_iso = "%s-server-cloudimg-%s-disk1.img" % (
+                        self.release, self.qemu_config['cloudimg_arch'])
+        else:
+            logging.error("Unknown cloud image type")
+            sys.exit(1)
+        return cloud_iso
+
+    def download_image(self, image_url=None):
         """
         Downloads Cloud image for same release as host machine
         """
-
-        # Check Ubuntu release info. Example {quantal, precise}
-        release = lsb_release.get_lsb_information()["CODENAME"]
-
-        # Construct URL
-        cloud_url = "http://cloud-images.ubuntu.com"
-
-        if self.qemu_config['cloudimg_type'] == CLOUD_IMAGE_TYPE_TAR:
-            cloud_iso = "%s-server-cloudimg-%s.tar.gz" % (
-                        release, self.qemu_config['cloudimg_arch'])
-        elif self.qemu_config['cloudimg_type'] == CLOUD_IMAGE_TYPE_DISK:
-            cloud_iso = "%s-server-cloudimg-%s-disk1.img" % (
-                        release, self.qemu_config['cloudimg_arch'])
+        if image_url is None:
+            # If we have not specified a URL to get our images from, default
+            # to ubuntu.com
+            cloud_url = "http://cloud-images.ubuntu.com"
+            cloud_iso = self.construct_cloud_filename()
+            full_url = "/".join((
+                cloud_url, self.release, "current", cloud_iso))
         else:
-            logging.error("Unknown cloud image type")
-            return False
-        image_url = "/".join((
-            cloud_url, release, "current", cloud_iso))
-
+            url = urlparse(image_url)
+            if url.path.endswith('/') or url.path == '':
+                # If we have a relative URL (MAAS server mirror)
+                cloud_url = image_url
+                cloud_iso = self.construct_cloud_filename()
+                full_url = "/".join((
+                    cloud_url, cloud_iso))
+            else:
+                # Assume anything else is an absolute URL to a remote server
+                cloud_iso = url.path.split('/')[-1]
+                cloud_url = "{}://{}".format(url.scheme, url.netloc)
+                full_url = image_url
         logging.debug("Downloading {}, from {}".format(cloud_iso, cloud_url))
 
         # Attempt download
         try:
-            resp = urllib.request.urlretrieve(image_url, cloud_iso)
+            resp = urllib.request.urlretrieve(full_url, cloud_iso)
         except (IOError,
                 OSError,
                 urllib.error.HTTPError,
@@ -324,6 +364,22 @@ final_message: CERTIFICATION BOOT COMPLETE
             logging.exception("Cloud data disk creation failed")
 
     def start(self):
+        if self.arch == 'arm64':
+            # lp:1548539 - For arm64, we need to make sure we're using qemu
+            # later than 2.0.0 to enable gic_version functionality
+            logging.debug('Checking QEMU version for arm64 arch')
+            cmd = 'apt-cache policy qemu-system-arm | grep Installed'
+            installed_version = (check_output(['/bin/bash', '-c', cmd]).
+                                 decode().split(':', 1)[1].strip())
+
+            cmd = ('dpkg --compare-versions \"2.0.0\" \"lt\" \"{}\"'
+                   .format(installed_version))
+            retcode = call(['/bin/bash', '-c', cmd])
+            if retcode != 0:
+                logging.error('arm64 needs qemu-system version later than '
+                              '2.0.0')
+                return 1
+
         logging.debug('Starting KVM Test')
         status = 1
         # Create temp directory:
@@ -337,6 +393,10 @@ final_message: CERTIFICATION BOOT COMPLETE
                 logging.debug('No image specified, downloading one now.')
                 # Download cloud image
                 self.image = self.download_image()
+            else:
+                logging.debug('Cloud image location specified: %s.' %
+                              self.image)
+                self.image = self.url_to_path(self.image)
 
             if self.image and os.path.isfile(self.image):
 
@@ -385,34 +445,10 @@ final_message: CERTIFICATION BOOT COMPLETE
 def test_kvm(args):
     print("Executing KVM Test", file=sys.stderr)
 
-    DEFAULT_CFG = "/etc/checkbox.d/virtualization.cfg"
     image = ""
     timeout = ""
 
-    # Configuration data can come from three sources.
-    # Lowest priority is the config file.
-    config_file = DEFAULT_CFG
-    config = configparser.SafeConfigParser()
-
-    try:
-        config.readfp(open(config_file))
-    except IOError:
-        logging.warn("No config file found")
-    else:
-        try:
-            timeout = config.getfloat("KVM", "timeout")
-        except ValueError:
-            logging.warning('Invalid or Empty timeout in config file. '
-                            'Falling back to default')
-        except configparser.NoSectionError as e:
-            logging.exception(e)
-
-        try:
-            image = config.get("KVM", "image")
-        except configparser.NoSectionError:
-            logging.exception('Invalid or Empty image in config file.')
-
-    # Next in priority are environment variables.
+    # First in priority are environment variables.
     if 'KVM_TIMEOUT' in os.environ:
         try:
             timeout = float(os.environ['KVM_TIMEOUT'])
@@ -431,7 +467,13 @@ def test_kvm(args):
         image = args.image
 
     kvm_test = KVMTest(image, timeout, args.log_file)
+    # If arch is ppc64el, disable smt
+    if kvm_test.arch == 'ppc64el':
+        os.system("/usr/sbin/ppc64_cpu --smt=off")
     result = kvm_test.start()
+    # If arch is ppc64el, re-enable smt
+    if kvm_test.arch == 'ppc64el':
+        os.system("/usr/sbin/ppc64_cpu --smt=on")
 
     sys.exit(result)
 
