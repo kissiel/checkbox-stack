@@ -17,8 +17,6 @@ _description:
  STEPS:
      1. Plug in one or more USB keys or hard drives.
      2. Click on "Test".
- INFO:
-     $output
  VERIFICATION:
      Were the drives detected?
 
@@ -34,7 +32,7 @@ _description:
  STEPS:
      1. Enable either a USB mouse or keyboard
      2. For mice, perform actions such as moving the pointer, right and left button clicks and double clicks
-     3. For keyboards, commence the test to lauch a small tool. Type some text and close the tool.
+     3. For keyboards, commence the test to launch a small tool. Type some text and close the tool.
  VERIFICATION:
      Did the device work as expected?
 
@@ -49,10 +47,8 @@ _description:
      This test will check that the system correctly detects the insertion of
      a USB storage device
  STEPS:
-     1. Click "Test" and insert a USB storage device, preferably a HDD.
-        Although a USB pen drive may be used it might cause performance
-        related tests to fail. (Note: this test will time-out after 20
-        seconds.)
+     1. Click "Test" and insert a USB storage device
+        (Note: this test will time-out after 20 seconds.)
      2. Do not unplug the device after the test.
  VERIFICATION:
      The verification of this test is automated. Do not change the
@@ -70,10 +66,8 @@ _description:
      This test will check that the system correctly detects the insertion of
      a USB 3.0 storage device
  STEPS:
-     1. Click "Test" and insert a USB 3.0 storage device, preferably a HDD,
-        in a USB 3.0 port. Although a USB 3.0 pen drive may be used it might
-        cause performance related tests to fail. (Note: this test will
-        time-out after 20 seconds.)
+     1. Click "Test" and insert a USB 3.0 storage device in a USB 3.0 port.
+        (Note: this test will time-out after 20 seconds.)
      2. Do not unplug the device after the test.
  VERIFICATION:
      The verification of this test is automated. Do not change the
@@ -182,9 +176,9 @@ user: root
 estimated_duration: 45.0
 command: removable_storage_test -l usb && removable_storage_test -s 268400000 usb
 _description:
- This is an automated version of usb/storage-automated and assumes that the
- server has usb storage devices plugged in prior to checkbox execution. It
- is intended for servers and SRU automated testing.
+ Tests USB 2.0 or 1.1 ports on a system by doing write/read/compare tests on
+ randomly created data.  It requires that a USB stick is plugged into an
+ available USB port before running the certification suite.
 
 plugin: shell
 category_id: 2013.com.canonical.plainbox::usb
@@ -195,9 +189,10 @@ requires:
 estimated_duration: 45.0
 command: removable_storage_test -l usb && removable_storage_test -s 268400000 -m 500000000 usb --driver xhci_hcd
 _description:
- This is an automated version of usb3/storage-automated and assumes that the
- server has usb 3.0 storage devices plugged in prior to checkbox execution. It
- is intended for servers and SRU automated testing.
+ Tests USB 3.0 ports on a system by doing write/read/compare tests on
+ randomly created data. It requires that a USB stick is plugged into an
+ available USB port before running the certification suite. Additionally, it
+ will only work with USB sticks and ports rated for USB 3.0 speeds or faster.
 
 plugin: manual
 category_id: 2013.com.canonical.plainbox::usb
