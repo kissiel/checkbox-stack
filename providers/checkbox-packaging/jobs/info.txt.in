@@ -8,6 +8,11 @@ unit: packaging meta-data
 os-id: debian
 Depends: python3-guacamole (>= 0.9)
 
+# This is for lsblk attachment and disk/detect
+unit: packaging meta-data
+os-id: debian
+Depends: util-linux
+
 id: codecs_attachment
 plugin: attachment
 category_id: 2013.com.canonical.plainbox::info
@@ -48,7 +53,7 @@ user: root
 command: dmidecode | iconv -t 'utf-8' -c
 estimated_duration: 0.030
 _description: Attaches dmidecode output
-_summary: Attach a copy of of the output of dmidecode
+_summary: Attach output of dmidecode
 
 id: lshw_attachment
 plugin: attachment
@@ -56,6 +61,7 @@ category_id: 2013.com.canonical.plainbox::info
 requires: package.name == 'lshw'
 user: root
 command: lshw | iconv -t 'utf-8' -c
+_summary: Attach lshw output
 _description: Attaches lshw output
 
 id: efi_attachment
@@ -64,6 +70,7 @@ category_id: 2013.com.canonical.plainbox::info
 user: root
 command: [ -d /sys/firmware/efi ] && grep -m 1 -o --color=never 'EFI v.*' /var/log/kern.log* || true
 estimated_duration: 0.5
+_summary: Attaches firmware version info
 _description: Attaches the firmware version
 
 id: lspci_attachment
@@ -98,6 +105,7 @@ requires: package.name == 'usbutils'
 user: root
 command: lsusb -vv | iconv -t 'utf-8' -c
 estimated_duration: 0.700
+_summary: Attach output of lsusb
 _description: Attaches a list of detected USB devices.
 
 id: meminfo_attachment
@@ -105,6 +113,7 @@ plugin: attachment
 category_id: 2013.com.canonical.plainbox::info
 command: cat /proc/meminfo
 estimated_duration: 0.043
+_summary: Attach copy of /proc/meminfo
 _description: Attaches info on system memory as seen in /proc/meminfo.
 
 id: modprobe_attachment
@@ -113,7 +122,7 @@ category_id: 2013.com.canonical.plainbox::info
 command: find /etc/modprobe.* -name \*.conf | xargs cat
 estimated_duration: 0.015
 _description: Attaches the contents of the various modprobe conf files.
-_summary: Attach the contents of modprobe configuration files
+_summary: Attach the contents of /etc/modprobe.*
 
 id: modinfo_attachment
 plugin: attachment
@@ -128,7 +137,6 @@ command:
     done
 estimated_duration: 1.5
 _description: Attaches modinfo information for all currently loaded modules
-
 
 id: modules_attachment
 plugin: attachment
@@ -165,7 +173,7 @@ category_id: 2013.com.canonical.plainbox::info
 command: udevadm info --export-db | xml_sanitize
 estimated_duration: 1.465
 _description: Attaches a dump of the udev database showing system hardware information.
-_summary: Attach hardware database (udev)
+_summary: Attach dump of udev database
 
 id: udev_resource_attachment
 plugin: attachment
@@ -173,6 +181,14 @@ category_id: 2013.com.canonical.plainbox::info
 command: udev_resource
 estimated_duration: 0.432
 _description: Attaches the output of udev_resource, for debugging purposes
+
+id: lsblk_attachment
+estimated_duration: 0.1
+plugin: attachment
+command: lsblk -i -n -P -o KNAME,TYPE,MOUNTPOINT
+requires: package.name == "util-linux"
+_description: Attaches disk block devices mount points
+_summary: Attach info block devices and their mount points
 
 id: gcov_attachment
 plugin: attachment
@@ -214,26 +230,19 @@ command:
  process_wait -u root bootchart collector ureadahead; \
  [ `ls /var/log/bootchart/*.tgz 2>/dev/null | wc -l` -lt 2 ] && reboot && sleep 100
 
-plugin: local
-_summary: SATA/IDE device information.
-id: info/hdparm
+unit: template
+template-resource: device
+template-filter: device.category == 'DISK'
+plugin: attachment
+category_id: 2013.com.canonical.plainbox::info
+id: info/hdparm_{name}.txt
 estimated_duration: 1.0
-_description: Attaches SATA/IDE device information reported by hdparm.
 requires:
  package.name == 'hdparm'
- device.category == 'DISK'
-command:
- cat <<'EOF' | run_templates -t -s 'udev_resource | filter_templates -w "category=DISK"'
- plugin: attachment
- category_id: 2013.com.canonical.plainbox::info
- id: info/hdparm_`ls /sys$path/block`.txt
- estimated_duration: 1.0
- requires:
-  device.path == "$path"
-  block_device.`ls /sys$path/block`_state != 'removable'
- user: root
- command: hdparm -I /dev/`ls /sys$path/block`
- EOF
+ block_device.{name}_state != 'removable'
+user: root
+command: hdparm -I /dev/{name}
+_summary: Attaches info from hdparm about {name}
 
 plugin: attachment
 category_id: 2013.com.canonical.plainbox::info
@@ -258,7 +267,7 @@ plugin: attachment
 category_id: 2013.com.canonical.plainbox::info
 id: installer_bootchart.tgz
 command: [ -f /var/log/installer/bootchart.tgz ] && base64 /var/log/installer/bootchart.tgz
-_description: installs the installer bootchart tarball if it exists.
+_description: Attach the installer bootchart tarball if it exists.
 
 plugin: attachment
 category_id: 2013.com.canonical.plainbox::info
@@ -283,7 +292,7 @@ category_id: 2013.com.canonical.plainbox::info
 id: info/audio_device_driver
 requires:
  package.name == 'pulseaudio-utils'
- package.name == 'module-init-tools'
+ package.name == 'kmod' or package.name == 'module-init-tools'
  device.category == 'AUDIO'
 command: audio_driver_info
 estimated_duration: 0.177
@@ -294,7 +303,7 @@ category_id: 2013.com.canonical.plainbox::info
 id: info/network_devices
 requires:
  device.category == 'NETWORK' or device.category == 'WIRELESS'
- package.name == 'module-init-tools'
+ package.name == 'kmod' or package.name == 'module-init-tools'
  package.name == 'pciutils'
 command: network_device_info
 estimated_duration: 0.550
@@ -319,6 +328,7 @@ id: info/disk_partitions
 estimated_duration: 1.0
 user: root
 command: parted -l -s
+_summary: Attaches info about disk partitions
 _description: Attaches information about disk partitions
 
 plugin: attachment
@@ -386,6 +396,8 @@ plugin: attachment
 category_id: 2013.com.canonical.plainbox::info
 id: info/kvm_output
 estimated_duration: 0.1
+_summary:
+ Attaches console log from the kvm_check_vm test
 _description: 
  Attaches the debug log from the virtualization/kvm_check_vm test
  to the results submission.

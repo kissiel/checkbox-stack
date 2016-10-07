@@ -7,18 +7,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: checkbox\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2016-01-14 14:48+0800\n"
-"PO-Revision-Date: 2016-01-15 03:37+0000\n"
+"POT-Creation-Date: 2016-03-07 14:59+0800\n"
+"PO-Revision-Date: 2016-01-26 10:34+0000\n"
 "Last-Translator: Po-Hsu Lin <po-hsu.lin@canonical.com>\n"
 "Language-Team: Chinese (Traditional) <zh_TW@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2016-01-15 05:08+0000\n"
-"X-Generator: Launchpad (build 17886)\n"
+"X-Launchpad-Export-Date: 2016-09-10 05:50+0000\n"
+"X-Generator: Launchpad (build 18186)\n"
 
 #. description
-#: ../jobs/audio.txt.in:9
+#: ../jobs/audio.txt.in:9 ../units/dock.pxu:108
 msgid "Test to detect audio devices"
 msgstr "偵測音效裝置的測試"
 
@@ -45,23 +45,70 @@ msgstr ""
 "檢查：\n"
 "    您有聽到測試音嗎？"
 
-#. summary
-#: ../jobs/audio.txt.in:46
-msgid "HDMI audio test"
-msgstr "HDMI 音效輸出測試"
+#. purpose
+#: ../jobs/audio.txt.in:58
+msgid "   HDMI audio interface verification"
+msgstr "   HDMI 介面音效輸出測試"
 
-#. summary
-#: ../jobs/audio.txt.in:79
-msgid "DisplayPort audio test"
-msgstr "DisplayPort 音效輸出測試"
+#. steps
+#: ../jobs/audio.txt.in:60
+msgid ""
+"   1. Plug an external HDMI device with sound (Use only one "
+"HDMI/DisplayPort/Thunderbolt interface at a time for this test)\n"
+"   2. Commence the test"
+msgstr ""
+"   1. 請連接一個能夠播放聲音的 HDMI 裝置 (針對本測試，請一次只使用一個 HDMI/DisplayPort/Thunderbolt 介面)\n"
+"   2. 進行測試"
 
-#. summary
-#: ../jobs/audio.txt.in:112
-msgid "Thunderbolt audio test"
-msgstr "Thunderbolt 音效輸出測試"
+#. verification
+#: ../jobs/audio.txt.in:63 ../units/dock.pxu:133
+msgid "   Did you hear the sound from the HDMI device?"
+msgstr "   您是否有聽到由該 HDMI 音訊裝置中播出的音效？"
+
+#. purpose
+#: ../jobs/audio.txt.in:85
+msgid "   DisplayPort audio interface verification"
+msgstr "   DisplayPort 介面音效輸出測試"
+
+#. steps
+#: ../jobs/audio.txt.in:87
+msgid ""
+"   1. Plug an external DisplayPort device with sound (Use only one "
+"HDMI/DisplayPort/Thunderbolt interface at a time for this test)\n"
+"   2. Commence the test"
+msgstr ""
+"   1. 請連接一個能夠播放聲音的 DisplayPort 裝置 (針對本測試，請一次只使用一個 "
+"HDMI/DisplayPort/Thunderbolt 介面)\n"
+"   2. 進行測試"
+
+#. verification
+#: ../jobs/audio.txt.in:90 ../units/dock.pxu:159
+msgid "   Did you hear the sound from the DisplayPort device?"
+msgstr "   您是否有聽到由該 DisplayPort 音訊裝置中播出的音效？"
+
+#. purpose
+#: ../jobs/audio.txt.in:113
+msgid "   Thunderbolt audio interface verification"
+msgstr "   Thunderbolt 介面音效輸出測試"
+
+#. steps
+#: ../jobs/audio.txt.in:115
+msgid ""
+"   1. Plug an external Thunderbolt device with sound (Use only one "
+"HDMI/DisplayPort/Thunderbolt interface at a time for this test)\n"
+"   2. Commence the test"
+msgstr ""
+"   1. 請連接一個能夠播放聲音的 Thunderbolt 裝置 (針對本測試，請一次只使用一個 "
+"HDMI/DisplayPort/Thunderbolt 介面)\n"
+"   2. 進行測試"
+
+#. verification
+#: ../jobs/audio.txt.in:118
+msgid "   Did you hear the sound from the Thunderbolt device?"
+msgstr "   您是否有聽到由該 Thunderbolt 音訊裝置中播出的音效？"
 
 #. description
-#: ../jobs/audio.txt.in:156
+#: ../jobs/audio.txt.in:138
 msgid ""
 "PURPOSE:\n"
 "    This test will check that headphones connector works correctly\n"
@@ -81,7 +128,7 @@ msgstr ""
 "    您是否有從外接耳機聽到一段清楚不失真、沒有喀噠聲或是其他奇怪噪音的音效？"
 
 #. description
-#: ../jobs/audio.txt.in:182
+#: ../jobs/audio.txt.in:164
 msgid ""
 "PURPOSE:\n"
 "    This test will check that recording sound using the onboard microphone "
@@ -103,7 +150,7 @@ msgstr ""
 "    您是否有聽到自己剛剛被錄下來的話"
 
 #. description
-#: ../jobs/audio.txt.in:209
+#: ../jobs/audio.txt.in:191
 msgid ""
 "PURPOSE:\n"
 "    This test will check that recording sound using an external microphone "
@@ -116,7 +163,7 @@ msgid ""
 "    Did you hear your speech played back?"
 msgstr ""
 "目的：\n"
-"    這個測試將會檢查外接的麥克風是否正常運作 (將用外接的麥克風錄下一段聲音)\n"
+"    這個測試將會檢查外接的麥克風是否可以正常錄音\n"
 "步驟：\n"
 "    1. 將外接的麥克風連接到電腦\n"
 "    2. 點擊「測試」按鈕，然後對著外接的麥克風講一段話\n"
@@ -125,7 +172,7 @@ msgstr ""
 "    您是否有聽到自己剛剛被錄下來的話"
 
 #. description
-#: ../jobs/audio.txt.in:235
+#: ../jobs/audio.txt.in:217
 msgid ""
 "PURPOSE:\n"
 "    This test will check that a USB audio device works correctly\n"
@@ -146,14 +193,14 @@ msgstr ""
 "    您是否有聽到自己剛剛被錄下來的話"
 
 #. description
-#: ../jobs/audio.txt.in:258
+#: ../jobs/audio.txt.in:240
 msgid ""
 "Play back a sound on the default output and listen for it on the default "
 "input."
 msgstr "在預設音效輸出裝置上播放一段音效，並由預設音效輸入裝置接收它"
 
 #. description
-#: ../jobs/audio.txt.in:267
+#: ../jobs/audio.txt.in:249 ../units/dock.pxu:221
 msgid ""
 "Collect audio-related system information. This data can be used to simulate "
 "this computer's audio subsystem and perform more detailed tests under a "
@@ -161,12 +208,12 @@ msgid ""
 msgstr "收集音效相關的系統資訊。這些資料可以用來模擬這台電腦的音效子系統並在受控環境下進行更詳細的檢查。"
 
 #. description
-#: ../jobs/audio.txt.in:278
+#: ../jobs/audio.txt.in:260 ../units/dock.pxu:232
 msgid "Attaches the audio hardware data collection log to the results."
 msgstr "將音效硬體資料附加至測試報告中。"
 
 #. description
-#: ../jobs/audio.txt.in:286
+#: ../jobs/audio.txt.in:268
 msgid ""
 "PURPOSE:\n"
 "    Check that the various audio channels are working properly\n"
@@ -183,7 +230,7 @@ msgstr ""
 "    你應該會聽到音效由不同的聲道中播出"
 
 #. description
-#: ../jobs/audio.txt.in:314
+#: ../jobs/audio.txt.in:296
 msgid ""
 "PURPOSE:\n"
 "     Check that external line out connection works correctly\n"
@@ -210,7 +257,7 @@ msgstr ""
 "     2. 您有聽到聲音從相對應的聲道中播出嗎？"
 
 #. description
-#: ../jobs/audio.txt.in:341
+#: ../jobs/audio.txt.in:323
 msgid ""
 "PURPOSE:\n"
 "    Check that external line in connection works correctly\n"
@@ -233,7 +280,7 @@ msgstr ""
 "    您有聽到自外部音源錄下的聲音嗎？"
 
 #. description
-#: ../jobs/audio.txt.in:359
+#: ../jobs/audio.txt.in:341
 msgid ""
 "PURPOSE:\n"
 "    Check that system detects speakers or headphones being plugged in\n"
@@ -249,7 +296,7 @@ msgid ""
 msgstr ""
 "目的：\n"
 "    檢查系統能否正確偵測到外接喇叭或耳機的連接\n"
-"STEPS:\n"
+"步驟：\n"
 "    1. 準備一組帶有 3.5mm 標準接頭的耳機或喇叭\n"
 "    2. 找到電腦上供外接喇叭 / 耳機接頭用的連接埠\n"
 "    3. 執行測試 (您會有 30 秒的時間來執行以下操作)\n"
@@ -260,7 +307,7 @@ msgstr ""
 "    本測試將在 30 秒後逾時 (若逾時，本測試將會被紀錄為測試失敗)"
 
 #. description
-#: ../jobs/audio.txt.in:380
+#: ../jobs/audio.txt.in:362
 msgid ""
 "PURPOSE:\n"
 "    Check that system detects a microphone being plugged in\n"
@@ -277,7 +324,7 @@ msgid ""
 msgstr ""
 "目的：\n"
 "    檢查系統能否正確偵測到外接麥克風的連接\n"
-"STEPS:\n"
+"步驟：\n"
 "    1. 準備一組帶有 3.5mm 標準接頭的麥克風\n"
 "    2. 找到電腦上供外接麥克風接頭用的連接埠\n"
 "       外接麥克風有可能會跟外接耳機共用同一個連接埠\n"
@@ -289,7 +336,7 @@ msgstr ""
 "    本測試將在 30 秒後逾時 (若逾時，本測試將會被紀錄為測試失敗)"
 
 #. description
-#: ../jobs/audio.txt.in:411
+#: ../jobs/audio.txt.in:393
 msgid ""
 "PURPOSE:\n"
 "    Check that balance control works correctly on internal speakers\n"
@@ -314,7 +361,7 @@ msgstr ""
 "    音效輸出平衡設定條是否能夠順利的被拖動，喇叭是否有正確反應出實際的音效平衡設定？"
 
 #. description
-#: ../jobs/audio.txt.in:439
+#: ../jobs/audio.txt.in:421
 msgid ""
 "PURPOSE:\n"
 "    Check that balance control works correctly on external headphone\n"
@@ -339,12 +386,12 @@ msgstr ""
 "    音效輸出平衡設定條是否能夠順利的被拖動，耳機是否有正確反應出實際的音效平衡設定？"
 
 #. description
-#: ../jobs/audio.txt.in:459
+#: ../jobs/audio.txt.in:441
 msgid "Test to detect audio devices after suspending 30 times."
 msgstr "本測試會在暫停30次後偵測音效裝置"
 
 #. description
-#: ../jobs/audio.txt.in:478
+#: ../jobs/audio.txt.in:460
 msgid ""
 "PURPOSE:\n"
 "    This test will check that internal speakers work correctly after "
@@ -368,14 +415,14 @@ msgstr ""
 "    您有聽到測試音嗎？"
 
 #. description
-#: ../jobs/audio.txt.in:503
+#: ../jobs/audio.txt.in:485
 msgid ""
 "Play back a sound on the default output and listen for it on the default "
 "input, after suspending 30 times."
 msgstr "在暫停 30 次後，於預設音效輸出裝置上播放一段音效，並由預設音效輸入裝置接收它"
 
 #. description
-#: ../jobs/audio.txt.in:516
+#: ../jobs/audio.txt.in:498
 msgid ""
 "This test will verify that the volume levels are at an acceptable level on "
 "your local system.  The test will validate that the volume is greater than "
@@ -388,212 +435,218 @@ msgstr ""
 "值，以及音量是否小於等於 maxvol 值。它也會檢查使用中的音效輸出、輸入是否不是處於靜音的狀態。在開始測試前請不要手動調整音量大小。"
 
 #. description
-#: ../jobs/audio.txt.in:532
+#: ../jobs/audio.txt.in:514
 msgid "Record mixer settings after suspending 30 times."
 msgstr "在暫停30次後紀錄混音器設定"
 
+#. summary
+#: ../jobs/benchmarks.txt.in:11
+msgid "Raw read timing benchmark of {name} using hdparm"
+msgstr "採用 hdparm 對 {name} 進行數據讀取計時效能測試"
+
 #. description
-#: ../jobs/benchmarks.txt.in:6
-msgid "Raw read timing benchmark of each disk using hdparm."
-msgstr ""
+#: ../jobs/benchmarks.txt.in:12
+msgid ""
+"This test runs hdparm timing of device reads as a benchmark for {name}"
+msgstr "本測試執行 hdparm 對 {name} 進行數據讀取計時效能測試"
 
 #. summary
-#: ../jobs/benchmarks.txt.in:20
-msgid "Benchmark for each disk"
-msgstr "針對各個磁碟進行效能測試"
-
-#. description
 #: ../jobs/benchmarks.txt.in:24
-msgid "Cached read timing benchmark of each disk using hdparm."
-msgstr ""
+msgid "Cached read timing benchmark of {name} using hdparm."
+msgstr "採用 hdparm 對 {name} 進行快取讀取計時效能測試。"
 
 #. description
-#: ../jobs/benchmarks.txt.in:44
+#: ../jobs/benchmarks.txt.in:25
+msgid "This test runs hdparm timing of cache reads as a benchmark for {name}"
+msgstr "本測試執行 hdparm 對 {name} 進行快取讀取計時效能測試"
+
+#. description
+#: ../jobs/benchmarks.txt.in:34
 msgid "Run gtkperf to make sure that GTK based test cases work"
 msgstr "執行 gtkperf 以確認基於 GTK 的測試項目能夠運作"
 
 #. description
-#: ../jobs/benchmarks.txt.in:53
+#: ../jobs/benchmarks.txt.in:43
 msgid "Run Render-Bench XRender/Imlib2 benchmark"
 msgstr "執行 Render-Bench XRender/Imlib2 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:61
+#: ../jobs/benchmarks.txt.in:51
 msgid "Run Qgears2 XRender Extension gearsfancy benchmark"
 msgstr "執行 Qgears2 XRender 延伸套件 gearsfancy 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:69
+#: ../jobs/benchmarks.txt.in:59
 msgid "Run Qgears2 XRender Extension image scaling benchmark"
 msgstr "執行 Qgears2 XRender Extension 影像縮放效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:77
+#: ../jobs/benchmarks.txt.in:67
 msgid "Run Qgears2 OpenGL gearsfancy benchmark"
 msgstr "執行 Qgears2 OpenGL gearsfancy 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:85
+#: ../jobs/benchmarks.txt.in:75
 msgid "Run Qgears2 OpenGL image scaling benchmark"
 msgstr "執行 Qgears2 OpenGL 影像縮放效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:95
+#: ../jobs/benchmarks.txt.in:85
 msgid "Run GLmark2-ES2 benchmark"
 msgstr "執行 GLmark2-ES2 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:106
+#: ../jobs/benchmarks.txt.in:96
 msgid "Run GLmark2 benchmark"
 msgstr "執行 GLmark2 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:113
+#: ../jobs/benchmarks.txt.in:103
 msgid "Run Unigine Santuary benchmark"
 msgstr "執行 Unigine Santuary 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:120
+#: ../jobs/benchmarks.txt.in:110
 msgid "Run Unigine Tropics benchmark"
 msgstr "執行 Unigine Tropics 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:127
+#: ../jobs/benchmarks.txt.in:117
 msgid "Run Unigine Heaven benchmark"
 msgstr "執行 Unigine Heaven 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:134
+#: ../jobs/benchmarks.txt.in:124
 msgid "Run Lightsmark benchmark"
 msgstr "執行 Lightsmark 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:142
+#: ../jobs/benchmarks.txt.in:132
 msgid "Run Cachebench Read benchmark"
 msgstr "執行 Cachebench 讀取效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:150
+#: ../jobs/benchmarks.txt.in:140
 msgid "Run Cachebench Write benchmark"
 msgstr "執行 Cachebench 寫入效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:158
+#: ../jobs/benchmarks.txt.in:148
 msgid "Run Cachebench Read / Modify / Write benchmark"
 msgstr "執行 Cachebench 讀取 / 修改 / 寫入效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:166
+#: ../jobs/benchmarks.txt.in:156
 msgid "Run Stream Copy benchmark"
 msgstr "執行 Stream Copy 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:174
+#: ../jobs/benchmarks.txt.in:164
 msgid "Run Stream Scale benchmark"
 msgstr "執行 Stream Scale 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:182
+#: ../jobs/benchmarks.txt.in:172
 msgid "Run Stream Add benchmark"
 msgstr "執行 Stream Add 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:190
+#: ../jobs/benchmarks.txt.in:180
 msgid "Run Stream Triad benchmark"
 msgstr "執行 Stream Triad 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:198
+#: ../jobs/benchmarks.txt.in:188
 msgid "Run Network Loopback benchmark"
 msgstr "執行網路 Loopback 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:205
+#: ../jobs/benchmarks.txt.in:195
 msgid "Check the time needed to reconnect to a WIFI access point"
 msgstr "檢查重新連至 WIFI 無線網路存取點所需時間"
 
 #. description
-#: ../jobs/benchmarks.txt.in:213
+#: ../jobs/benchmarks.txt.in:203
 msgid "Run Encode MP3 benchmark"
 msgstr "執行 MP3 編碼效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:221
+#: ../jobs/benchmarks.txt.in:211
 msgid "Run x264 H.264/AVC encoder benchmark"
 msgstr "執行 x264 H.264/AVC 編碼器效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:228
+#: ../jobs/benchmarks.txt.in:218
 msgid "Run GnuPG benchmark"
 msgstr "執行 GnuPG 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:236
+#: ../jobs/benchmarks.txt.in:226
 msgid "Run Compress PBZIP2 benchmark"
 msgstr "執行 PBZIP2 壓縮效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:244
+#: ../jobs/benchmarks.txt.in:234
 msgid "Run Compress 7ZIP benchmark"
 msgstr "執行 7ZIP 壓縮效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:252
+#: ../jobs/benchmarks.txt.in:242
 msgid "Run N-Queens benchmark"
 msgstr "執行N皇后效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:260
+#: ../jobs/benchmarks.txt.in:250
 msgid "Run Himeno benchmark"
 msgstr "執行 Himeno 效能測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:268
+#: ../jobs/benchmarks.txt.in:258
 msgid "CPU utilization on an idle system."
 msgstr "檢查在系統閒置時的 CPU 閒置率"
 
 #. description
-#: ../jobs/benchmarks.txt.in:276
+#: ../jobs/benchmarks.txt.in:266
 msgid "Disk utilization on an idle system."
 msgstr "檢查在系統閒置時的磁碟使用率"
 
 #. description
-#: ../jobs/benchmarks.txt.in:286
+#: ../jobs/benchmarks.txt.in:276
 msgid ""
 "Run a stress test based on FurMark (OpenGL 2.1 or 3.2) Fullscreen 1920x1080 "
 "no antialiasing"
 msgstr "採用 FurMark (OpenGL 2.1 or 3.2) 無抗鋸齒 1920x1080 全螢幕模式進行壓力測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:298
+#: ../jobs/benchmarks.txt.in:288
 msgid ""
 "Run a stress test based on FurMark (OpenGL 2.1 or 3.2) Windowed 1024x640 no "
 "antialiasing"
 msgstr "採用 FurMark (OpenGL 2.1 or 3.2) 無抗鋸齒 1024x640 視窗模式進行壓力測試"
 
 #. description
-#: ../jobs/benchmarks.txt.in:310
+#: ../jobs/benchmarks.txt.in:300
 msgid ""
 "Run GiMark, a geometry instancing test (OpenGL 3.3) Fullscreen 1920x1080 no "
 "antialiasing"
 msgstr "執行 GiMark (OpenGL 3.3) 幾何示例測試，以無抗鋸齒 1920x1080 全螢幕模式進行"
 
 #. description
-#: ../jobs/benchmarks.txt.in:322
+#: ../jobs/benchmarks.txt.in:312
 msgid ""
 "Run GiMark, a geometry instancing test (OpenGL 3.3) Windowed 1024x640 no "
 "antialiasing"
 msgstr "執行 GiMark (OpenGL 3.3) 幾何示例測試，以無抗鋸齒 1024x640 視窗模式進行"
 
 #. description
-#: ../jobs/benchmarks.txt.in:334
+#: ../jobs/benchmarks.txt.in:324
 msgid ""
 "Run a tessellation test based on TessMark (OpenGL 4.0) Fullscreen 1920x1080 "
 "no antialiasing"
 msgstr "執行 TessMark (OpenGL 4.0) 曲面細分測試，以無抗鋸齒 1920x1080 全螢幕模式進行"
 
 #. description
-#: ../jobs/benchmarks.txt.in:345
+#: ../jobs/benchmarks.txt.in:335
 msgid ""
 "Run a tessellation test based on TessMark (OpenGL 4.0) Windowed 1024x640 no "
 "antialiasing"
@@ -892,7 +945,7 @@ msgstr "本測試將會比對 proc 與 sysfs 下的 CPU 的資訊以確認其正
 #. description
 #: ../jobs/cpu.txt.in:74
 msgid "This test checks that CPU frequency governors are obeyed when set."
-msgstr ""
+msgstr "本測試會檢查當有設定 CPU 頻率控制器時，其設定值是否有被遵循。"
 
 #. description
 #: ../jobs/cpu.txt.in:83
@@ -905,7 +958,7 @@ msgid "Run Firmware Test Suite (fwts) cstates tests."
 msgstr "執行 Firmware Test Suite (fwts) cstates 測試。"
 
 #. description
-#: ../jobs/cpu.txt.in:104 ../jobs/firmware.txt.in:71
+#: ../jobs/cpu.txt.in:104 ../jobs/firmware.txt.in:57
 msgid "Attaches the FWTS desktop diagnosis results log to the submission"
 msgstr "將 FWTS desktop 診斷結果附加至測試報告中"
 
@@ -965,18 +1018,18 @@ msgid "Test if the winbindd daemon is running when the package is installed."
 msgstr "當套件安裝後，測試 winbindd 系統服務是否已在執行中。"
 
 #. description
-#: ../jobs/disk.txt.in:12
+#: ../jobs/disk.txt.in:7
 msgid ""
 "Displays information about each disk detected on the system under test."
-msgstr ""
+msgstr "顯示待測系統上所偵測到的每個硬碟的資訊。"
 
 #. summary
-#: ../jobs/disk.txt.in:27
+#: ../jobs/disk.txt.in:21
 msgid "Disk statistics for /dev/{name}"
 msgstr "/dev/{name} 的磁碟統計資料"
 
 #. description
-#: ../jobs/disk.txt.in:28
+#: ../jobs/disk.txt.in:22
 msgid ""
 "This test checks disk stats, generates some activity and rechecks stats to "
 "verify they've changed. It also verifies that disks appear in the various "
@@ -984,12 +1037,12 @@ msgid ""
 msgstr "本測試將會比對在進行一些操作前後的磁碟狀況，來確認其狀態會改變。它同時也會檢查磁碟是否有出現在應該出現的檔案裡。"
 
 #. description
-#: ../jobs/disk.txt.in:28
+#: ../jobs/disk.txt.in:22
 msgid "This test will inspect the following disk:"
 msgstr "本測試將會檢測下列磁碟："
 
 #. description
-#: ../jobs/disk.txt.in:28
+#: ../jobs/disk.txt.in:22
 msgid ""
 "    product name: {product}\n"
 "    sysfs path: {path}\n"
@@ -999,54 +1052,28 @@ msgstr ""
 "    sysfs 路徑：{path}\n"
 "    裝置節點路徑：/dev/{name}"
 
-#. summary
-#: ../jobs/disk.txt.in:40
-msgid "Check stats changes for each disk"
-msgstr "檢查每個磁碟的狀態改變"
-
 #. description
-#: ../jobs/disk.txt.in:44
+#: ../jobs/disk.txt.in:45
 msgid ""
-"This test generates some disk activity and checks the stats to ensure drive "
-"activity is being recorded properly."
+"This test checks {name} disk stats, generates some activity and rechecks "
+"stats to verify they've changed. It also verifies that disks appear in the "
+"various files they're supposed to."
 msgstr ""
 
-#. summary
-#: ../jobs/disk.txt.in:62
-msgid "SMART test"
-msgstr "SMART 測試"
-
 #. description
-#: ../jobs/disk.txt.in:68
-msgid "This tests the SMART capabilities of disks detected on the system."
-msgstr "本測試會對系統上偵測到的硬碟進行 SMART 性測試。"
-
-#. summary
-#: ../jobs/disk.txt.in:86
-msgid "Verify system storage performs at or above baseline performance"
-msgstr "確認系統的儲存裝置效能有達到或超過一般的水準"
-
-#. description
-#: ../jobs/disk.txt.in:91
-msgid "Verify system storage performs at or above a baseline speed."
-msgstr "確認系統的儲存裝置效能有達到或超過一般的水準。"
-
-#. summary
-#: ../jobs/disk.txt.in:107
+#: ../jobs/disk.txt.in:59
 msgid ""
-"Verify that storage devices, such as Fibre Channel and RAID, perform under "
-"stress."
-msgstr "確認儲存裝置，如光纖通道和容錯式磁碟陣列能在壓力測試下運作。"
+"This tests the SMART capabilities for {product} (Note that this test will "
+"not work against hardware RAID)"
+msgstr ""
 
 #. description
-#: ../jobs/disk.txt.in:112
-msgid ""
-"Verify that storage devices, such as Fibre Channel and RAID, perform under "
-"stress without data loss or corruption."
-msgstr "確認儲存裝置，如光纖通道和容錯式磁碟陣列能在壓力測試下運作並沒有資料損失或毀損。"
+#: ../jobs/disk.txt.in:89
+msgid "Disk I/O stress test for {product}"
+msgstr "對 {product} 進行讀/寫壓力測試"
 
 #. description
-#: ../jobs/disk.txt.in:138
+#: ../jobs/disk.txt.in:101
 msgid ""
 "Some new hard drives include a feature that parks the drive heads after a "
 "short period of inactivity. This is a power-saving feature, but it can have "
@@ -1058,7 +1085,7 @@ msgstr ""
 "進而導致硬體壽命縮短。"
 
 #. description
-#: ../jobs/disk.txt.in:151
+#: ../jobs/disk.txt.in:114
 msgid ""
 "PURPOSE:\n"
 " This test checks that a systems drive protection mechanism works properly.\n"
@@ -1103,7 +1130,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/esata.txt.in:22
+#: ../jobs/esata.txt.in:22 ../units/dock.pxu:942
 msgid ""
 "This is an automated test which performs read/write operations on an "
 "attached eSATA HDD"
@@ -1168,78 +1195,78 @@ msgstr ""
 "    是否有通知出現，而且連線是否有正確建立？"
 
 #. summary
-#: ../jobs/ethernet.txt.in:52
+#: ../jobs/ethernet.txt.in:51
 msgid "Multi-NIC Iperf testing for NIC {interface}"
 msgstr "對 {interface} 網路介面卡的多網卡 Iperf 測試"
 
 #. description
-#: ../jobs/ethernet.txt.in:62
+#: ../jobs/ethernet.txt.in:61
 msgid ""
 "This test uses iperf to ensure network devices pass data at an acceptable "
 "minimum percentage of advertized speed."
-msgstr ""
+msgstr "本測試使用 iperf 來確定網路裝置的資料傳輸速度有達到標示速度的最小可接受百分比。"
 
 #. summary
-#: ../jobs/ethernet.txt.in:73
+#: ../jobs/ethernet.txt.in:71
 msgid "Multi-NIC Iperf3 testing for NIC {interface}"
 msgstr "對 {interface} 網路介面卡的多網卡 Iperf3 測試"
 
 #. description
-#: ../jobs/ethernet.txt.in:83
+#: ../jobs/ethernet.txt.in:81
 msgid ""
 "This test uses iperf3 to ensure network devices pass data at an acceptable "
 "minimum percentage of advertized speed."
-msgstr ""
+msgstr "本測試使用 iperf3 來確定網路裝置的資料傳輸速度有達到標示速度的最小可接受百分比。"
 
 #. summary
-#: ../jobs/ethernet.txt.in:94
+#: ../jobs/ethernet.txt.in:91
 msgid "ethtool check for NIC {interface}"
 msgstr "用 ethtool 對網路介面卡 {interface} 進行檢查"
 
 #. description
-#: ../jobs/ethernet.txt.in:100
+#: ../jobs/ethernet.txt.in:97
 msgid ""
 "This test executes ethtool requests against ethernet device {__index__} "
 "({interface})."
 msgstr "本測試會對 {__index__} ({interface}) 乙太網路裝置執行 ethtool 指令。"
 
 #. summary
-#: ../jobs/ethernet.txt.in:110
+#: ../jobs/ethernet.txt.in:106
 msgid "Maximum bandwidth test of device {__index__} ({interface})"
 msgstr "對 {__index__} ({interface}) 裝置的最大頻寬測試"
 
 #. purpose
-#: ../jobs/ethernet.txt.in:119
+#: ../jobs/ethernet.txt.in:115
 msgid ""
 "User verification of whether the observed transfer throughput is acceptable "
 "for the type and maximum speed of each ethernet interface."
-msgstr ""
+msgstr "使用者確認在每個乙太網路介面上觀察到的傳輸速度對於此介面的類別以及理論最大速度來說是否可以接受。"
 
 #. steps
-#: ../jobs/ethernet.txt.in:122 ../jobs/mobilebroadband.txt.in:105
-#: ../jobs/wireless.txt.in:694
+#: ../jobs/ethernet.txt.in:118 ../jobs/mobilebroadband.txt.in:103
+#: ../jobs/wireless.txt.in:691
 msgid ""
 "1. Click \"Test\". 2. Read the network test summary and confirm that the "
 "throughput is acceptable. 3. If needed, click \"Test\" again to repeat the "
 "transfer test."
-msgstr ""
+msgstr "1. 按下「測試」。 2. 檢查網路測試摘要，並確認吞吐量的值可以接受。3. 若有需要，請再次按下「測試」來重複傳輸測試。"
 
 #. verification
-#: ../jobs/ethernet.txt.in:126 ../jobs/mobilebroadband.txt.in:109
-#: ../jobs/wireless.txt.in:698
+#: ../jobs/ethernet.txt.in:122 ../jobs/mobilebroadband.txt.in:107
+#: ../jobs/wireless.txt.in:695
 msgid ""
 "Was the reported throughput acceptable for the type and maximum speed of "
 "this interface?"
-msgstr ""
+msgstr "回報的傳輸速度對於此介面的類別以及理論最大速度來說是否可以接受？"
 
 #. summary
-#: ../jobs/ethernet.txt.in:136
+#: ../jobs/ethernet.txt.in:131
 msgid ""
 "Stress and performance test of ethernet device {__index__} ({interface})"
 msgstr "對 {__index__} ({interface}) 乙太網路裝置的壓力與效能測試"
 
 #. description
-#: ../jobs/ethernet.txt.in:142
+#: ../jobs/ethernet.txt.in:137
 msgid ""
 "Automated test that tests performance of ethernet device {__index__} "
 "({interface})."
@@ -1350,7 +1377,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/firewire.txt.in:24
+#: ../jobs/firewire.txt.in:24 ../units/dock.pxu:897
 msgid ""
 "This is an automated test which performs read/write operations on an "
 "attached FireWire HDD"
@@ -1379,273 +1406,529 @@ msgstr ""
 "檢查：\n"
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
-#. description
-#: ../jobs/firmware.txt.in:25
-msgid "Automated tests for firmware using Firmware Test Suite."
-msgstr "採用 Firmware Test Suite 對韌體進行自動化測試。"
-
-#. description
-#: ../jobs/firmware.txt.in:45
-msgid ""
-"Run Firmware Test Suite (fwts) QA-concerned desktop-specific diagnosis tests."
-msgstr ""
+#. summary
+#: ../jobs/firmware.txt.in:11
+msgid "Run {name} test from Firmware Test Suite."
+msgstr "執行 Firmware Test Suite 裡面的 {name} 測試"
 
 #. summary
-#: ../jobs/firmware.txt.in:47
-msgid "Run FWTS QA-concerned desktop-specific diagnosis tests."
-msgstr ""
+#: ../jobs/firmware.txt.in:23
+msgid "Attach log for FWTS {name} test."
+msgstr "將 FWTS {name} 紀錄附加至測試報告中。"
 
 #. description
-#: ../jobs/firmware.txt.in:58
+#: ../jobs/firmware.txt.in:31
+msgid ""
+"Run Firmware Test Suite (fwts) QA-concerned desktop-specific diagnosis tests."
+msgstr "執行 Firmware Test Suite (fwts) 中針對桌面系統與 QA 相關的診斷測試。"
+
+#. summary
+#: ../jobs/firmware.txt.in:33
+msgid "Run FWTS QA-concerned desktop-specific diagnosis tests."
+msgstr "執行 FWTS 中針對桌面系統與 QA 相關的診斷測試。"
+
+#. description
+#: ../jobs/firmware.txt.in:44
 msgid ""
 "Run Firmware Test Suite (fwts) HWE-concerned desktop-specific diagnosis "
 "tests."
-msgstr ""
+msgstr "執行 Firmware Test Suite (fwts) 中針對桌面系統與 HWE 相關的診斷測試。"
 
 #. summary
-#: ../jobs/firmware.txt.in:60
+#: ../jobs/firmware.txt.in:46
 msgid "Run FWTS HWE-concerned desktop-specific diagnosis tests."
-msgstr ""
+msgstr "執行 FWTS 中針對桌面系統與 HWE 相關的診斷測試。"
 
 #. summary
-#: ../jobs/firmware.txt.in:72
+#: ../jobs/firmware.txt.in:58
 msgid "Attach FWTS desktop diagnosis log to submission"
 msgstr "將 FWTS desktop 診斷結果附加至測試報告中"
 
 #. description
-#: ../jobs/firmware.txt.in:80
+#: ../jobs/firmware.txt.in:66
 msgid ""
 "Attaches the FWTS desktop diagnosis results log to the submission (to HWE)"
 msgstr "將 FWTS desktop 診斷結果附加至測試報告中 (給 HWE)"
 
 #. summary
-#: ../jobs/firmware.txt.in:81
+#: ../jobs/firmware.txt.in:67
 msgid "Attach FWTS desktop diagnosis log to submission (to HWE)"
 msgstr "將 FWTS desktop 診斷結果附加至測試報告中 (給 HWE)"
 
 #. summary
-#: ../jobs/firmware.txt.in:86
+#: ../jobs/firmware.txt.in:72
 msgid "No _REV interface in ACPI [DS]SDT tables"
 msgstr "在 ACPI [DS]SDT 表格中沒有 _REV 介面"
 
 #. description
-#: ../jobs/firmware.txt.in:90
+#: ../jobs/firmware.txt.in:76
 msgid ""
 "This Automated test checks misuse of the _REV interface in ACPI DSDT and "
 "SSDT tables"
+msgstr "本自動測試將會檢查 _REV 介面在 ACPI DSDT 與 SSDT 表格中的誤用"
+
+#. description
+#: ../jobs/floppy.txt.in:8
+msgid "Floppy test for {product}"
+msgstr "對 {product} 進行軟碟測試"
+
+#. description
+#: ../jobs/graphics.txt.in:8
+msgid ""
+"Parses Xorg.0.Log and discovers the running X driver and version for the "
+"{vendor} {product} graphics card"
 msgstr ""
 
-#. description
-#: ../jobs/floppy.txt.in:5
-msgid "Floppy test"
-msgstr "軟碟測試"
-
 #. summary
-#: ../jobs/graphics.txt.in:4
-msgid "Driver version tests"
-msgstr "驅動程式版本測試"
+#: ../jobs/graphics.txt.in:9
+msgid "Test X driver/version for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行 X 驅動程式 / 版本測試"
 
 #. description
-#: ../jobs/graphics.txt.in:23
+#: ../jobs/graphics.txt.in:17
 msgid "Test to output the Xorg version"
 msgstr "輸出 Xorg 版本的測試"
 
 #. summary
-#: ../jobs/graphics.txt.in:24
+#: ../jobs/graphics.txt.in:18
 msgid "Test Xorg version"
 msgstr "測試 Xorg 版本"
 
 #. summary
-#: ../jobs/graphics.txt.in:29
-msgid "Resolution change tests"
-msgstr "解析度切換測試"
+#: ../jobs/graphics.txt.in:26
+msgid "Test changing resolution for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行解析度切換測試"
+
+#. description
+#: ../jobs/graphics.txt.in:27
+msgid ""
+"PURPOSE:\n"
+"    This test will verify that the GUI is usable after manually changing "
+"resolution on the {vendor} {product} graphics card.\n"
+"STEPS:\n"
+"    1. Select the {vendor} {product} graphics card (a reboot may be "
+"necessary)\n"
+"    2. Open the Displays application\n"
+"    3. Select a new resolution from the dropdown list\n"
+"    4. Click on Apply\n"
+"    5. Select the original resolution from the dropdown list\n"
+"    6. Click on Apply\n"
+"VERIFICATION:\n"
+"    Did the resolution on the {vendor} {product} graphics card change as "
+"expected?"
+msgstr ""
 
 #. summary
-#: ../jobs/graphics.txt.in:61
+#: ../jobs/graphics.txt.in:49
 msgid "Test that the X process is running."
 msgstr "測試 X 程序正在執行中。"
 
 #. description
-#: ../jobs/graphics.txt.in:69
+#: ../jobs/graphics.txt.in:57
 msgid "Test that the X is not running in failsafe mode."
 msgstr "測試在失敗安全模式下 X 程序並未執行。"
 
 #. summary
-#: ../jobs/graphics.txt.in:70
+#: ../jobs/graphics.txt.in:58
 msgid "Test that X is not in failsafe mode."
 msgstr "測試 X 並不處於失敗安全模式中。"
 
-#. summary
-#: ../jobs/graphics.txt.in:101
-msgid "Default resolution tests"
-msgstr "預設解析度測試"
+#. description
+#: ../jobs/graphics.txt.in:71
+msgid ""
+"PURPOSE:\n"
+"    This test will verify the default display resolution on the {vendor} "
+"{product} graphics card.\n"
+"STEPS:\n"
+"    1. Click \"Test\".\n"
+"    2. Confirm that the resolution shown in the text window is acceptable "
+"for your display.\n"
+"VERIFICATION:\n"
+"    Is the resolution shown acceptable for your display on {vendor} "
+"{product} graphics card?"
+msgstr ""
 
 #. summary
-#: ../jobs/graphics.txt.in:126
-msgid "Minimum resolution tests"
-msgstr "最小解析度測試"
+#: ../jobs/graphics.txt.in:90
+msgid "Test default resolution for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行預設解析度測試"
+
+#. description
+#: ../jobs/graphics.txt.in:91
+msgid ""
+"PURPOSE:\n"
+"    This test will verify the default display resolution on the {vendor} "
+"{product} graphics card\n"
+"STEPS:\n"
+"    1. Click on Test to display the screen resolution overlay for 5 "
+"seconds.\n"
+"VERIFICATION:\n"
+"    Is this acceptable for your display on the {vendor} {product} graphics "
+"card?"
+msgstr ""
 
 #. summary
-#: ../jobs/graphics.txt.in:147
-msgid "Maximum resolution tests"
-msgstr "最大解析度測試"
+#: ../jobs/graphics.txt.in:108
+msgid "Test that {vendor} {product} meets minimum resolution requirement"
+msgstr "測試 {vendor} {product} 是否有達到最小解析度之要求"
+
+#. description
+#: ../jobs/graphics.txt.in:109
+msgid ""
+"Ensure the current resolution meets or exceeds the recommended minimum "
+"resolution (800x600) on the {vendor} {product} graphics card. See here for "
+"details: https://help.ubuntu.com/community/Installation/SystemRequirements"
+msgstr ""
+"確定 {vendor} {product} 顯示卡目前的解析度符合或超過推薦的最小解析度 "
+"(800x600)。詳細資料：https://help.ubuntu.com/community/Installation/SystemRequireme"
+"nts"
 
 #. summary
-#: ../jobs/graphics.txt.in:178
-msgid "Mode tests"
-msgstr "模式測試"
+#: ../jobs/graphics.txt.in:128
+msgid "Test maximum supported resolution for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行其所支援的最大解析度測試"
 
-#. summary
-#: ../jobs/graphics.txt.in:194
-msgid "Color depth tests"
-msgstr "色彩深度測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:210
-msgid "Refresh rate tests"
-msgstr "更新頻率測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:225
-msgid "Graphic memory tests"
-msgstr "圖形介面卡記憶體測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:240
-msgid "Display video test"
+#. description
+#: ../jobs/graphics.txt.in:129
+msgid ""
+"PURPOSE:\n"
+"  This test will verify the maximum supported resolution on the {vendor} "
+"{product} graphics card.\n"
+"STEPS:\n"
+"  1. Select the {vendor} {product} graphics card (a reboot may be "
+"necessary)\n"
+"  2. Consult the system's specifications and locate the screen's maximum "
+"supported resolution.\n"
+"  3. Click on Test to display the maximum resolution that can be used by "
+"Ubuntu on the current display.\n"
+"VERIFICATION:\n"
+"  Is this the maximum resolution for the display connected to the {vendor} "
+"{product} graphics card?"
 msgstr ""
 
 #. description
-#: ../jobs/graphics.txt.in:266
+#: ../jobs/graphics.txt.in:146
+msgid ""
+"Collect info on graphics modes (screen resolution and refresh rate) for "
+"{vendor} {product}"
+msgstr ""
+
+#. summary
+#: ../jobs/graphics.txt.in:147
+msgid "Test graphic modes info for {vendor} {product}"
+msgstr ""
+
+#. description
+#: ../jobs/graphics.txt.in:156
+msgid "Collect info on color depth and pixel format for {vendor} {product}"
+msgstr "對 {vendor} {product} 收集色彩深度與像素格式資訊"
+
+#. summary
+#: ../jobs/graphics.txt.in:157
+msgid "Test color depth info for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行色彩深度資訊測試"
+
+#. description
+#: ../jobs/graphics.txt.in:165
+msgid "Collect info on fresh rate for {vendor} {product}."
+msgstr "對 {vendor} {product} 收集更新頻率資訊。"
+
+#. summary
+#: ../jobs/graphics.txt.in:166
+msgid "Test refresh rate for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行更新頻率測試"
+
+#. description
+#: ../jobs/graphics.txt.in:174
+msgid "Collect info on graphic memory for {vendor} {product}."
+msgstr "對 {vendor} {product} 收集視訊記憶體資訊"
+
+#. summary
+#: ../jobs/graphics.txt.in:175
+msgid "Test graphic memory info for {vendor} {product}."
+msgstr "對 {vendor} {product} 進行視訊記憶體資訊測試"
+
+#. summary
+#: ../jobs/graphics.txt.in:186
+msgid "Test that video can be displayed with {vendor} {product}"
+msgstr "對 {vendor} {product} 測試其是否能播放影片"
+
+#. description
+#: ../jobs/graphics.txt.in:187
+msgid ""
+"PURPOSE:\n"
+"    This test will test the default display with a sample video\n"
+"STEPS:\n"
+"    1. Click \"Test\" to display a video test.\n"
+"VERIFICATION:\n"
+"    Do you see color bars and static?"
+msgstr ""
+"目的：\n"
+"    本測試將會檢查預設螢幕是否能播放範例影片\n"
+"步驟：\n"
+"    1. 點擊「測試」來播放影片\n"
+"檢查：\n"
+"    您有看到色條與雜訊嗎？"
+
+#. description
+#: ../jobs/graphics.txt.in:200
 msgid "Check that VESA drivers are not in use"
 msgstr "確定目前沒有使用 VESA 驅動程式"
 
 #. summary
-#: ../jobs/graphics.txt.in:267
+#: ../jobs/graphics.txt.in:201
 msgid "Test that VESA drivers are not in use"
 msgstr "檢查 VESA 驅動程式為非使用中狀態"
 
 #. summary
-#: ../jobs/graphics.txt.in:272
-msgid "Resolution cycling tests"
-msgstr "解析度循環切換測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:296
-msgid "Rotation tests"
-msgstr "旋轉測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:320
-msgid "Compiz support tests"
-msgstr "Compiz 支援度測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:337
-msgid "Unity support tests"
-msgstr "Unity 支援度測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:354
-msgid "glxgears tests"
-msgstr "glxgears 測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:378
-msgid "3D window open/close tests"
-msgstr "3D 視窗開啟 / 關閉測試"
-
-#. summary
-#: ../jobs/graphics.txt.in:395
-msgid "3D window with suspend/resume tests"
-msgstr "3D 視窗與系統暫停 / 恢復測試"
+#: ../jobs/graphics.txt.in:212
+msgid "Test resolution cycling for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行解析度循環切換測試"
 
 #. description
-#: ../jobs/graphics.txt.in:411
-msgid "Multiple 3D window open/close"
-msgstr "開啟 / 關閉多個 3D 視窗"
+#: ../jobs/graphics.txt.in:213
+msgid ""
+"PURPOSE:\n"
+"    This test cycles through the detected video modes for the {vendor} "
+"{product} graphics card\n"
+"STEPS:\n"
+"    1. Click \"Test\" to start cycling through the video modes\n"
+"VERIFICATION:\n"
+"    Did the screen appear to be working for each mode?"
+msgstr ""
 
 #. summary
-#: ../jobs/graphics.txt.in:412
-msgid "Multiple 3D window open/close tests"
-msgstr "多個 3D 視窗開啟 / 關閉測試"
+#: ../jobs/graphics.txt.in:229
+msgid "Test rotation for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行旋轉測試"
 
 #. description
-#: ../jobs/graphics.txt.in:428
-msgid "3D window movement"
-msgstr "3D 視窗移動"
+#: ../jobs/graphics.txt.in:230
+msgid ""
+"PURPOSE:\n"
+"    This test will test display rotation on the {vendor} {product} graphics "
+"card\n"
+"STEPS:\n"
+"    1. Click \"Test\" to test display rotation. The display will be rotated "
+"every 4 seconds.\n"
+"    2. Check if all rotations (normal right inverted left) took place "
+"without permanent screen corruption\n"
+"VERIFICATION:\n"
+"    Did the display rotation take place without without permanent screen "
+"corruption?"
+msgstr ""
+
+#. description
+#: ../jobs/graphics.txt.in:247
+msgid "Check that {vendor} {product} hardware is able to run compiz"
+msgstr "檢查 Compiz 是否能在 {vendor} {product} 硬體上執行"
 
 #. summary
-#: ../jobs/graphics.txt.in:429
-msgid "3D window movement tests"
-msgstr "3D 視窗移動測試"
+#: ../jobs/graphics.txt.in:248
+msgid "Test Compiz support for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行 Compiz 支援度測試"
+
+#. description
+#: ../jobs/graphics.txt.in:258
+msgid "Check that {vendor} {product} hardware is able to run Unity 3D"
+msgstr "檢查 Unity 3D 是否能在 {vendor} {product} 硬體上執行"
 
 #. summary
-#: ../jobs/graphics.txt.in:448
-msgid "screenshot tests"
-msgstr "螢幕截圖測試"
+#: ../jobs/graphics.txt.in:259
+msgid "Test Unity 3D support for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行 Unity 3D 支援度測試"
 
 #. summary
-#: ../jobs/graphics.txt.in:470
-msgid "screenshot attachment tests"
-msgstr "將螢幕截圖附加至測試報告中"
+#: ../jobs/graphics.txt.in:268
+msgid "Test that glxgears works for {vendor} {product}"
+msgstr ""
+
+#. description
+#: ../jobs/graphics.txt.in:269
+msgid ""
+"PURPOSE:\n"
+"    This test tests the basic 3D capabilities of your {vendor} {product} "
+"video card\n"
+"STEPS:\n"
+"    1. Click \"Test\" to execute an OpenGL demo. Press ESC at any time to "
+"close.\n"
+"    2. Verify that the animation is not jerky or slow.\n"
+"VERIFICATION:\n"
+"    1. Did the 3d animation appear?\n"
+"    2. Was the animation free from slowness/jerkiness?"
+msgstr ""
+
+#. description
+#: ../jobs/graphics.txt.in:287
+msgid ""
+"Open and close a 3D window multiple times on the {vendor} {product} video "
+"card"
+msgstr "對 {vendor} {product} 顯示卡進行多次 3D 視窗開啟並關閉的測試"
 
 #. summary
-#: ../jobs/graphics.txt.in:486
-msgid "full screen video screenshot tests"
-msgstr "全螢幕影片截圖測試"
+#: ../jobs/graphics.txt.in:288
+msgid "Test 3D window open/close for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行 3D 視窗開啟 / 關閉測試"
+
+#. description
+#: ../jobs/graphics.txt.in:298
+msgid ""
+"Open, suspend resume and close a 3D window multiple times on the {vendor} "
+"{product} video card"
+msgstr "對 {vendor} {product} 顯示卡進行多次 3D 視窗開啟、暫停、恢復並關閉的測試"
 
 #. summary
-#: ../jobs/graphics.txt.in:516
-msgid "GPU switch prompt tests"
-msgstr "GPU 切換提示測試"
+#: ../jobs/graphics.txt.in:299
+msgid "Test a 3D window with suspend/resume for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行 3D 視窗的暫停 / 恢復測試"
+
+#. description
+#: ../jobs/graphics.txt.in:309
+msgid ""
+"Open and close 4 3D windows multiple times on the {vendor} {product} video "
+"card"
+msgstr "對 {vendor} {product} 顯示卡進行四個 3D 視窗多次開啟並關閉的測試"
 
 #. summary
-#: ../jobs/graphics.txt.in:539
-msgid "full screen video attachment tests"
-msgstr "將全螢幕影片截圖附加至測試報告中"
+#: ../jobs/graphics.txt.in:310
+msgid "Test Multi 3D window open/close for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行多個 3D 視窗的開啟 / 關閉測試"
+
+#. description
+#: ../jobs/graphics.txt.in:322
+msgid ""
+"Move a 3D window around the screen on the {vendor} {product} video card"
+msgstr "對 {vendor} {product} 顯示卡進行在螢幕上移動 3D 視窗的測試"
 
 #. summary
-#: ../jobs/graphics.txt.in:555
+#: ../jobs/graphics.txt.in:323
+msgid "Test 3D window movement for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行 3D 視窗的移動測試"
+
+#. summary
+#: ../jobs/graphics.txt.in:332
+msgid "Test grabbing a screenshot for {vendor} {product}"
+msgstr ""
+
+#. description
+#: ../jobs/graphics.txt.in:333
+msgid ""
+"PURPOSE:\n"
+"    Take a screengrab of the current screen (logged on Unity desktop) as "
+"produced by the {vendor} {product} graphics card\n"
+"STEPS:\n"
+"    1. Take picture using USB webcam\n"
+"VERIFICATION:\n"
+"    Review attachment manually later"
+msgstr ""
+
+#. description
+#: ../jobs/graphics.txt.in:348
+msgid ""
+"Attaches the screenshot captured in graphics/screenshot for the {vendor} "
+"{product} graphics card."
+msgstr ""
+
+#. summary
+#: ../jobs/graphics.txt.in:349
+msgid "Attach results of screenshot test for {vendor} {product}"
+msgstr "將對 {vendor} {product} 螢幕截圖的結果附加至測試報告中"
+
+#. summary
+#: ../jobs/graphics.txt.in:365
+msgid "Test FSV screenshot for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行全螢幕影片播放截圖測試"
+
+#. description
+#: ../jobs/graphics.txt.in:366
+msgid ""
+"PURPOSE:\n"
+"    Take a screengrab of the current screen during fullscreen video playback "
+"using the {vendor} {product} graphics card\n"
+"STEPS:\n"
+"    1. Start a fullscreen video playback\n"
+"    2. Take picture using USB webcam after a few seconds\n"
+"VERIFICATION:\n"
+"    Review attachment manually later"
+msgstr ""
+
+#. summary
+#: ../jobs/graphics.txt.in:380
+msgid "Test GPU switching for {vendor} {product}"
+msgstr "對 {vendor} {product} 進行 GPU 切換測試"
+
+#. description
+#: ../jobs/graphics.txt.in:381
+msgid ""
+"PURPOSE:\n"
+"    Manually switch to the {vendor} {product} card.\n"
+"STEPS:\n"
+"    1. If your system is already running with the {vendor} {product} card, "
+"then please mark this test as \"passed\" and proceed.\n"
+"    2. Using the appropriate tool (either NVidia settings or AMD Control "
+"Center), switch your system to use the {vendor} {product} graphics card. "
+"This will require restarting your session.\n"
+"    3. Once the session restarts, please restart this testing program and "
+"select \"continue\" when prompted for a resume action.\n"
+"    4. Don't answer the verification question until the system has restarted "
+"with the {vendor} {product} card enabled.\n"
+"VERIFICATION:\n"
+"    Is the system using the {vendor} {product} card now?"
+msgstr ""
+
+#. summary
+#: ../jobs/graphics.txt.in:399
+msgid "Attach results of FSV screenshot test for {vendor} {product}"
+msgstr "將對 {vendor} {product} 全螢幕影片播放截圖的結果附加至測試報告中"
+
+#. description
+#: ../jobs/graphics.txt.in:400
+msgid ""
+"Attaches the screenshot captured in graphics/screenshot_fullscreen_video for "
+"the {vendor} {product} graphics card"
+msgstr ""
+
+#. summary
+#: ../jobs/graphics.txt.in:405
 msgid "Obtains a simple screen capture"
 msgstr "取得一張簡單的螢幕快照"
 
 #. description
-#: ../jobs/graphics.txt.in:559
+#: ../jobs/graphics.txt.in:409
 msgid "Obtains a simple screen capture using gnome-screenshot if present"
 msgstr "利用 gnome-screenshot (若可用) 來進行簡單的螢幕快照"
 
 #. summary
-#: ../jobs/graphics.txt.in:564
+#: ../jobs/graphics.txt.in:414
 msgid "Attaches a simple screen capture"
 msgstr "附加簡單的螢幕快照至測試報告中"
 
 #. description
-#: ../jobs/graphics.txt.in:568
+#: ../jobs/graphics.txt.in:418
 msgid "Attaches the simple screen capture file"
 msgstr "將簡單的螢幕快照檔案附加至測試報告中"
 
 #. summary
-#: ../jobs/graphics.txt.in:583
-msgid "Obtains a simple screen capture of {product}"
-msgstr "對 {product} 取得簡單的螢幕快照"
+#: ../jobs/graphics.txt.in:425
+msgid "Obtains a simple screen capture of {vendor} {product}"
+msgstr ""
 
 #. description
-#: ../jobs/graphics.txt.in:587
+#: ../jobs/graphics.txt.in:429
 msgid ""
-"Obtains a simple screen capture of {product} using gnome-screenshot if "
-"present"
-msgstr "利用 gnome-screenshot (若可用) 來對 {product} 進行簡單的螢幕快照"
+"Obtains a simple screen capture of {vendor} {product} using gnome-screenshot "
+"if present"
+msgstr ""
 
 #. summary
-#: ../jobs/graphics.txt.in:596
-msgid "Attaches a simple screen capture of {product}"
-msgstr "將對 {product} 取得的簡單的螢幕快照附加至測試報告中"
+#: ../jobs/graphics.txt.in:437
+msgid "Attaches a simple screen capture of {vendor} {product}"
+msgstr ""
 
 #. description
-#: ../jobs/graphics.txt.in:599
-msgid "Attaches the simple screen capture file of {product}"
-msgstr "將對 {product} 取得的簡單的螢幕快照檔案附加至測試報告中"
+#: ../jobs/graphics.txt.in:440
+msgid "Attaches the simple screen capture file of {vendor} {product}"
+msgstr ""
 
 #. description
 #: ../jobs/hibernate.txt.in:18
@@ -1674,347 +1957,383 @@ msgstr ""
 "驗證：\n"
 "    您的電腦是否正常的進入休眠模式，並在被喚醒後正常運作？"
 
-#. summary
-#: ../jobs/hibernate.txt.in:34
-msgid "Hibernate test"
-msgstr "休眠測試"
+#. purpose
+#: ../jobs/hibernate.txt.in:48
+msgid ""
+"   This test will check to make sure your system can successfully hibernate "
+"(if supported)"
+msgstr ""
+
+#. steps
+#: ../jobs/hibernate.txt.in:50
+msgid ""
+"   1. Click on Test\n"
+"   2. The system will hibernate and should wake itself within 5 minutes\n"
+"   3. If your system does not wake itself after 5 minutes, please press the "
+"power button to wake the system manually\n"
+"   4. If the system fails to resume from hibernate, please restart System "
+"Testing and mark this test as Failed"
+msgstr ""
+
+#. verification
+#: ../jobs/hibernate.txt.in:55
+msgid ""
+"   Did the system successfully hibernate and did it work properly after "
+"waking up?"
+msgstr ""
 
 #. description
-#: ../jobs/hibernate.txt.in:68
+#: ../jobs/hibernate.txt.in:62
 msgid "Automated check of the hibernate log for errors discovered by fwts"
 msgstr "自動檢查休眠紀錄中由 fwts 所偵測到的錯誤"
 
 #. description
-#: ../jobs/hibernate.txt.in:77
+#: ../jobs/hibernate.txt.in:81
 msgid "attaches log from single hibernate/resume test to results"
 msgstr "將單次休眠 / 喚醒測試的紀錄檔附加至測試報告中"
 
-#. summary
-#: ../jobs/hibernate.txt.in:81
-msgid "Hibernate log attach"
-msgstr "將休眠紀錄附加至測試報告中"
-
 #. description
-#: ../jobs/info.txt.in:17
+#: ../jobs/info.txt.in:22
 msgid "Attaches a report of installed codecs for Intel HDA"
 msgstr "將對 Intel HDA 所安裝的解碼器列表附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:24
+#: ../jobs/info.txt.in:29
 msgid "Attaches a report of CPU information"
 msgstr "將 CPU 資訊附加至測試報告中"
 
 #. summary
-#: ../jobs/info.txt.in:25
+#: ../jobs/info.txt.in:30
 msgid "Attach a copy of /proc/cpuinfo"
 msgstr "將 /proc/cpuinfo 的複本附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:32
+#: ../jobs/info.txt.in:37
 msgid "Attaches a copy of /var/log/dmesg to the test results"
 msgstr "將 /var/log/dmesg 的複本附加至測試報告中"
 
 #. summary
-#: ../jobs/info.txt.in:33
+#: ../jobs/info.txt.in:38
 msgid "Attach a copy of /var/log/dmesg"
 msgstr "將 /var/log/dmesg 的複本附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:40
+#: ../jobs/info.txt.in:45
 msgid "Attaches info on DMI"
 msgstr "將 DMI 資訊附加至測試報告中"
 
 #. summary
-#: ../jobs/info.txt.in:41
+#: ../jobs/info.txt.in:46
 msgid "Attach a copy of /sys/class/dmi/id/*"
 msgstr "將 /sys/class/dmi/id/* 的複本附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:50
+#: ../jobs/info.txt.in:55
 msgid "Attaches dmidecode output"
 msgstr "將 dmidecoe 資訊附加至測試報告中"
 
 #. summary
-#: ../jobs/info.txt.in:51
+#: ../jobs/info.txt.in:56
 msgid "Attach a copy of of the output of dmidecode"
 msgstr "將 dmidecode 輸出的複本附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:59
+#: ../jobs/info.txt.in:64
 msgid "Attaches lshw output"
 msgstr "將 lshw 資訊附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:67
+#: ../jobs/info.txt.in:72
 msgid "Attaches the firmware version"
 msgstr "將韌體版本資訊附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:74
+#: ../jobs/info.txt.in:79
 msgid "Attaches very verbose lspci output."
 msgstr "將詳盡的 lspci 輸出結果附加至測試報告中。"
 
 #. summary
-#: ../jobs/info.txt.in:75
+#: ../jobs/info.txt.in:80
 msgid "Attach a list of PCI devices"
 msgstr "附加 PCI 裝置列表"
 
 #. description
-#: ../jobs/info.txt.in:82
+#: ../jobs/info.txt.in:87
 msgid "Attaches very verbose lspci output (with central database Query)."
 msgstr "將詳盡的 lspci 輸出結果附加至測試報告中 (向中央資料庫進行查詢)。"
 
 #. summary
-#: ../jobs/info.txt.in:85
+#: ../jobs/info.txt.in:90
 msgid "Attach PCI configuration space hex dump"
-msgstr ""
+msgstr "將 PCI 組態空間的十六進位數據附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:90
+#: ../jobs/info.txt.in:95
 msgid ""
 "   Attaches a hex dump of the standard part of the PCI configuration\n"
 "   space for all PCI devices."
-msgstr ""
+msgstr "   將所有 PCI 裝置的組態空間十六進位數據標準部份附加至測試報告中。"
 
 #. description
-#: ../jobs/info.txt.in:101
+#: ../jobs/info.txt.in:106
 msgid "Attaches a list of detected USB devices."
 msgstr "附加偵測到的 USB 裝置列表"
 
 #. description
-#: ../jobs/info.txt.in:108
+#: ../jobs/info.txt.in:113
 msgid "Attaches info on system memory as seen in /proc/meminfo."
-msgstr ""
+msgstr "將自 /proc/meminfo 中所取得的系統記憶體資訊附加至測試報告中。"
 
 #. description
-#: ../jobs/info.txt.in:115
+#: ../jobs/info.txt.in:120
 msgid "Attaches the contents of the various modprobe conf files."
 msgstr "將各個 modprobe 的設定檔內容附加至測試報告中。"
 
 #. summary
-#: ../jobs/info.txt.in:116
+#: ../jobs/info.txt.in:121
 msgid "Attach the contents of modprobe configuration files"
 msgstr "附加 modprobe 設定檔的內容"
 
 #. summary
-#: ../jobs/info.txt.in:121
+#: ../jobs/info.txt.in:126
 msgid "Attach modinfo information"
 msgstr "附加 modinfo 資訊"
 
 #. description
-#: ../jobs/info.txt.in:130
+#: ../jobs/info.txt.in:135
 msgid "Attaches modinfo information for all currently loaded modules"
-msgstr ""
+msgstr "將目前所有載入的模組的 modinfo 資訊附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:138
+#: ../jobs/info.txt.in:142
 msgid "Attaches the contents of the /etc/modules file."
 msgstr "將 /etc/modules 檔案的內容附加至測試報告中。"
 
 #. summary
-#: ../jobs/info.txt.in:139
+#: ../jobs/info.txt.in:143
 msgid "Attach the contents of /etc/modules"
 msgstr "附加 /etc/modules 的內容"
 
 #. description
-#: ../jobs/info.txt.in:146
+#: ../jobs/info.txt.in:150
 msgid "Attaches the contents of various sysctl config files."
 msgstr "附加各個 sysctl 設定檔的內容。"
 
 #. summary
-#: ../jobs/info.txt.in:147
+#: ../jobs/info.txt.in:151
 msgid "Attach sysctl configuration files."
 msgstr "附加 sysctl 設定檔。"
 
 #. description
-#: ../jobs/info.txt.in:152
+#: ../jobs/info.txt.in:156
 msgid "Attaches a report of sysfs attributes."
 msgstr "將 sysfs 屬性報告附加至測試報告中。"
 
 #. summary
-#: ../jobs/info.txt.in:160
+#: ../jobs/info.txt.in:164
 msgid "Attach detailed sysfs property output from udev"
-msgstr ""
+msgstr "將由 udev 取得的詳細 sysfs 屬性資料附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:167
+#: ../jobs/info.txt.in:171
 msgid ""
 "Attaches a dump of the udev database showing system hardware information."
-msgstr ""
+msgstr "將 udev 硬體資料庫資訊附加至測試報告中。"
 
 #. summary
-#: ../jobs/info.txt.in:168
+#: ../jobs/info.txt.in:172
 msgid "Attach hardware database (udev)"
 msgstr "附加硬體資料庫 (udev)"
 
 #. description
-#: ../jobs/info.txt.in:175
+#: ../jobs/info.txt.in:179
 msgid "Attaches the output of udev_resource, for debugging purposes"
 msgstr "為了除錯需要，將 udev_resource 的輸出附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:183
-msgid "Attaches a tarball of gcov data if present."
-msgstr "將 gvoc 資料 (若存在) 打包附加至測試報告中。"
+#: ../jobs/info.txt.in:186
+msgid "Attaches disk block devices mount points"
+msgstr ""
+
+#. summary
+#: ../jobs/info.txt.in:187
+msgid "Attaches information about disk block devices and their mount points"
+msgstr ""
 
 #. description
-#: ../jobs/info.txt.in:190
+#: ../jobs/info.txt.in:195
+msgid "Attaches a tarball of gcov data if present."
+msgstr "若將 gvoc 資料存在則將其打包附加至測試報告中。"
+
+#. description
+#: ../jobs/info.txt.in:202
 msgid "Attaches a list of the currently running kernel modules."
 msgstr "將目前執行中的內核模組列表附加至測試報告中。"
 
 #. summary
-#: ../jobs/info.txt.in:191
+#: ../jobs/info.txt.in:203
 msgid "Attach a list of currently running kernel modules"
 msgstr "將目前執行中的內核模組列表附加至測試報告中"
 
 #. summary
-#: ../jobs/info.txt.in:198
+#: ../jobs/info.txt.in:210
 msgid "Attaches json dumps of installed dkms package information."
-msgstr ""
+msgstr "將已安裝的 dkms 套件資訊以 json 格式輸出並附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:205
+#: ../jobs/info.txt.in:217
 msgid "Attaches the contents of /proc/acpi/sleep if it exists."
 msgstr "若 /proc/acpi/sleep 存在，將其內容附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:210
+#: ../jobs/info.txt.in:222
 msgid "Bootchart information."
 msgstr "Bootchart 資訊。"
 
-#. summary
-#: ../jobs/info.txt.in:218
-msgid "SATA/IDE device information."
-msgstr "SATA/IDE 裝置資訊。"
-
 #. description
-#: ../jobs/info.txt.in:221
-msgid "Attaches SATA/IDE device information reported by hdparm."
-msgstr "將 hdparm 回報的 SATA/IDE 裝置資訊附加至測試報告中。"
-
-#. description
-#: ../jobs/info.txt.in:243
+#: ../jobs/info.txt.in:248
 msgid "Attaches the bootchart png file for bootchart runs"
 msgstr "將執行 bootchart 產生的 bootchart png 檔案附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:252
+#: ../jobs/info.txt.in:257
 msgid "Attaches the bootchart log for bootchart test runs."
 msgstr "將執行 bootchart 產生的 bootchart 紀錄檔附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:261
-msgid "installs the installer bootchart tarball if it exists."
-msgstr ""
+#: ../jobs/info.txt.in:266
+msgid "Attach the installer bootchart tarball if it exists."
+msgstr "若安裝程式的 bootchart 壓縮檔存在則將其附加至測試報告中。"
 
 #. description
-#: ../jobs/info.txt.in:269
+#: ../jobs/info.txt.in:274
 msgid "Attaches the installer debug log if it exists."
-msgstr "將安裝程式的除錯紀錄 (若存在) 附加至測試報告中。"
+msgstr "若安裝程式的除錯紀錄存在則附加至測試報告中。"
 
 #. description
-#: ../jobs/info.txt.in:277
+#: ../jobs/info.txt.in:282
 msgid ""
 "Returns the name, driver name and driver version of any touchpad discovered "
 "on the system."
 msgstr "回傳系統上偵測到的觸控板名稱、驅動程式名稱以及驅動程式版本。"
 
 #. description
-#: ../jobs/info.txt.in:290
+#: ../jobs/info.txt.in:295
 msgid "Lists the device driver and version for all audio devices."
 msgstr "列出有音效裝置的驅動程式與版本資訊。"
 
 #. description
-#: ../jobs/info.txt.in:301
+#: ../jobs/info.txt.in:306
 msgid "Provides information about network devices"
 msgstr "提供關於網際網路裝置的資訊"
 
 #. description
-#: ../jobs/info.txt.in:308
+#: ../jobs/info.txt.in:313
 msgid "Provides information about wwan/mobile broadband devices"
 msgstr "提供關於 WWAN / 行動網路裝置的資訊"
 
 #. description
-#: ../jobs/info.txt.in:314
+#: ../jobs/info.txt.in:319
 msgid "Provides information about displays attached to the system"
 msgstr "提供關於連接至本機的螢幕資訊"
 
 #. description
-#: ../jobs/info.txt.in:322
+#: ../jobs/info.txt.in:327
 msgid "Attaches information about disk partitions"
 msgstr "將磁碟分割資訊附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:328
+#: ../jobs/info.txt.in:333
 msgid "Attaches the buildstamp identifier for the preinstalled OS"
 msgstr "附加預載作業系統的 buildstamp 識別至測試報告中"
 
 #. summary
-#: ../jobs/info.txt.in:329
+#: ../jobs/info.txt.in:334
 msgid "Attach /etc/buildstamp"
 msgstr "將 /etc/buildstamp 資訊附加至測試報告中"
 
 #. description
-#: ../jobs/info.txt.in:339
+#: ../jobs/info.txt.in:344
 msgid "Check existence of recovery partition"
 msgstr "檢查還原磁區是否存在"
 
 #. description
-#: ../jobs/info.txt.in:350
+#: ../jobs/info.txt.in:355
 msgid "Check the recovery type is dell or not"
 msgstr "檢查還原類別是否為 Dell"
 
 #. summary
-#: ../jobs/info.txt.in:360
+#: ../jobs/info.txt.in:365
 msgid "Attach the recovery partition versions"
-msgstr "附加還原資區版本資訊"
+msgstr "附加還原磁區版本資訊"
 
 #. description
-#: ../jobs/info.txt.in:361
+#: ../jobs/info.txt.in:366
 msgid ""
 "Attach the recovery partition version image_version is the preinstalled OS "
 "image version bto_version is only for dell_recovery Example: image_version: "
 "somerville-trusty-amd64-20140620-0 bto_version: A00_dell-bto-trusty-houston-"
 "15-A11-iso-20141203-0.iso"
 msgstr ""
+"將還原磁區版本附加至測試報告中，image_version 為預載作業系統映像檔的版本，bto_version 僅存在出現於 dell_recovery "
+"中，例：image_version: somerville-trusty-amd64-20140620-0 bto_version: A00_dell-"
+"bto-trusty-houston-15-A11-iso-20141203-0.iso"
 
 #. summary
-#: ../jobs/info.txt.in:377
+#: ../jobs/info.txt.in:382
 msgid "Attach the bto.xml in Dell recovery partition"
 msgstr "附加 Dell 還原磁區中的 bto.xml"
 
 #. description
-#: ../jobs/info.txt.in:378
+#: ../jobs/info.txt.in:383
 msgid ""
 "bto.xml is basically a Fish manifest The information include:\n"
 " - fish packages\n"
 " - dell recovery stage 2 boot log"
 msgstr ""
+"bto.xml 為工廠軟體安裝處理流程表 (FISH)，裡面的資訊包含：\n"
+" - 工廠軟體安裝套件表\n"
+" - Dell 還原第二階段開機紀錄"
 
 #. description
-#: ../jobs/info.txt.in:389
+#: ../jobs/info.txt.in:394
 msgid ""
 "Attaches the debug log from the virtualization/kvm_check_vm test to the "
 "results submission."
-msgstr ""
+msgstr "將 virtualization/kvm_check_vm 測試的除錯紀錄附加至測試報告中。"
 
 #. description
-#: ../jobs/info.txt.in:399
+#: ../jobs/info.txt.in:404
 msgid "Attaches the kernel command line used to boot"
 msgstr "將開機使用的內核指令附加至測試報告中"
 
 #. summary
-#: ../jobs/info.txt.in:400
+#: ../jobs/info.txt.in:405
 msgid "Attach a copy of /proc/cmdline"
 msgstr "附加 /proc/cmdline 的複本"
 
-#. description
-#: ../jobs/input.txt.in:7
-msgid "Pointing device tests."
-msgstr "指向裝置測試。"
+#. summary
+#: ../jobs/input.txt.in:9
+msgid "Check pointing functionality for {product}"
+msgstr "檢查 {product} 的指向功能"
+
+#. purpose
+#: ../jobs/input.txt.in:10
+msgid "   This will test your {product} device"
+msgstr "   本測試將會檢查您的 {product} 裝置"
+
+#. steps
+#: ../jobs/input.txt.in:12
+msgid "   1. Move the cursor with your {product}."
+msgstr "   1. 用您的 {product} 來移動游標。"
+
+#. verification
+#: ../jobs/input.txt.in:14
+msgid "   Did the cursor move?"
+msgstr "   游標有移動嗎？"
 
 #. description
-#: ../jobs/input.txt.in:27
+#: ../jobs/input.txt.in:21
 msgid ""
 "PURPOSE:\n"
 "    This test will test your pointing device\n"
@@ -2033,7 +2352,7 @@ msgstr ""
 "    該指向裝置的運作是否一如預期？"
 
 #. description
-#: ../jobs/input.txt.in:42
+#: ../jobs/input.txt.in:36
 msgid ""
 "PURPOSE:\n"
 "    This test will test your keyboard\n"
@@ -2052,7 +2371,7 @@ msgstr ""
 "    您的鍵盤是否有正常運作？"
 
 #. description
-#: ../jobs/input.txt.in:55
+#: ../jobs/input.txt.in:49
 msgid ""
 "PURPOSE:\n"
 "    Manual detection of accelerometer.\n"
@@ -2069,7 +2388,7 @@ msgstr ""
 "    這台電腦有加速度感應器嗎？"
 
 #. description
-#: ../jobs/input.txt.in:70
+#: ../jobs/input.txt.in:64
 msgid ""
 "PURPOSE:\n"
 "    This test will test your accelerometer to see if it is detected\n"
@@ -2090,14 +2409,32 @@ msgstr ""
 "    您的加速度感應器有被正確偵測到嗎？您能夠使用該裝置嗎？"
 
 #. summary
-#: ../jobs/input.txt.in:85
-msgid "Create click tests for pointing devices."
-msgstr "為指向裝置產生點擊測試項目"
+#: ../jobs/input.txt.in:82
+msgid "Check button functionality for {product}"
+msgstr "對 {product} 進行按鈕功能檢查"
 
-#. description
-#: ../jobs/input.txt.in:86
-msgid "Click tests for pointing devices."
-msgstr "指向裝置的點擊測試"
+#. purpose
+#: ../jobs/input.txt.in:83
+msgid "   This will test the buttons of your {product} device"
+msgstr "   本測試將會檢查您 {product} 裝置上的按鈕"
+
+#. steps
+#: ../jobs/input.txt.in:85
+msgid ""
+"   1. Click the left button with your {product}.\n"
+"   2. Click the right button with your {product}.\n"
+"   3. Click the middle button with your {product} (if available).\n"
+"   4. Double-click the left button with your {product}."
+msgstr ""
+"   1. 按下您 {product} 裝置上的左鍵\n"
+"   2. 按下您 {product} 裝置上的右鍵\n"
+"   3. 按下您 {product} 裝置上的中鍵 (若有的話)\n"
+"   4. 雙擊您 {product} 裝置上的左鍵"
+
+#. verification
+#: ../jobs/input.txt.in:90
+msgid "   Did these buttons work as expected?"
+msgstr "   這些按鈕的運作是否一如預期？"
 
 #. description
 #: ../jobs/install.txt.in:6
@@ -2880,7 +3217,7 @@ msgstr "休眠測試"
 #. description
 #: ../jobs/local.txt.in:122
 msgid "Informational tests"
-msgstr ""
+msgstr "資訊測試"
 
 #. description
 #: ../jobs/local.txt.in:129
@@ -2935,7 +3272,7 @@ msgstr "螢幕測試"
 #. description
 #: ../jobs/local.txt.in:199
 msgid "Non-device specific networking tests"
-msgstr ""
+msgstr "非與特定裝置相關的網路測試"
 
 #. description
 #: ../jobs/local.txt.in:206
@@ -3640,27 +3977,48 @@ msgid ""
 "should have suitably large swap files for the amount of RAM they have "
 "installed."
 msgstr ""
+"本測試將會對系統記憶體進行基本的壓力測試。其中包含了過量使用的功能來強迫系統使用磁碟上的 swap "
+"空間，因此該待測系統應該要有對應於目前已安裝的記憶體來說夠大的 swap 空間。"
 
 #. description
-#: ../jobs/mir.txt.in:5
-msgid "MIR Integration tests"
-msgstr "MIR 整合測試"
+#: ../jobs/memory.txt.in:33
+msgid ""
+"Test to perform some basic stress and exercise of system memory via the "
+"stress_ng tool. This test also includes an over-commit function to force "
+"swapping to disk, thus SUTs should have suitably large swap files for the "
+"amount of RAM they have installed."
+msgstr ""
+
+#. summary
+#: ../jobs/mir.txt.in:10
+msgid "MIR Integration test ({name})"
+msgstr "MIR 整合測試 ({name})"
 
 #. description
-#: ../jobs/mir.txt.in:21
-msgid "MIR Acceptance tests"
-msgstr "MIR Acceptance 測試"
+#: ../jobs/mir.txt.in:11
+msgid "Run {name} test from MIR Integration tests."
+msgstr "執行 MIR 整合測試中的 {name} 測試。"
+
+#. summary
+#: ../jobs/mir.txt.in:22
+msgid "MIR Acceptance test ({name})"
+msgstr "MIR 接受度測試 ({name})"
 
 #. description
-#: ../jobs/miscellanea.txt.in:17
+#: ../jobs/mir.txt.in:23
+msgid "Run {name} test from MIR Acceptance tests."
+msgstr "執行 MIR 接受度測試中的 {name} 測試。"
+
+#. description
+#: ../jobs/miscellanea.txt.in:18
 msgid ""
 "A meta-job that verifies the data necessary for a complete result submission "
 "are present. Failure indicates that the results are incomplete and may be "
 "rejected."
-msgstr ""
+msgstr "本後設工作是用來驗證一份完整的測試報告中其必要的資料是否存在，失敗的話表示測試報告不完整並可能被退回。"
 
 #. description
-#: ../jobs/miscellanea.txt.in:25
+#: ../jobs/miscellanea.txt.in:26
 msgid ""
 "PURPOSE:\n"
 "    Keep tester related information in the report\n"
@@ -3685,7 +4043,7 @@ msgstr ""
 "    本測試不需要特別檢查什麼"
 
 #. description
-#: ../jobs/miscellanea.txt.in:44
+#: ../jobs/miscellanea.txt.in:45
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system can switch to a virtual terminal "
@@ -3705,98 +4063,98 @@ msgstr ""
 "    您的螢幕有暫時切到文字模式然後再切回您目前的作業環境嗎？"
 
 #. description
-#: ../jobs/miscellanea.txt.in:59
+#: ../jobs/miscellanea.txt.in:60
 msgid "Run Firmware Test Suite (fwts) automated tests."
 msgstr "執行 Firmware Test Suite (fwts) 自動化測試項目。"
 
 #. description
-#: ../jobs/miscellanea.txt.in:70
+#: ../jobs/miscellanea.txt.in:73
 msgid "Attaches the miscellanes/fwts_test results log to the submission."
 msgstr "將 miscellanes/fwts_test 結果紀錄附加至測試報告中。"
 
 #. description
-#: ../jobs/miscellanea.txt.in:78
+#: ../jobs/miscellanea.txt.in:83
 msgid "Attaches the FWTS results log to the submission (to HWE)"
 msgstr "將 FWTS 結果紀錄附加至測試報告中 (給 HWE)"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:79
+#: ../jobs/miscellanea.txt.in:84
 msgid "Attach FWTS log to submission (to HWE)"
 msgstr "將 FWTS 紀錄附加至測試報告中 (給 HWE)"
 
 #. description
-#: ../jobs/miscellanea.txt.in:87
+#: ../jobs/miscellanea.txt.in:92
 msgid ""
 "This will run some basic commands in-band against a BMC, verifying that IPMI "
 "works. Use of MAAS to deploy the system implicitly tests out-of-band BMC "
 "control."
 msgstr ""
+"本測試將會對 BMC 執行一些頻內的基本指令來檢查 IPMI 是否運作正常。使用 MAAS 來佈署系統，並以此來測試頻外的 BMC 控制。"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:98
+#: ../jobs/miscellanea.txt.in:103
 msgid "EFI-mode boot test"
 msgstr "EFI 模式開機測試"
 
 #. description
-#: ../jobs/miscellanea.txt.in:99
+#: ../jobs/miscellanea.txt.in:104
 msgid ""
-"Test to verify that the system booted in EFI mode rather than Legacy/BIOS "
-"mode."
-msgstr "檢查系統是否是以 EFI 模式開機而不是 Legacy/BIOS 模式。"
+"Test to verify that the system booted in EFI mode with Secure Boot active."
+msgstr "檢查系統是否是以 EFI 模式開機而且 Secure Boot 是處於啟動的狀態。"
 
 #. description
-#: ../jobs/miscellanea.txt.in:116
+#: ../jobs/miscellanea.txt.in:115
 msgid ""
 "This will gather some info about the BMC itself for diagnostic purposes. "
 "This will not works on non-IPMI systems like AMT and blade/sled type systems."
 msgstr "為了診斷需要，這將會收集一些關於 BMC 本身的資訊。這在非 IPMI 的系統上將無法運作，如 AMT 與刀鋒式 / 微伺服器。"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:119
+#: ../jobs/miscellanea.txt.in:118
 msgid "Gather BMC Identification info"
 msgstr "收集 BMC 識別資訊"
 
 #. description
-#: ../jobs/miscellanea.txt.in:129
+#: ../jobs/miscellanea.txt.in:128
 msgid ""
 "Sanity check of CPU information; fails if CPU is an engineering sample"
 msgstr "CPU 資訊完整性檢查，若 CPU 為工程樣本測試將會失敗"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:131
+#: ../jobs/miscellanea.txt.in:130
 msgid "CPU sanity check"
 msgstr "CPU 資訊完整性檢查"
 
 #. description
-#: ../jobs/miscellanea.txt.in:141
+#: ../jobs/miscellanea.txt.in:140
 msgid "Sanity check of DMI system identification data (for servers)"
 msgstr "DMI 系統識別資料完整性檢查 (對伺服器)"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:143
+#: ../jobs/miscellanea.txt.in:142
 msgid "DMI ID sanity check (servers)"
 msgstr "DMI ID 完整性檢查 (伺服器)"
 
 #. description
-#: ../jobs/miscellanea.txt.in:153
+#: ../jobs/miscellanea.txt.in:152
 msgid ""
 "Sanity check of DMI system identification data (for desktops & laptops)"
 msgstr "DMI 系統識別資料完整性檢查 (對桌機與筆電)"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:155
+#: ../jobs/miscellanea.txt.in:154
 msgid "DMI ID sanity check (desktops/laptops)"
 msgstr "DMI ID 完整性檢查 (桌機/筆電)"
 
 #. description
-#: ../jobs/miscellanea.txt.in:162
+#: ../jobs/miscellanea.txt.in:161
 msgid ""
 "   Determine if we need to run tests specific to portable computers that may "
 "not apply to desktops."
 msgstr "   檢查我們是否需要執行針對筆記型電腦的測試，那些測試可能不適用於桌上型電腦。"
 
 #. description
-#: ../jobs/miscellanea.txt.in:171
+#: ../jobs/miscellanea.txt.in:170
 msgid ""
 "Test that the /var/crash directory doesn't contain anything. Lists the files "
 "contained within if it does, or echoes the status of the directory (doesn't "
@@ -3804,61 +4162,61 @@ msgid ""
 msgstr "確定 /var/crash 資料夾中沒有任何東西，若有檔案存在則將其列出，或是回傳資料夾狀態 (不存在 / 空的)"
 
 #. description
-#: ../jobs/miscellanea.txt.in:178
+#: ../jobs/miscellanea.txt.in:177
 msgid ""
 "Checks that a specified sources list file contains the requested repositories"
 msgstr "檢查指定的軟體來源列表檔案中是否有包含所需的軟體庫"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:187
+#: ../jobs/miscellanea.txt.in:185
 msgid "PXE verification test of device {__index__} ({interface})"
 msgstr "對 {__index__} ({interface}) 裝置的 PXE 驗證測試"
 
 #. purpose
-#: ../jobs/miscellanea.txt.in:189
+#: ../jobs/miscellanea.txt.in:187
 msgid ""
 "This test will verify that you have attempted to PXE boot this machine from "
 "the network device {__index__} ({interface})."
 msgstr "本測試將會檢查您是否有透過 {__index__} ({interface}) 網路裝置嘗試對本機器進行 PXE 開機。"
 
 #. steps
-#: ../jobs/miscellanea.txt.in:192
+#: ../jobs/miscellanea.txt.in:190
 msgid ""
 "1. Prior to running this test, you should have attempted to boot this system "
 "via PXE on every Network Port available."
 msgstr "1. 在進行本測試前，您應該有嘗試在本機器上透過所有可用的乙太網路孔上進行 PXE 開機。"
 
 #. verification
-#: ../jobs/miscellanea.txt.in:194
+#: ../jobs/miscellanea.txt.in:192
 msgid ""
-"1. Select Yes if you successfully used PXE boot this system using the NIC "
-"{interface} 2. Select No if you did not attempt to PXE boot this system "
-"using the NIC {interface} 3. Select No if you attempted to PXE boot via "
-"{interface} and it failed for some reason."
+"1. Select Yes if you successfully used PXE to boot this system using the NIC "
+"{interface} 2. Select No if you attempted to PXE boot via {interface} and it "
+"failed for some reason. 3. Select Skip if you did not attempt to PXE boot "
+"this system using the NIC {interface}"
 msgstr ""
 
 #. summary
-#: ../jobs/miscellanea.txt.in:206
+#: ../jobs/miscellanea.txt.in:203
 msgid ""
 "Remote Shared IPMI verification test for device {__index__} ({interface})"
 msgstr "對 {__index__} ({interface}) 裝置的遠端共享 IPMI 驗證測試"
 
 #. purpose
-#: ../jobs/miscellanea.txt.in:208
+#: ../jobs/miscellanea.txt.in:205
 msgid ""
 "This test will verify that you have attempted IPMI control of this machine "
 "from the network device {__index__} ({interface})."
-msgstr ""
+msgstr "本測試將會檢查您是否有嘗試使用 IPMI 透過 {__index__} ({interface}) 網路裝置控制本系統。"
 
 #. steps
-#: ../jobs/miscellanea.txt.in:210
+#: ../jobs/miscellanea.txt.in:207
 msgid ""
 "1. Prior to running this test, you should have configured and used IPMI to "
 "power this machine off and on using every Network Port available."
-msgstr ""
+msgstr "1. 在開始本測試前，您應該先進行設定並用 IPMI 來將此機器關閉再透過各個可用的網路埠開機。"
 
 #. verification
-#: ../jobs/miscellanea.txt.in:212
+#: ../jobs/miscellanea.txt.in:209
 msgid ""
 "1. Select Yes if you successfully used IPMI to remotely power this system "
 "off and on using the NIC {interface} 2. Select No if you did not attempt to "
@@ -3866,9 +4224,12 @@ msgid ""
 "Select No if you attempted to use IPMI to remotely power off/on this system "
 "via {interface} and it failed for some reason."
 msgstr ""
+"1. 若您成功的透過 IPMI 在 {interface} 網路控制器上遠端關閉並開啟此系統的話請選擇「Yes」2. 如果您沒有嘗試透過 IPMI 在 "
+"{interface} 網路控制器上遠端關閉並開啟此系統的話請選擇「No」3. 若您嘗試透過 IPMI 在 {interface} "
+"網路控制器上遠端關閉並開啟此系統但因為某些原因失敗，請選擇「No」。"
 
 #. description
-#: ../jobs/miscellanea.txt.in:220
+#: ../jobs/miscellanea.txt.in:217
 msgid ""
 "PURPOSE:\n"
 " Some systems do not share IPMI over all NICs but instead have a dedicated "
@@ -3879,7 +4240,7 @@ msgid ""
 "Dedicated Management Port to remotely power off/on this sytem.\n"
 "VERIFICATION:\n"
 " Skip this test if this system ONLY uses shared management/ethernet ports OR "
-"if this system does not have a BMC (Management Console)\n"
+"if this system does not have a Management Controller.\n"
 " 1. Select Yes if you successfully used IPMI to remotely power this system "
 "off and on using the dedicated management port.\n"
 " 2. Select No if you attempted to use the dedicated management port to "
@@ -3887,17 +4248,17 @@ msgid ""
 msgstr ""
 
 #. description
-#: ../jobs/miscellanea.txt.in:236
+#: ../jobs/miscellanea.txt.in:233
 msgid "Run Firmware Test Suite (fwts) oops tests."
 msgstr "執行 Firmware Test Suite (fwts) oops 測試。"
 
 #. description
-#: ../jobs/miscellanea.txt.in:248
+#: ../jobs/miscellanea.txt.in:245
 msgid "Attaches the FWTS oops results log to the submission"
 msgstr "將 FWTS oops 測試結果附加到測試報告中"
 
 #. description
-#: ../jobs/miscellanea.txt.in:261
+#: ../jobs/miscellanea.txt.in:258
 msgid ""
 "If system was installed via MAAS from a cert server, the MAAS version used "
 "should be contained in /etc/installed-by-maas"
@@ -3905,19 +4266,19 @@ msgstr ""
 "如果系統是透過 cert 伺服器以 MAAS 安裝的，其所使用的 MAAS 版本資訊將會在 /etc/installed-by-maas 檔案中"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:262
+#: ../jobs/miscellanea.txt.in:259
 msgid "Gets the version of MAAS used to deploy the SUT"
 msgstr "取得佈署此待測機器用的 MAAS 版本資訊"
 
 #. description
-#: ../jobs/miscellanea.txt.in:270
+#: ../jobs/miscellanea.txt.in:267
 msgid ""
 "Retrieve the computer's make and model for easier access than digging "
 "through the dmidecode output."
 msgstr "取得電腦的製造商與型號，如此一來取得此資料會比之後在 dmidecode 輸出中挖掘來得容易"
 
 #. summary
-#: ../jobs/miscellanea.txt.in:271
+#: ../jobs/miscellanea.txt.in:268
 msgid "Retrieve the computer's make and model"
 msgstr "取得本電腦的製造商與型號名稱"
 
@@ -3936,74 +4297,210 @@ msgid ""
 msgstr "為 CDMA 數據機建立行動寬頻網路連線並檢查連線以確定它運作正常"
 
 #. purpose
-#: ../jobs/mobilebroadband.txt.in:102
+#: ../jobs/mobilebroadband.txt.in:100
 msgid ""
 "User verification of whether the observed transfer throughput is acceptable "
 "for the type and maximum speed of device {__index__} ({interface})."
 msgstr ""
+"使用者確認在 {__index__} ({interface}) 裝置上觀察到的傳輸速度對於此介面的類別以及理論最大速度來說是否可以接受。"
 
-#. summary
-#: ../jobs/monitor.txt.in:3
-msgid "VGA port test"
-msgstr "VGA 視訊輸出埠測試"
+#. purpose
+#: ../jobs/monitor.txt.in:7
+msgid "   This test will check your VGA port."
+msgstr "   本測試將會檢查您的 VGA 視訊輸出埠。"
 
-#. summary
+#. steps
+#: ../jobs/monitor.txt.in:9
+msgid ""
+"   Skip this test if your system does not have a VGA port.\n"
+"   1. Connect a display (if not already connected) to the VGA port on your "
+"system"
+msgstr ""
+
+#. purpose
+#: ../jobs/monitor.txt.in:21
+msgid "   This test will check your DVI port."
+msgstr "   本測試將會檢查您的 DVI 視訊輸出埠。"
+
+#. steps
 #: ../jobs/monitor.txt.in:23
-msgid "DVI port test"
-msgstr "DVI 視訊輸出埠測試"
+msgid ""
+"   Skip this test if your system does not have a DVI port.\n"
+"   1. Connect a display (if not already connected) to the DVI port on your "
+"system"
+msgstr ""
 
-#. summary
-#: ../jobs/monitor.txt.in:43
-msgid "DisplayPort test"
-msgstr "DisplayPort 視訊輸出埠測試"
+#. purpose
+#: ../jobs/monitor.txt.in:35
+msgid "    This test will check your DisplayPort port."
+msgstr "    本測試將會檢查您的 DisplayPort 視訊輸出埠。"
 
-#. summary
+#. steps
+#: ../jobs/monitor.txt.in:37
+msgid ""
+"    Skip this test if your system does not have a DisplayPort port.\n"
+"    1. Connect a display (if not already connected) to the DisplayPort port "
+"on your system"
+msgstr ""
+
+#. verification
+#: ../jobs/monitor.txt.in:40
+msgid "    Was the desktop displayed correctly on both screens?"
+msgstr ""
+
+#. purpose
+#: ../jobs/monitor.txt.in:49
+msgid "   This test will check your HDMI port."
+msgstr "   本測試將會檢查您的 HDMI 視訊輸出埠。"
+
+#. steps
+#: ../jobs/monitor.txt.in:51
+msgid ""
+"   Skip this test if your system does not have a HDMI port.\n"
+"   1. Connect a display (if not already connected) to the HDMI port on your "
+"system"
+msgstr ""
+
+#. purpose
 #: ../jobs/monitor.txt.in:63
-msgid "HDMI port test"
-msgstr "HDMI 視訊輸出埠測試"
+msgid "   This test will check your S-VIDEO port."
+msgstr "   本測試將會檢查您的 S-VIDEO 視訊輸出埠。"
+
+#. steps
+#: ../jobs/monitor.txt.in:65
+msgid ""
+"   Skip this test if your system does not have a S-VIDEO port.\n"
+"   1. Connect a display (if not already connected) to the S-VIDEO port on "
+"your system"
+msgstr ""
+
+#. purpose
+#: ../jobs/monitor.txt.in:77
+msgid "   This test will check your RCA port."
+msgstr "   本測試將會檢查您的 RCA 視訊輸出埠。"
+
+#. steps
+#: ../jobs/monitor.txt.in:79
+msgid ""
+"   Skip this test if your system does not have a RCA port.\n"
+"   1. Connect a display (if not already connected) to the RCA port on your "
+"system"
+msgstr ""
+
+#. verification
+#: ../jobs/monitor.txt.in:82 ../units/dock.pxu:673
+msgid "   Was the desktop displayed correctly on both screens?"
+msgstr ""
+
+#. purpose
+#: ../jobs/monitor.txt.in:91
+msgid ""
+"   This test verifies that multi-monitor output works on your desktop "
+"system. This is NOT the same test as the external monitor tests you would "
+"run on your laptop.  You will need two monitors to perform this test."
+msgstr ""
+
+#. steps
+#: ../jobs/monitor.txt.in:93
+msgid ""
+"   Skip this test if your video card does not support multiple monitors.\n"
+"   1. If your second monitor is not already connected, connect it now\n"
+"   2. Open the \"Displays\" tool (open the dash and search for "
+"\"Displays\")\n"
+"   3. Configure your output to provide one desktop across both monitors\n"
+"   4. Open any application and drag it from one monitor to the next."
+msgstr ""
+
+#. verification
+#: ../jobs/monitor.txt.in:99
+msgid "   Was the stretched desktop displayed correctly across both screens?"
+msgstr ""
+
+#. purpose
+#: ../jobs/monitor.txt.in:108
+msgid "   This test will check your monitor power saving capabilities"
+msgstr "   本測試將會檢查您螢幕的省電功能"
+
+#. steps
+#: ../jobs/monitor.txt.in:110
+msgid ""
+"   1. Click \"Test\" to try the power saving capabilities of your monitor\n"
+"   2. Press any key or move the mouse to recover"
+msgstr ""
+"   1. 按下「測試」按鈕來測試您電腦螢幕的省電功能\n"
+"   2. 請按下任意鍵或移動滑鼠來恢復"
+
+#. verification
+#: ../jobs/monitor.txt.in:113
+msgid "   Did the monitor go blank and turn on again?"
+msgstr "   您的螢幕有變黑然後再亮起嗎？"
+
+#. purpose
+#: ../jobs/monitor.txt.in:124
+msgid "   This test will test changes to screen brightness"
+msgstr "   本測試將會檢查是否能改變螢幕亮度"
+
+#. steps
+#: ../jobs/monitor.txt.in:126
+msgid ""
+"   1. Click \"Test\" to try to dim the screen.\n"
+"   2. Check if the screen was dimmed approximately to half of the maximum "
+"brightness.\n"
+"   3. The screen will go back to the original brightness in 2 seconds."
+msgstr ""
+"   1. 按下「測試」按鈕來將螢幕亮度調暗\n"
+"   2. 檢查螢幕亮度是否有降到約最大值的一半\n"
+"   3. 螢幕將會在 2 秒後回到原本的亮度"
+
+#. verification
+#: ../jobs/monitor.txt.in:130
+msgid ""
+"   Was your screen dimmed approximately to half of the maximum brightness?"
+msgstr "   您的螢幕亮度有降至最大值的一半嗎？"
 
 #. summary
-#: ../jobs/monitor.txt.in:83
-msgid "S-VIDEO port test"
-msgstr "S-VIDEO 視訊輸出埠測試"
+#: ../jobs/monitor.txt.in:141
+msgid "Display connected via Thunderbolt for {vendor} {product}"
+msgstr ""
 
-#. summary
-#: ../jobs/monitor.txt.in:103
-msgid "RCA port test"
-msgstr "RCA 視訊輸出埠測試"
+#. purpose
+#: ../jobs/monitor.txt.in:142
+msgid ""
+"   This test will check your Thunderbolt port as a monitor interconnect for "
+"{vendor} {product}."
+msgstr ""
 
-#. summary
-#: ../jobs/monitor.txt.in:123
-msgid "Multi-monitor test"
-msgstr "多螢幕測試"
+#. steps
+#: ../jobs/monitor.txt.in:144
+msgid ""
+"   1. Connect a display (if not already connected) to the Thunderbolt port "
+"on\n"
+"      your system\n"
+"   2. Switch display modes between in your Display Settings, check if it can "
+"be\n"
+"      set to mirrored, extended, displayed on external or onboard only"
+msgstr ""
 
-#. summary
-#: ../jobs/monitor.txt.in:146
-msgid "Monitor power-saving test"
-msgstr "螢幕省電功能測試"
-
-#. summary
-#: ../jobs/monitor.txt.in:166
-msgid "Screen dimming test"
-msgstr "螢幕亮度降低測試"
-
-#. summary
-#: ../jobs/monitor.txt.in:189
-msgid "Thunderbolt monitor test"
-msgstr "Thunderbolt 螢幕測試"
+#. verification
+#: ../jobs/monitor.txt.in:149
+msgid ""
+"   Was the desktop displayed correctly with {vendor} {product} on the "
+"Thunderbolt-connected\n"
+"   screen in every mode?"
+msgstr ""
 
 #. description
-#: ../jobs/networking.txt.in:7
+#: ../jobs/networking.txt.in:7 ../units/dock.pxu:512
 msgid "Tests whether the system has a working Internet connection."
 msgstr "測試系統網路連線是否運作正常。"
 
 #. summary
-#: ../jobs/networking.txt.in:16
+#: ../jobs/networking.txt.in:15
 msgid "Network Information of device {__index__} ({interface})"
 msgstr "{__index__} ({interface}) 裝置的網路資訊"
 
 #. description
-#: ../jobs/networking.txt.in:20
+#: ../jobs/networking.txt.in:19
 msgid ""
 "PURPOSE:\n"
 "    This test will check the network device {__index__} ({interface})\n"
@@ -4020,7 +4517,7 @@ msgstr ""
 "    這資訊正確嗎？"
 
 #. description
-#: ../jobs/networking.txt.in:32
+#: ../jobs/networking.txt.in:31
 msgid ""
 "PURPOSE:\n"
 "   This test will check that a DSL modem can be configured and connected.\n"
@@ -4050,73 +4547,79 @@ msgstr ""
 "   是否有通知出現，連線是否已成功建立？"
 
 #. description
-#: ../jobs/networking.txt.in:50
+#: ../jobs/networking.txt.in:49
 msgid ""
 "Automated test case to verify availability of some system on the network "
 "using ICMP ECHO packets."
 msgstr "驗證某些系統在網路上能否使用 ICMP 回應封包的自動化測試。"
 
 #. description
-#: ../jobs/networking.txt.in:57 ../jobs/peripheral.txt.in:40
+#: ../jobs/networking.txt.in:56 ../jobs/peripheral.txt.in:40
 msgid ""
 "Automated test case to make sure that it's possible to download files "
 "through HTTP"
 msgstr "驗證是否能透過 HTTP 下載檔案的自動化測試。"
 
 #. description
-#: ../jobs/networking.txt.in:66
+#: ../jobs/networking.txt.in:65
 msgid "Test to see if we can sync local clock to an NTP server"
 msgstr "測試能否讓本機的時間與 NTP 伺服器同步。"
 
 #. description
-#: ../jobs/networking.txt.in:73
+#: ../jobs/networking.txt.in:72
 msgid ""
 "Verify that an installation of checkbox-server on the network can be reached "
 "over SSH."
-msgstr "驗證一個在網路上已安裝好的 checkbox-server 可以透過 SSH 連接。"
+msgstr "驗證是否可以透過 SSH 連接一個在網路上已安裝好的 checkbox-server。"
 
 #. description
-#: ../jobs/networking.txt.in:80
+#: ../jobs/networking.txt.in:79
 msgid "Try to enable a remote printer on the network and print a test page."
 msgstr "嘗試啓動網路遠端印表機並且印出測試頁。"
 
 #. description
 #: ../jobs/optical.txt.in:6
 msgid "Detects optical drives (CD/DVD) attached to the system."
-msgstr ""
+msgstr "偵測安裝於本系統上的光碟機 (CD/DVD)。"
 
 #. description
-#: ../jobs/optical.txt.in:18
-msgid "Optical read test."
-msgstr "光碟讀取測試。"
-
-#. summary
-#: ../jobs/optical.txt.in:40
-msgid "Automated optical read test."
-msgstr "自動化的光碟讀取測試。"
-
-#. description
-#: ../jobs/optical.txt.in:45
+#: ../jobs/optical.txt.in:42
 msgid ""
-"Automated test to read a data CD/DVD and ensure the optical drive works "
-"properly."
+"This is an automated version of optical/read. It assumes you have already "
+"inserted a data CD into your optical drive prior to running Checkbox."
 msgstr ""
 
 #. description
-#: ../jobs/optical.txt.in:66
-msgid "CD write test."
-msgstr "CD 寫入測試。"
-
-#. description
-#: ../jobs/optical.txt.in:96
-msgid "Automated CD write test"
-msgstr "自動化的 CD 寫入測試"
-
-#. description
-#: ../jobs/optical.txt.in:117
+#: ../jobs/optical.txt.in:57
 msgid ""
 "PURPOSE:\n"
-"    This test will check your CD audio playback capabilities\n"
+"    This test will check your system's {product} CD writing capabilities. "
+"This test requires a blank CD-R or CD+R.\n"
+"STEPS:\n"
+"    Skip this test if you do not have a blank CD disk.\n"
+"    1. Insert a blank CD-R or CD+R into your drive\n"
+"    2. Click \"Test\" to begin.\n"
+"    3. When the CD tray ejects the media after burning, close it (DO NOT "
+"remove the disk, it is needed for the second portion of the test). Note, you "
+"must close the drive within 5 minutes or the test will time out.\n"
+"VERIFICATION:\n"
+"    This test should automatically select \"Yes\" if it passes, \"No\" if it "
+"fails."
+msgstr ""
+
+#. description
+#: ../jobs/optical.txt.in:80
+msgid ""
+"This is an automated version of optical/cdrom-write. It assumes you have "
+"already inserted a data CD into your {product} optical drive prior to "
+"running Checkbox."
+msgstr ""
+
+#. description
+#: ../jobs/optical.txt.in:91
+msgid ""
+"PURPOSE:\n"
+"    This test will check your {product} CD audio playback capabilities\n"
 "STEPS:\n"
 "    1. Insert an audio CD in your optical drive\n"
 "    2. When prompted, launch the Music Player\n"
@@ -4130,33 +4633,9 @@ msgid ""
 "VERIFICATION:\n"
 "    Did all the steps work?"
 msgstr ""
-"目的：\n"
-"    本測試將會檢查您的音樂 CD 播放功能\n"
-"步驟：\n"
-"    1. 插入一張音樂 CD 到您的光碟機中\n"
-"    2. 當提示出現時，啟動音樂撥放器\n"
-"    3. 在音樂播放器中找到該 CD\n"
-"    4. 在音樂播放器中選擇該 CD\n"
-"    5. 按下播放鈕來從該 CD 播放音樂\n"
-"    6. 於一小段時間後停止播放\n"
-"    7. 在 CD 圖示上按右鍵並選擇「退出光碟」\n"
-"    8. CD 應該會被退出來\n"
-"    9. 關閉音樂撥放器\n"
-"檢查：\n"
-"    各個步驟是否都正常運作？"
 
 #. description
-#: ../jobs/optical.txt.in:139
-msgid "DVD write test."
-msgstr "DVD 寫入測試。"
-
-#. description
-#: ../jobs/optical.txt.in:169
-msgid "Automated DVD write test."
-msgstr "自動化的 DVD 寫入測試。"
-
-#. description
-#: ../jobs/optical.txt.in:193
+#: ../jobs/optical.txt.in:153
 msgid ""
 "PURPOSE:\n"
 "    This test will check your DVD  playback capabilities\n"
@@ -4173,16 +4652,6 @@ msgstr ""
 "    2. 按下「測試」按鈕來在 Totem 中播放該 DVD\n"
 "檢查：\n"
 "    該電影檔有被播放出來嗎？"
-
-#. description
-#: ../jobs/optical.txt.in:207
-msgid "Automated Blu-Ray read test."
-msgstr "自動化的藍光光碟讀取測試。"
-
-#. description
-#: ../jobs/optical.txt.in:235
-msgid "Automated Blu-Ray write test."
-msgstr "自動化的藍光光碟寫入測試。"
 
 #. description
 #: ../jobs/panel_clock_test.txt.in:4
@@ -4219,6 +4688,17 @@ msgid ""
 "   Is your system clock displaying the correct date and time for your "
 "timezone?"
 msgstr ""
+"目的：\n"
+"   本測試將會檢查桌面時鐘是否有與系統時鐘同步\n"
+"步驟：\n"
+"   1. 進行測試來將桌面時鐘快轉一小時\n"
+"   註：這可能需要一分鐘以上來讓時鐘更新\n"
+"   2. 在時鐘上按右鍵，並選擇「時間與日期設定」\n"
+"   3. 確定您的時鐘是處於手動設定模式\n"
+"   4. 將時間往回調整一小時\n"
+"   5. 關閉視窗並重新開機\n"
+"檢查：\n"
+"   您的系統時鐘有正確顯示您目前時區的日期與時間嗎？"
 
 #. description
 #: ../jobs/panel_reboot.txt.in:3
@@ -4495,23 +4975,22 @@ msgstr ""
 #. description
 #: ../jobs/power-management.txt.in:198
 msgid ""
-"Checks the battery drain during idle. Reports time and capacity until empty "
-"and capacity."
-msgstr ""
+"Checks the battery drain during idle. Reports time and capacity until empty."
+msgstr "檢查閒置時的電池消耗情形。持續回報時間與存量直到電力耗盡。"
 
 #. description
 #: ../jobs/power-management.txt.in:209
 msgid ""
 "Checks the battery drain while watching a movie. Reports time and capacity "
 "until empty. Requires MOVIE_VAR to be set."
-msgstr ""
+msgstr "檢查觀看影片時的電池消耗情形。持續回報時間與存量直到電力耗盡。需要事先設定 MOVIE_VAR 變數。"
 
 #. description
 #: ../jobs/power-management.txt.in:222
 msgid ""
 "Checks the battery drain during suspend. Reports time and capacity until "
 "empty."
-msgstr ""
+msgstr "檢查暫停時的電池消耗情形。持續回報時間與存量直到電力耗盡。"
 
 #. description
 #: ../jobs/power-management.txt.in:231
@@ -4674,6 +5153,13 @@ msgid ""
 "    Check that in the report the result is passed and the comment is "
 "displayed"
 msgstr ""
+"目的：\n"
+"    本測試將會檢查手動測試項目運作正常\n"
+"步驟：\n"
+"    1. 新增備註\n"
+"    2. 將結果設定為測試成功\n"
+"檢查：\n"
+"    確定在測試報告中此項測試成功並且能看到新增的備註"
 
 #. description
 #: ../jobs/stress.txt.in:9
@@ -4681,10 +5167,18 @@ msgid ""
 "Simulate high system load using the 'stress' tool to exercise the CPU for "
 "several hours. The test is considered passed if the system does not freeze "
 "or abend."
+msgstr "透過 stress 工具對 CPU 進行數小時的高負載狀態模擬。若系統沒有死當或異常則此測試通過。"
+
+#. description
+#: ../jobs/stress.txt.in:27
+msgid ""
+"Impose a high system load using the 'stress_ng' tool to exercise the CPU for "
+"several hours. The test is considered passed if the system does not freeze "
+"and if the stress_ng tool does not report errors."
 msgstr ""
 
 #. description
-#: ../jobs/stress.txt.in:33
+#: ../jobs/stress.txt.in:51
 msgid ""
 "PURPOSE:\n"
 "   This is an automated stress test that will force the system to "
@@ -4694,25 +5188,25 @@ msgstr ""
 "   本自動化壓力測試將會強迫系統進行 30 次的休眠 / 喚醒循環"
 
 #. description
-#: ../jobs/stress.txt.in:42
+#: ../jobs/stress.txt.in:60
 msgid ""
 "Automated check of the 30 cycle hibernate log for errors detected by fwts."
 msgstr "自動檢查 30 次休眠紀錄中由 fwts 所偵測到的錯誤。"
 
 #. description
-#: ../jobs/stress.txt.in:50
+#: ../jobs/stress.txt.in:68
 msgid "Attaches the log from the 30 cycle Hibernate/Resume test if it exists"
 msgstr "若 30 次休眠 / 喚醒循環的測試紀錄存在，則將其附加到測試報告中"
 
 #. description
-#: ../jobs/stress.txt.in:63
+#: ../jobs/stress.txt.in:81
 msgid ""
 "This is an automated stress test that will run a sequence of '30 "
 "suspend/resume cycles and one reboot' 3 times."
-msgstr ""
+msgstr "本自動化測試將會進行三回「30 次暫停 / 恢復循環並重新開機一次」之壓力測試。"
 
 #. description
-#: ../jobs/stress.txt.in:83
+#: ../jobs/stress.txt.in:101
 msgid ""
 "PURPOSE:\n"
 "   This is an automated stress test that will force the system to "
@@ -4722,32 +5216,32 @@ msgstr ""
 "   本自動化壓力測試將會強迫系統進行 30 次的暫停 / 恢復循環。"
 
 #. description
-#: ../jobs/stress.txt.in:93
+#: ../jobs/stress.txt.in:111
 msgid ""
 "Automated check of the 30 cycle suspend log for errors detected by fwts."
-msgstr ""
-
-#. description
-#: ../jobs/stress.txt.in:102
-msgid ""
-"Automated check of the '30 cycle suspend and 1 reboot times 3' logs for "
-"errors detected by fwts."
-msgstr ""
-
-#. description
-#: ../jobs/stress.txt.in:111
-msgid "Attaches the log from the 30 cycle Suspend/Resume test if it exists"
-msgstr "若 30 次暫停 / 恢復循環的測試紀錄存在，則將其附加到測試報告中"
+msgstr "自動檢查 30 次暫停紀錄中由 fwts 所偵測到的錯誤。"
 
 #. description
 #: ../jobs/stress.txt.in:120
 msgid ""
-"Attaches the log from the '30 cycle Suspend/Resume and one reboot times 3' "
-"test if it exists"
-msgstr ""
+"Automated check of the '30 cycle suspend and 1 reboot times 3' logs for "
+"errors detected by fwts."
+msgstr "自動檢查三回「30 次暫停 / 恢復循環並重新開機一次」紀錄中由 fwts 所偵測到的錯誤。"
 
 #. description
-#: ../jobs/stress.txt.in:156
+#: ../jobs/stress.txt.in:129
+msgid "Attaches the log from the 30 cycle Suspend/Resume test if it exists"
+msgstr "若 30 次暫停 / 恢復循環的測試紀錄存在，則將其附加到測試報告中"
+
+#. description
+#: ../jobs/stress.txt.in:138
+msgid ""
+"Attaches the log from the '30 cycle Suspend/Resume and one reboot times 3' "
+"test if it exists"
+msgstr "若三回「30 次暫停 / 恢復循環並重新開機一次」的測試紀錄存在，則將其附加到測試報告中"
+
+#. description
+#: ../jobs/stress.txt.in:174
 msgid ""
 "PURPOSE:\n"
 "   This is an automated stress test that will force the system to "
@@ -4757,13 +5251,13 @@ msgstr ""
 "   本自動化壓力測試將會強迫系統進行 250 次的休眠 / 喚醒循環。"
 
 #. description
-#: ../jobs/stress.txt.in:165
+#: ../jobs/stress.txt.in:183
 msgid ""
 "Attaches the log from the 250 cycle Hibernate/Resume test if it exists"
 msgstr "若 250 次休眠 / 喚醒循環的測試紀錄存在，則將其附加到測試報告中"
 
 #. description
-#: ../jobs/stress.txt.in:183
+#: ../jobs/stress.txt.in:201
 msgid ""
 "PURPOSE:\n"
 "   This is an automated stress test that will force the system to "
@@ -4773,79 +5267,79 @@ msgstr ""
 "   本自動化壓力測試將會強迫系統進行 250 次的暫停 / 恢復循環。"
 
 #. description
-#: ../jobs/stress.txt.in:192
+#: ../jobs/stress.txt.in:210
 msgid "Attaches the log from the 250 cycle Suspend/Resume test if it exists"
 msgstr "若 250 次暫停 / 恢復循環的測試紀錄存在，則將其附加到測試報告中"
 
 #. description
-#: ../jobs/stress.txt.in:200 ../jobs/suspend.txt.in:388
+#: ../jobs/stress.txt.in:218 ../jobs/suspend.txt.in:366
 msgid ""
 "Checks the sleep times to ensure that a machine suspends and resumes within "
 "a given threshold"
 msgstr "檢查系統進入暫停狀態以及由暫停狀態恢復的所需時間是否符合給定的門檻值"
 
 #. description
-#: ../jobs/stress.txt.in:214
+#: ../jobs/stress.txt.in:232
 msgid "Stress reboot system (100 cycles)"
 msgstr "重開機壓力測試 (100次)"
 
 #. description
-#: ../jobs/stress.txt.in:237
+#: ../jobs/stress.txt.in:255
 msgid "Stress reboot system (30 cycles)"
 msgstr "重開機壓力測試 (30次)"
 
 #. description
-#: ../jobs/stress.txt.in:259
+#: ../jobs/stress.txt.in:277
 msgid "Stress poweroff system (100 cycles)"
 msgstr "關機壓力測試 (100次)"
 
 #. description
-#: ../jobs/stress.txt.in:282
+#: ../jobs/stress.txt.in:300
 msgid "Stress poweroff system (30 cycles)"
 msgstr "關機壓力測試 (30次)"
 
 #. description
-#: ../jobs/stress.txt.in:299
+#: ../jobs/stress.txt.in:317
 msgid "Check logs for the stress reboot (30 cycles) test case"
 msgstr "檢查重開機壓力測試 (30次) 的紀錄"
 
 #. description
-#: ../jobs/stress.txt.in:316
+#: ../jobs/stress.txt.in:334
 msgid "Check logs for the stress poweroff (30 cycles) test case"
 msgstr "檢查關機壓力測試 (30次) 的紀錄"
 
 #. description
-#: ../jobs/stress.txt.in:333
+#: ../jobs/stress.txt.in:351
 msgid "Check logs for the stress reboot (100 cycles) test case"
 msgstr "檢查重開機壓力測試 (100次) 的紀錄"
 
 #. description
-#: ../jobs/stress.txt.in:350
+#: ../jobs/stress.txt.in:368
 msgid "Check logs for the stress poweroff (100 cycles) test case"
 msgstr "檢查關機壓力測試 (100次) 的紀錄"
 
 #. description
-#: ../jobs/stress.txt.in:370
+#: ../jobs/stress.txt.in:388
 msgid "Run the graphics stress test. This test can take a few minutes."
 msgstr "執行圖形壓力測試，本測試將會需要幾分鐘的時間。"
 
 #. description
-#: ../jobs/stress.txt.in:380
+#: ../jobs/stress.txt.in:398
 msgid "Attaches the graphics stress results to the submission."
 msgstr "將圖形壓力測試的結果附加至測試報告中。"
 
 #. description
-#: ../jobs/stress.txt.in:388
+#: ../jobs/stress.txt.in:406
 msgid "Runs a test that transfers 100 10MB files 3 times to usb."
 msgstr "執行三次傳送 100 個 10MB 的檔案至 USB 的測試。"
 
 #. summary
-#: ../jobs/stress.txt.in:394
+#: ../jobs/stress.txt.in:412
 msgid "Stress test for SDHC card"
 msgstr "對 SDHC 記憶卡的壓力測試"
 
 #. description
-#: ../jobs/stress.txt.in:397
+#: ../jobs/stress.txt.in:415
 msgid ""
 "PURPOSE:\n"
 "    This test will transfers 100 10MB files 3 times to a SDHC card, to\n"
@@ -4869,12 +5363,12 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/stress.txt.in:417
+#: ../jobs/stress.txt.in:435
 msgid "Ping ubuntu.com and restart network interfaces 100 times"
 msgstr "Ping ubuntu.com 並重新啟動網路介面 100 次"
 
 #. description
-#: ../jobs/stress.txt.in:431
+#: ../jobs/stress.txt.in:449
 msgid ""
 "PURPOSE:\n"
 "    To make sure that stressing the wifi hotkey does not cause applets to "
@@ -4896,54 +5390,54 @@ msgstr ""
 "    檢查系統沒有死當，而網路與藍牙小工具還在上方狀態列中並且仍然能夠運作"
 
 #. description
-#: ../jobs/suspend.txt.in:6
+#: ../jobs/suspend.txt.in:6 ../units/dock.pxu:479
 msgid "Record the current network before suspending."
 msgstr "在暫停前紀錄當前網路設定。"
 
-#. summary
-#: ../jobs/suspend.txt.in:19
+#. description
+#: ../jobs/suspend.txt.in:23
 msgid "Record the current resolution before suspending."
 msgstr "在暫停之前紀錄目前的解析度。"
 
 #. description
-#: ../jobs/suspend.txt.in:38
+#: ../jobs/suspend.txt.in:33 ../units/dock.pxu:489
 msgid "Record mixer settings before suspending."
 msgstr "在暫停前紀錄混音器設定。"
 
 #. description
-#: ../jobs/suspend.txt.in:45
+#: ../jobs/suspend.txt.in:40
 msgid "Verify that all the CPUs are online before suspending"
 msgstr "在暫停前確認 CPU 都在線上狀態"
 
 #. description
-#: ../jobs/suspend.txt.in:52
+#: ../jobs/suspend.txt.in:47
 msgid ""
 "Dumps memory info to a file for comparison after suspend test has been run"
 msgstr "將記憶體資訊存入檔案以便在暫停測試後進行比較。"
 
 #. description
-#: ../jobs/suspend.txt.in:63
+#: ../jobs/suspend.txt.in:58
 msgid ""
 "This test disconnects all connections and then connects to the wireless "
 "interface. It then checks the connection to confirm it's working as expected."
 msgstr "本測試將會先切斷所有網路連線後再連到無線網路，然後檢查連線以確認其運作一如預期。"
 
 #. description
-#: ../jobs/suspend.txt.in:100
+#: ../jobs/suspend.txt.in:93
 msgid ""
 "This test executes iperf connection performance/stability against device "
 "{__index__} ({interface}) before suspend."
-msgstr ""
+msgstr "本測試將會在暫停前對 {__index__} ({interface}) 裝置執行 iperf 連線表現 / 穩定度測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:128
+#: ../jobs/suspend.txt.in:121
 msgid ""
 "This test executes iperf connection performance/stability against the "
 "broadband device found on the system before suspend."
 msgstr "本測試將會在暫停前對系統上所有找到的寬頻裝置執行 iperf 連線表現 / 穩定度測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:232
+#: ../jobs/suspend.txt.in:225
 msgid ""
 "PURPOSE:\n"
 "    This test will check suspend and resume\n"
@@ -4974,48 +5468,77 @@ msgstr ""
 "    (註：請依據電腦是否正常的暫停並恢復來選擇測試結果，關於電源 LED 指示燈的驗證將於本測試結束後進行。)"
 
 #. summary
-#: ../jobs/suspend.txt.in:247
-msgid "Suspend after graphics card switch tests"
-msgstr "在圖形卡切換測試後進行暫停測試"
-
-#. description
-#: ../jobs/suspend.txt.in:290
-msgid "This is the automated version of suspend/suspend_advanced."
-msgstr "本測試為 suspend/suspend_advanced 的全自動版本。"
-
-#. summary
-#: ../jobs/suspend.txt.in:299
-msgid "Hybrid sleep test"
+#: ../jobs/suspend.txt.in:257
+msgid "Test suspend/resume after switching to {vendor} {product}"
 msgstr ""
 
 #. description
-#: ../jobs/suspend.txt.in:327
+#: ../jobs/suspend.txt.in:258
+msgid ""
+"PURPOSE:\n"
+"    This test will check suspend and resume after switching to {vendor} "
+"{product} graphics card.\n"
+"STEPS:\n"
+"    1. Ensure you have switched to {vendor} {product} graphics card.\n"
+"    2. Click \"Test\" and your system will suspend for about 30 - 60 "
+"seconds\n"
+"    3. Observe the Power LED to see if it blinks or changes color during "
+"suspend\n"
+"    4. If your system does not wake itself up after 60 seconds, please press "
+"the power button momentarily to wake the system manually\n"
+"    5. If your system fails to wake at all and must be rebooted, restart "
+"System Testing after reboot and mark this test as Failed\n"
+"VERIFICATION:\n"
+"    Did your system suspend and resume correctly after switching to {vendor} "
+"{product} graphics card?\n"
+"    (NOTE: Please only consider whether the system successfully suspended "
+"and resumed. Power/Suspend LED verification will occur after this test is "
+"completed.)"
+msgstr ""
+
+#. description
+#: ../jobs/suspend.txt.in:277
+msgid "This is the automated version of suspend/suspend_advanced."
+msgstr "本測試為 suspend/suspend_advanced 的全自動版本。"
+
+#. description
+#: ../jobs/suspend.txt.in:293
+msgid ""
+"PURPOSE:\n"
+"    This test will check hybrid sleep and resume\n"
+"STEPS:\n"
+"    1. Click \"Test\" and your system will go into hybrid sleep mode for "
+"about 30 - 60 seconds\n"
+"    2. Observe the Power LED to see if it blinks or changes color during "
+"suspend\n"
+"    3. If your system does not wake itself up after 60 seconds, please press "
+"the power button momentarily to wake the system manually\n"
+"    4. If your system fails to wake at all and must be rebooted, restart "
+"System Testing after reboot and mark this test as Failed\n"
+"VERIFICATION:\n"
+"    Did your system enter hybrid sleep and then resume correctly?"
+msgstr ""
+
+#. description
+#: ../jobs/suspend.txt.in:309
 msgid ""
 "Automated check of the suspend log to look for errors reported by fwts"
 msgstr "自動檢查暫停紀錄中由 fwts 所偵測到的錯誤"
 
-#. summary
-#: ../jobs/suspend.txt.in:339
-msgid "Suspend log attach"
-msgstr ""
-
-#. summary
-#: ../jobs/suspend.txt.in:354
-msgid "Hybrid sleep log check test"
-msgstr ""
-
-#. summary
-#: ../jobs/suspend.txt.in:370
-msgid "Hybrid sleep log attach"
-msgstr ""
-
-#. summary
-#: ../jobs/suspend.txt.in:393
-msgid "Suspend time check test"
-msgstr ""
+#. description
+#: ../jobs/suspend.txt.in:337
+msgid ""
+"Automated check of the hybrid sleep log to look for errors reported by fwts"
+msgstr "自動檢查混合式睡眠紀錄中由 fwts 所偵測到的錯誤"
 
 #. description
-#: ../jobs/suspend.txt.in:413
+#: ../jobs/suspend.txt.in:347
+msgid ""
+"Attaches the log from the single hybrid sleep/resume test to the results"
+msgstr "將單次混合式睡眠 / 恢復的測試紀錄附加到測試報告中"
+
+#. description
+#: ../jobs/suspend.txt.in:375
 msgid ""
 "PURPOSE:\n"
 "    Wake up by USB keyboard\n"
@@ -5036,7 +5559,7 @@ msgstr ""
 "    當您按下鍵盤上的按鍵時，系統有從暫停狀態中恢復嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:430
+#: ../jobs/suspend.txt.in:392
 msgid ""
 "PURPOSE:\n"
 "    Wake up by USB mouse\n"
@@ -5058,31 +5581,24 @@ msgstr ""
 "    當您按下滑鼠上的按鍵時，系統有從暫停狀態中恢復嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:445
+#: ../jobs/suspend.txt.in:407
 msgid "Test the network after resuming."
 msgstr "從暫停恢復之後測試網路。"
 
 #. description
-#: ../jobs/suspend.txt.in:453
+#: ../jobs/suspend.txt.in:425
 msgid ""
 "Test to see that we have the same resolution after resuming as before."
 msgstr "測試看看從暫停恢復之後我們是否能擁有與之前相同的解析度。"
 
-#. summary
-#: ../jobs/suspend.txt.in:459
-msgid ""
-"Resolution consistency check after suspend with the valuse we got before "
-"suspend."
-msgstr ""
-
 #. description
-#: ../jobs/suspend.txt.in:492
+#: ../jobs/suspend.txt.in:449 ../units/dock.pxu:838
 msgid ""
 "Verify that mixer settings after suspend are the same as before suspend."
 msgstr "從暫停狀態恢復後檢查混音器設定是否與暫停前相同。"
 
 #. description
-#: ../jobs/suspend.txt.in:506
+#: ../jobs/suspend.txt.in:463
 msgid ""
 "PURPOSE:\n"
 "    Check that system detects speakers or headphones being plugged in after "
@@ -5097,9 +5613,20 @@ msgid ""
 "    Verification is automatic, no action is required.\n"
 "    The test times out after 30 seconds (and fails in that case)."
 msgstr ""
+"目的：\n"
+"    檢查系統從暫停狀態恢復後能否正確偵測到外接喇叭或耳機的連接\n"
+"步驟：\n"
+"    1. 準備一組帶有 3.5mm 標準接頭的耳機或喇叭\n"
+"    2. 找到電腦上供外接喇叭 / 耳機接頭用的連接埠\n"
+"    3. 執行測試 (您會有 30 秒的時間來執行以下操作)\n"
+"    4. 將耳機或喇叭連接端子接至電腦上對應的連接埠\n"
+"    5. 為了接下來的測試，請將連接端子自電腦上拔除\n"
+"檢查：\n"
+"    這是一個自動化的測試，您不需要進行其他操作\n"
+"    本測試將在 30 秒後逾時 (若逾時，本測試將會被紀錄為測試失敗)"
 
 #. description
-#: ../jobs/suspend.txt.in:528
+#: ../jobs/suspend.txt.in:485
 msgid ""
 "PURPOSE:\n"
 "    Check that system detects a microphone being plugged in after suspend\n"
@@ -5114,9 +5641,21 @@ msgid ""
 "    Verification is automatic, no action is required.\n"
 "    The test times out after 30 seconds (and fails in that case)."
 msgstr ""
+"目的：\n"
+"    檢查系統從暫停狀態恢復能否正確偵測到外接麥克風的連接\n"
+"步驟：\n"
+"    1. 準備一組帶有 3.5mm 標準接頭的麥克風\n"
+"    2. 找到電腦上供外接麥克風接頭用的連接埠\n"
+"       外接麥克風有可能會跟外接耳機共用同一個連接埠\n"
+"    3. 執行測試 (您會有 30 秒的時間來執行以下操作)\n"
+"    4. 將麥克風連接端子接至電腦上對應的連接埠\n"
+"    5. 為了接下來的測試，請將連接端子自電腦上拔除\n"
+"檢查：\n"
+"    這是一個自動化的測試，您不需要進行其他操作\n"
+"    本測試將在 30 秒後逾時 (若逾時，本測試將會被紀錄為測試失敗)"
 
 #. description
-#: ../jobs/suspend.txt.in:559
+#: ../jobs/suspend.txt.in:516
 msgid ""
 "PURPOSE:\n"
 "    This test will check that headphones connector works correctly after "
@@ -5128,9 +5667,16 @@ msgid ""
 "    Did you hear a sound through the headphones and did the sound play "
 "without any distortion, clicks or other strange noises from your headphones?"
 msgstr ""
+"目的：\n"
+"    這個測試會測試在系統從暫停狀態恢復後耳機連接端子是否正常運作\n"
+"步驟：\n"
+"    1. 將外接耳機接上電腦\n"
+"    2. 進行測試來讓您的裝置播放一小段音效\n"
+"檢查：\n"
+"    您是否有從外接耳機聽到一段清楚不失真、沒有喀噠聲或是其他奇怪噪音的音效？"
 
 #. description
-#: ../jobs/suspend.txt.in:585
+#: ../jobs/suspend.txt.in:542
 msgid ""
 "PURPOSE:\n"
 "    This test will check that recording sound using an external microphone "
@@ -5142,19 +5688,27 @@ msgid ""
 "VERIFICATION:\n"
 "    Did you hear your speech played back?"
 msgstr ""
+"目的：\n"
+"    這個測試將會檢查在系統從暫停狀態恢復後外接的麥克風是否可以正常錄音\n"
+"步驟：\n"
+"    1. 將外接的麥克風連接到電腦\n"
+"    2. 進行然後對著外接的麥克風講一段話\n"
+"    3. 您剛剛講的話將透過喇叭播放出來\n"
+"檢查：\n"
+"    您是否有聽到自己剛剛被錄下來的話"
 
 #. description
-#: ../jobs/suspend.txt.in:608
+#: ../jobs/suspend.txt.in:565
 msgid "Verify that all CPUs are online after resuming."
 msgstr "從暫停恢復之後確認所有 CPU 都在線上狀態。"
 
 #. description
-#: ../jobs/suspend.txt.in:625
+#: ../jobs/suspend.txt.in:582
 msgid "Verify that all memory is available after resuming from suspend."
 msgstr "檢查從暫停狀態恢復後是否所有記憶體皆可用。"
 
 #. description
-#: ../jobs/suspend.txt.in:634
+#: ../jobs/suspend.txt.in:591
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the display is correct after suspend and "
@@ -5173,12 +5727,32 @@ msgstr ""
 "    顯示器從暫停狀態恢復後是否正常運作？"
 
 #. summary
-#: ../jobs/suspend.txt.in:645
-msgid "Display after suspend tests"
-msgstr "暫停後的顯示器測試"
+#: ../jobs/suspend.txt.in:605
+msgid "Test display function after suspend for {vendor} {product}"
+msgstr "在系統從暫停狀態恢復後對 {vendor} {product} 進行顯示功能測試"
 
 #. description
-#: ../jobs/suspend.txt.in:671
+#: ../jobs/suspend.txt.in:606
+msgid ""
+"PURPOSE:\n"
+"    This test will check that the display is correct after suspend and "
+"resume on the {vendor} {product} graphics card.\n"
+"STEPS:\n"
+"    1. Check that your display does not show up visual artifacts after "
+"resuming.\n"
+"VERIFICATION:\n"
+"    Does the display work normally after resuming from suspend using the "
+"{vendor} {product} graphics card?"
+msgstr ""
+"目的：\n"
+"    本測試將會檢查使用 {vendor} {product} 顯示卡從暫停狀態恢復後，顯示器是否正常運作\n"
+"步驟：\n"
+"    1. 從暫停狀態恢復後檢查您的顯示器沒有出現多餘的產物\n"
+"檢查：\n"
+"    使用 {vendor} {product} 顯示卡時，顯示器從暫停狀態恢復後是否正常運作？"
+
+#. description
+#: ../jobs/suspend.txt.in:622
 msgid ""
 "This test checks that the wireless interface is working after suspending the "
 "system. It disconnects all interfaces and then connects to the wireless "
@@ -5187,63 +5761,63 @@ msgstr ""
 "本測試將會檢查無線網路介面在系統從暫停狀態恢復後是否運作正常。它將會先切斷所有網路連線後再連到無線網路，然後檢查連線以確認其運作一如預期。"
 
 #. description
-#: ../jobs/suspend.txt.in:891
+#: ../jobs/suspend.txt.in:842 ../units/dock.pxu:709
 msgid ""
 "Tests that the systems wireless hardware can connect to a router using WPA "
 "security and the 802.11b/g protocols after the system has been suspended."
 msgstr "測試本系統的無線網路裝置是否能在系統從暫停狀態恢復後採用 802.11b/g 通訊協定以 WPA 加密之設定連上路由器。"
 
 #. description
-#: ../jobs/suspend.txt.in:922
+#: ../jobs/suspend.txt.in:873 ../units/dock.pxu:732
 msgid ""
 "Tests that the systems wireless hardware can connect to a router using no "
 "security and the 802.11b/g protocols after the system has been suspended."
 msgstr "測試本系統的無線網路裝置是否能在系統從暫停狀態恢復後採用 802.11b/g 通訊協定以無加密之設定連上路由器。"
 
 #. description
-#: ../jobs/suspend.txt.in:953
+#: ../jobs/suspend.txt.in:904 ../units/dock.pxu:755
 msgid ""
 "Tests that the systems wireless hardware can connect to a router using WPA "
 "security and the 802.11n protocol after the system has been suspended."
 msgstr "測試本系統的無線網路裝置是否能在系統從暫停狀態恢復後採用 802.11n 通訊協定以 WPA 加密之設定連上路由器。"
 
 #. description
-#: ../jobs/suspend.txt.in:984
+#: ../jobs/suspend.txt.in:935 ../units/dock.pxu:778
 msgid ""
 "Tests that the systems wireless hardware can connect to a router using no "
 "security and the 802.11n protocol after the system has been suspended."
 msgstr "測試本系統的無線網路裝置是否能在系統從暫停狀態恢復後採用 802.11n 通訊協定以無加密之設定連上路由器。"
 
 #. description
-#: ../jobs/suspend.txt.in:1016
+#: ../jobs/suspend.txt.in:967 ../units/dock.pxu:802
 msgid ""
 "Tests that the systems wireless hardware can connect to a router using WPA "
 "security and the 802.11ac protocol after the system has been suspended."
 msgstr "測試本系統的無線網路裝置是否能在系統從暫停狀態恢復後採用 802.11ac 通訊協定以 WPA 加密之設定連上路由器。"
 
 #. description
-#: ../jobs/suspend.txt.in:1048
+#: ../jobs/suspend.txt.in:999 ../units/dock.pxu:826
 msgid ""
 "Tests that the systems wireless hardware can connect to a router using no "
 "security and the 802.11ac protocol after the system has been suspended."
 msgstr "測試本系統的無線網路裝置是否能在系統從暫停狀態恢復後採用 802.11ac 通訊協定以無加密之設定連上路由器。"
 
 #. description
-#: ../jobs/suspend.txt.in:1085
+#: ../jobs/suspend.txt.in:1034
 msgid ""
 "This test executes iperf connection performance/stability against device "
 "{__index__} ({interface}) after suspend."
-msgstr ""
+msgstr "本測試將會在系統從暫停狀態恢復後對 {__index__} ({interface}) 裝置執行 iperf 連線表現 / 穩定度測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:1113
+#: ../jobs/suspend.txt.in:1062
 msgid ""
 "This test executes iperf connection performance/stability against the "
 "broadband device found on the system after suspend."
 msgstr "測試將會在系統從暫停狀態恢復後對所有找到的寬頻裝置執行 iperf 連線表現 / 穩定度測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:1143
+#: ../jobs/suspend.txt.in:1092
 msgid ""
 "PURPOSE:\n"
 "    Tests that the systems wireless hardware can connect to a router using "
@@ -5262,9 +5836,19 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11b/g 通訊協定以 WPA 加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 B 與 G 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為 WPA2 並確定密碼與先前設定的 ROUTER_PSK 變數相符\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:1183
+#: ../jobs/suspend.txt.in:1132
 msgid ""
 "PURPOSE:\n"
 "    Tests that the systems wireless hardware can connect to a router using\n"
@@ -5281,9 +5865,19 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11b/g 通訊協定以無加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 B 與 G 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為無安全保護之設定\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:1223
+#: ../jobs/suspend.txt.in:1172
 msgid ""
 "PURPOSE:\n"
 "    Tests that the systems wireless hardware can connect to a router using "
@@ -5302,9 +5896,19 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11n 通訊協定以 WPA 加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 N 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為 WPA2 並確定密碼與先前設定的 ROUTER_PSK 變數相符\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:1263
+#: ../jobs/suspend.txt.in:1212
 msgid ""
 "PURPOSE:\n"
 "    Tests that the systems wireless hardware can connect to a router using\n"
@@ -5321,9 +5925,19 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11n 通訊協定以無加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 N 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為無安全保護之設定\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:1303
+#: ../jobs/suspend.txt.in:1252
 msgid ""
 "PURPOSE:\n"
 "    Tests that the systems wireless hardware can connect to a router using "
@@ -5342,9 +5956,19 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11ac 通訊協定以 WPA 加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 802.11ac 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為 WPA2 並確定密碼與先前設定的 ROUTER_PSK 變數相符\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:1343
+#: ../jobs/suspend.txt.in:1292
 msgid ""
 "PURPOSE:\n"
 "    Tests that the systems wireless hardware can connect to a router using\n"
@@ -5361,37 +5985,47 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11ac 通訊協定以無加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 802.11ac 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為無安全保護之設定\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:1379
+#: ../jobs/suspend.txt.in:1328
 msgid ""
 "This test grabs the hardware address of the bluetooth adapter after suspend "
 "and compares it to the address grabbed before suspend."
 msgstr "本測試會在系統從暫停狀態恢復後將偵測到的藍牙硬體位置與暫停前取得的位置作比較。"
 
 #. description
-#: ../jobs/suspend.txt.in:1437
+#: ../jobs/suspend.txt.in:1386
 msgid ""
 "This is an automated Bluetooth file transfer test. It sends an image to the "
 "device specified by the BTDEVADDR environment variable."
 msgstr "這是一個全自動的藍牙檔案傳輸測試，它將會傳送一個影像檔到環境設定中由 BTDEVADDR 變數所指定的裝置上。"
 
 #. description
-#: ../jobs/suspend.txt.in:1495
+#: ../jobs/suspend.txt.in:1444
 msgid ""
 "This is an automated Bluetooth test. It emulates browsing on a remote device "
 "specified by the BTDEVADDR environment variable."
 msgstr "這是一個全自動的藍牙測試，它將會模擬瀏覽環境設定中由 BTDEVADDR 變數所指定的裝置。"
 
 #. description
-#: ../jobs/suspend.txt.in:1553
+#: ../jobs/suspend.txt.in:1502
 msgid ""
 "This is an automated Bluetooth test. It receives the given file from a "
 "remote host specified by the BTDEVADDR environment variable"
 msgstr "這是一個全自動的藍牙測試，它將會從環境設定中由 BTDEVADDR 變數所指定的裝置上接收一個檔案。"
 
 #. description
-#: ../jobs/suspend.txt.in:1563
+#: ../jobs/suspend.txt.in:1529
 msgid ""
 "PURPOSE:\n"
 "    This test will cycle through the detected display modes\n"
@@ -5407,13 +6041,8 @@ msgstr ""
 "檢查：\n"
 "    您的螢幕在各個解析度下運作正常嗎？"
 
-#. summary
-#: ../jobs/suspend.txt.in:1575
-msgid "Cycle resolution after suspend tests"
-msgstr ""
-
 #. description
-#: ../jobs/suspend.txt.in:1600
+#: ../jobs/suspend.txt.in:1543
 msgid ""
 "This test will check to make sure supported video modes work after a suspend "
 "and resume. This is done automatically by taking screenshots and uploading "
@@ -5421,21 +6050,14 @@ msgid ""
 msgstr "本測試將會檢查系統自暫停狀態恢復後所有支援的螢幕解析度是否仍能正常運作。此自動測試將會擷取螢幕畫面並以附加檔之形式上傳。"
 
 #. description
-#: ../jobs/suspend.txt.in:1610
+#: ../jobs/suspend.txt.in:1562
 msgid ""
 "This attaches screenshots from the suspend/cycle_resolutions_after_suspend "
 "test to the results submission."
 msgstr "這將會把 suspend/cycle_resolutions_after_suspend 測試中所擷取的螢幕畫面附加至測試報告中。"
 
-#. summary
-#: ../jobs/suspend.txt.in:1615
-msgid ""
-"Attach screenshots from the suspend/cycle_resolution_after_suspend test to "
-"the results submission."
-msgstr ""
-
 #. description
-#: ../jobs/suspend.txt.in:1657
+#: ../jobs/suspend.txt.in:1595 ../units/dock.pxu:857
 msgid ""
 "This will check to make sure that your audio device works properly after a "
 "suspend and resume.  This may work fine with speakers and onboard "
@@ -5446,12 +6068,12 @@ msgstr ""
 "更好。"
 
 #. description
-#: ../jobs/suspend.txt.in:1664
+#: ../jobs/suspend.txt.in:1602
 msgid "Attaches the log from the single suspend/resume test to the results"
 msgstr "將單次暫停 / 恢復的測試紀錄附加到測試報告中"
 
 #. description
-#: ../jobs/suspend.txt.in:1674
+#: ../jobs/suspend.txt.in:1612
 msgid ""
 "PURPOSE:\n"
 "    Take a screengrab of the current screen after suspend (logged on Unity "
@@ -5469,12 +6091,12 @@ msgstr ""
 "    稍候請以人工檢視附加檔案"
 
 #. description
-#: ../jobs/suspend.txt.in:1687
+#: ../jobs/suspend.txt.in:1625
 msgid "Attaches the screenshot captured in graphics/screenshot."
 msgstr "將 graphics/screenshot 測試項中所拍到的畫面附加至測試報告中。"
 
 #. description
-#: ../jobs/suspend.txt.in:1699
+#: ../jobs/suspend.txt.in:1637
 msgid ""
 "PURPOSE:\n"
 "    Do some challenging operations then check for lockup on the GPU\n"
@@ -5495,14 +6117,14 @@ msgstr ""
 "    在 60 秒的負載後，檢查 kern.log 是否有回報 GPU 錯誤"
 
 #. description
-#: ../jobs/suspend.txt.in:1729
+#: ../jobs/suspend.txt.in:1667
 msgid ""
 "Checks the length of time it takes to reconnect an existing wifi connection "
 "after a suspend/resume cycle."
 msgstr "檢查在暫停 / 恢復循環後重新連上現存的無線網路需要多久的時間。"
 
 #. description
-#: ../jobs/suspend.txt.in:1753
+#: ../jobs/suspend.txt.in:1691
 msgid ""
 "Checks the length of time it takes to reconnect an existing wired "
 "connection\n"
@@ -5510,7 +6132,7 @@ msgid ""
 msgstr "檢查在暫停 / 恢復循環後重新連上現存的有線網路需要多久的時間。"
 
 #. description
-#: ../jobs/suspend.txt.in:1762
+#: ../jobs/suspend.txt.in:1700
 msgid ""
 "PURPOSE:\n"
 "    Validate that the power LED operated the same after resuming from "
@@ -5528,7 +6150,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，電源狀態 LED 指示燈是否有亮起？"
 
 #. description
-#: ../jobs/suspend.txt.in:1775
+#: ../jobs/suspend.txt.in:1713
 msgid ""
 "PURPOSE:\n"
 "    Validate that the battery light shows charging status after resuming "
@@ -5549,7 +6171,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，充電時電池狀態 LED 指示燈有變成橘色嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:1789
+#: ../jobs/suspend.txt.in:1727
 msgid ""
 "PURPOSE:\n"
 "    Validate that the battery LED properly displays charged status after "
@@ -5572,7 +6194,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，充電完成時橘色的電池狀態 LED 指示燈有熄滅嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:1804
+#: ../jobs/suspend.txt.in:1742
 msgid ""
 "PURPOSE:\n"
 "    Validate that the battery LED indicated low power after resuming from "
@@ -5593,7 +6215,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，電池狀態 LED 指示燈在電力不足時有變成橘色嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:1819
+#: ../jobs/suspend.txt.in:1757
 msgid ""
 "PURPOSE:\n"
 "    Validate that the HDD LED still operates as expected after resuming from "
@@ -5614,7 +6236,7 @@ msgstr ""
 "   在系統由暫停狀態恢復後，進行本測試時硬碟狀態 LED 指示燈有亮起嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:1834
+#: ../jobs/suspend.txt.in:1772
 msgid ""
 "PURPOSE:\n"
 "    Validate that the numeric keypad LED operates the same before and after "
@@ -5640,7 +6262,7 @@ msgstr ""
 "    2. 僅在數字鍵盤 LED 指示燈亮起時，才能從數字鍵盤上輸入數字"
 
 #. description
-#: ../jobs/suspend.txt.in:1850
+#: ../jobs/suspend.txt.in:1788
 msgid ""
 "PURPOSE:\n"
 "    Validate that the Caps Lock key operates the same before and after "
@@ -5660,7 +6282,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，大寫鎖定狀態 LED 指示燈能夠一如預期的亮起嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:1864
+#: ../jobs/suspend.txt.in:1802
 msgid ""
 "PURPOSE:\n"
 "    WLAN LED verification after resuming from suspend\n"
@@ -5679,7 +6301,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，無線網路狀態 LED 指示燈是否有一如預期的亮起？"
 
 #. description
-#: ../jobs/suspend.txt.in:1878
+#: ../jobs/suspend.txt.in:1816
 msgid ""
 "PURPOSE:\n"
 "    Validate that WLAN LED shuts off when disabled after resuming from "
@@ -5703,7 +6325,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，當您停用無線網路時無線網路狀態 LED 指示燈有熄滅嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:1894
+#: ../jobs/suspend.txt.in:1832
 msgid ""
 "PURPOSE:\n"
 "    Validate that the Bluetooth LED turns on and off when BT is "
@@ -5727,7 +6349,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，在這些步驟後藍牙狀態 LED 指示燈是否有亮起、熄滅兩次？"
 
 #. description
-#: ../jobs/suspend.txt.in:1913
+#: ../jobs/suspend.txt.in:1851
 msgid ""
 "PURPOSE:\n"
 "    Validate that the camera LED still works as expected after resuming from "
@@ -5747,7 +6369,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，網路攝影機狀態 LED 指示燈能正常亮起嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:1927
+#: ../jobs/suspend.txt.in:1865
 msgid ""
 "PURPOSE:\n"
 "    Touchpad LED verification after resuming from suspend\n"
@@ -5773,7 +6395,7 @@ msgstr ""
 "    3. 當觸控板狀態 LED 指示燈熄滅時，游標應該不會隨著手指在觸控板上的操作而移動"
 
 #. description
-#: ../jobs/suspend.txt.in:1943
+#: ../jobs/suspend.txt.in:1881
 msgid ""
 "PURPOSE:\n"
 "    Validate Wireless (WLAN + Bluetooth) LED operated the same after "
@@ -5801,7 +6423,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，無線裝置 (無線網路 + 藍牙) 狀態 LED 指示燈的運作是否一如預期？"
 
 #. description
-#: ../jobs/suspend.txt.in:1962
+#: ../jobs/suspend.txt.in:1900
 msgid ""
 "PURPOSE:\n"
 "    This test will test the brightness key after resuming from suspend\n"
@@ -5819,7 +6441,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，螢幕亮度是否有隨著您按下的亮度調整鍵而改變？"
 
 #. description
-#: ../jobs/suspend.txt.in:1979
+#: ../jobs/suspend.txt.in:1917
 msgid ""
 "PURPOSE:\n"
 "    This test will test the volume keys of your keyboard after resuming from "
@@ -5841,7 +6463,7 @@ msgstr ""
 "    這些按鍵運作是否正常？"
 
 #. description
-#: ../jobs/suspend.txt.in:1998
+#: ../jobs/suspend.txt.in:1936
 msgid ""
 "PURPOSE:\n"
 "    This test will test the mute key of your keyboard after resuming from "
@@ -5861,7 +6483,7 @@ msgstr ""
 "    此音量靜音鍵是否運作正常？"
 
 #. description
-#: ../jobs/suspend.txt.in:2014
+#: ../jobs/suspend.txt.in:1952
 msgid ""
 "PURPOSE:\n"
 "    This test will test the sleep key after resuming from suspend\n"
@@ -5881,7 +6503,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，按下睡眠鍵後有讓您的系統進入睡眠狀態嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:2031
+#: ../jobs/suspend.txt.in:1969
 msgid ""
 "PURPOSE:\n"
 "    This test will test the battery information key after resuming from "
@@ -5905,7 +6527,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，電池資訊鍵是否運作正常？"
 
 #. description
-#: ../jobs/suspend.txt.in:2048
+#: ../jobs/suspend.txt.in:1986
 msgid ""
 "PURPOSE:\n"
 "    This test will test the wireless key after resuming from suspend\n"
@@ -5925,7 +6547,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，無線網路是否有在第一次按下該按鍵時被關閉，並在第二次按下該按鍵時啟用？"
 
 #. description
-#: ../jobs/suspend.txt.in:2066
+#: ../jobs/suspend.txt.in:2004
 msgid ""
 "PURPOSE:\n"
 "    This test will test the media keys of your keyboard after resuming from "
@@ -5947,7 +6569,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，這些按鍵運作是否正常？"
 
 #. description
-#: ../jobs/suspend.txt.in:2085
+#: ../jobs/suspend.txt.in:2023
 msgid ""
 "PURPOSE:\n"
 "    This test will test the super key of your keyboard after resuming from "
@@ -5967,7 +6589,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，此 super 鍵是否運作正常？"
 
 #. description
-#: ../jobs/suspend.txt.in:2100
+#: ../jobs/suspend.txt.in:2038
 msgid ""
 "PURPOSE:\n"
 "    Validate that the External Video hot key is working as expected after "
@@ -5988,7 +6610,7 @@ msgstr ""
 "    在系統由暫停狀態恢復後，檢查螢幕顯示模式可以在鏡像、延伸、只顯示在外接螢幕上與只顯示在內建螢幕上切換"
 
 #. description
-#: ../jobs/suspend.txt.in:2115
+#: ../jobs/suspend.txt.in:2053
 msgid ""
 "PURPOSE:\n"
 "    Verify touchpad hotkey toggles touchpad functionality on and off after "
@@ -6010,7 +6632,7 @@ msgstr ""
 "    請確認觸控板是否有被停用、重新啟用"
 
 #. description
-#: ../jobs/suspend.txt.in:2132
+#: ../jobs/suspend.txt.in:2070
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the insertion of\n"
@@ -6033,7 +6655,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2153
+#: ../jobs/suspend.txt.in:2091
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the insertion of\n"
@@ -6057,7 +6679,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2172
+#: ../jobs/suspend.txt.in:2110
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal of\n"
@@ -6078,7 +6700,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2192
+#: ../jobs/suspend.txt.in:2130
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal of\n"
@@ -6099,21 +6721,21 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2210
+#: ../jobs/suspend.txt.in:2148
 msgid ""
 "This test is automated and executes after the "
 "suspend/usb_insert_after_suspend test is run."
 msgstr "本自動化測試將在 suspend/usb_insert_after_suspend 測試成功結束後進行。"
 
 #. description
-#: ../jobs/suspend.txt.in:2223
+#: ../jobs/suspend.txt.in:2161
 msgid ""
 "This test is automated and executes after the "
 "suspend/usb3_insert_after_suspend test is run."
 msgstr "本自動化測試將在 suspend/usb3_insert_after_suspend 測試成功結束後進行。"
 
 #. description
-#: ../jobs/suspend.txt.in:2234
+#: ../jobs/suspend.txt.in:2172
 msgid ""
 "This is an automated version of usb/storage-automated and assumes that the "
 "server has usb storage devices plugged in prior to checkbox execution. It is "
@@ -6123,7 +6745,7 @@ msgstr ""
 "儲存裝置了。這是針對伺服器與 SRU 自動化測試的項目。"
 
 #. description
-#: ../jobs/suspend.txt.in:2248
+#: ../jobs/suspend.txt.in:2186
 msgid ""
 "This is an automated version of usb3/storage-automated and assumes that the "
 "server has usb 3.0 storage devices plugged in prior to checkbox execution. "
@@ -6133,14 +6755,14 @@ msgstr ""
 "儲存裝置了。這是針對伺服器與 SRU 自動化測試的項目。"
 
 #. description
-#: ../jobs/suspend.txt.in:2260 ../jobs/usb.txt.in:219
+#: ../jobs/suspend.txt.in:2198 ../jobs/usb.txt.in:219
 msgid ""
 "This test will check that your USB 2.0 port transfers data at a minimum "
 "expected speed."
 msgstr "本測試將會檢查您的 USB 2.0 埠是否能夠至少以最低的期望速度進行資料傳輸。"
 
 #. description
-#: ../jobs/suspend.txt.in:2273
+#: ../jobs/suspend.txt.in:2211
 msgid ""
 "This test will check that your USB 3.0 port could be recognized as "
 "SuperSpeed USB device using xhci_hcd driver and transfers data correctly."
@@ -6148,7 +6770,7 @@ msgstr ""
 "本測試將會檢查您的 USB 3.0 埠是否能被偵測為 SuperSpeed USB 裝置並使用 xhci_hcd 驅動程式，且能正確的進行資料傳輸。"
 
 #. description
-#: ../jobs/suspend.txt.in:2283
+#: ../jobs/suspend.txt.in:2221
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6173,7 +6795,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2303
+#: ../jobs/suspend.txt.in:2241
 msgid ""
 "This test is automated and executes after the mediacard/mmc-insert-after-"
 "suspend test is run. It tests reading and writing to the MMC card after the "
@@ -6183,7 +6805,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2313
+#: ../jobs/suspend.txt.in:2251
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal\n"
@@ -6205,7 +6827,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2330
+#: ../jobs/suspend.txt.in:2268
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6231,7 +6853,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2351
+#: ../jobs/suspend.txt.in:2289
 msgid ""
 "This test is automated and executes after the mediacard/sd-insert-after-"
 "suspend test is run. It tests reading and writing to the SD card after the "
@@ -6241,7 +6863,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2361
+#: ../jobs/suspend.txt.in:2299
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects\n"
@@ -6263,7 +6885,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2379
+#: ../jobs/suspend.txt.in:2317
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6289,7 +6911,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2400
+#: ../jobs/suspend.txt.in:2338
 msgid ""
 "This test is automated and executes after the mediacard/sdhc-insert-after-"
 "suspend test is run. It tests reading and writing to the SDHC card after the "
@@ -6299,7 +6921,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2410
+#: ../jobs/suspend.txt.in:2348
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal\n"
@@ -6321,7 +6943,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2427
+#: ../jobs/suspend.txt.in:2365
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6346,7 +6968,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2447
+#: ../jobs/suspend.txt.in:2385
 msgid ""
 "This test is automated and executes after the mediacard/cf-insert-after-"
 "suspend test is run. It tests reading and writing to the CF card after the "
@@ -6356,7 +6978,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2457
+#: ../jobs/suspend.txt.in:2395
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal\n"
@@ -6378,7 +7000,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2474
+#: ../jobs/suspend.txt.in:2412
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6403,7 +7025,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2494
+#: ../jobs/suspend.txt.in:2432
 msgid ""
 "This test is automated and executes after the mediacard/sdxc-insert-after-"
 "suspend test is run. It tests reading and writing to the SDXC card after the "
@@ -6413,7 +7035,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2504
+#: ../jobs/suspend.txt.in:2442
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal\n"
@@ -6426,9 +7048,16 @@ msgid ""
 "    The verification of this test is automated. Do not change the\n"
 "    automatically selected result."
 msgstr ""
+"目的：\n"
+"\"    本測試將會檢查系統上的記憶卡讀卡機是否能在系統由暫停狀態恢復後偵測到 SDXC 卡的移除\n"
+"步驟：\n"
+"    1. 按下「測試」鈕並將 SDXC 記憶卡從讀卡機中移除\n"
+"       (註：本測試將在 20 秒後逾時)\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果"
 
 #. description
-#: ../jobs/suspend.txt.in:2521
+#: ../jobs/suspend.txt.in:2459
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6453,7 +7082,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2541
+#: ../jobs/suspend.txt.in:2479
 msgid ""
 "This test is automated and executes after the mediacard/ms-insert-after-"
 "suspend test is run. It tests reading and writing to the MS card after the "
@@ -6463,7 +7092,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2551
+#: ../jobs/suspend.txt.in:2489
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal\n"
@@ -6485,7 +7114,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2568
+#: ../jobs/suspend.txt.in:2506
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6510,7 +7139,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2588
+#: ../jobs/suspend.txt.in:2526
 msgid ""
 "This test is automated and executes after the mediacard/msp-insert-after-"
 "suspend test is run. It tests reading and writing to the MSP card after the "
@@ -6520,7 +7149,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2598
+#: ../jobs/suspend.txt.in:2536
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal\n"
@@ -6542,7 +7171,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2615
+#: ../jobs/suspend.txt.in:2553
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the systems media card reader can\n"
@@ -6567,7 +7196,7 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2635
+#: ../jobs/suspend.txt.in:2573
 msgid ""
 "This test is automated and executes after the mediacard/xd-insert-after-"
 "suspend test is run. It tests reading and writing to the xD card after the "
@@ -6577,7 +7206,7 @@ msgstr ""
 "卡進行讀寫測試。"
 
 #. description
-#: ../jobs/suspend.txt.in:2645
+#: ../jobs/suspend.txt.in:2583
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the system correctly detects the removal\n"
@@ -6599,12 +7228,12 @@ msgstr ""
 "    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
-#: ../jobs/suspend.txt.in:2665
+#: ../jobs/suspend.txt.in:2603
 msgid "Determine if the touchpad is still functioning after suspend/resume."
 msgstr "確認觸控板在系統暫停 / 恢復後是否仍正常運作。"
 
 #. description
-#: ../jobs/suspend.txt.in:2675 ../jobs/touchscreen.txt.in:45
+#: ../jobs/suspend.txt.in:2613 ../jobs/touchscreen.txt.in:45
 msgid ""
 "PURPOSE:\n"
 "    Check touchscreen tap recognition\n"
@@ -6622,7 +7251,7 @@ msgstr ""
 "    觸控螢幕點擊偵測運作正常嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:2691
+#: ../jobs/suspend.txt.in:2629
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the built-in camera works after suspend\n"
@@ -6640,7 +7269,7 @@ msgstr ""
 "    您有看到攝影機所拍到的影片嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:2710
+#: ../jobs/suspend.txt.in:2648
 msgid ""
 "PURPOSE:\n"
 "    This test will check that the built-in camera works after suspend\n"
@@ -6658,7 +7287,7 @@ msgstr ""
 "    您有看到攝影機所拍到照片嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:2727
+#: ../jobs/suspend.txt.in:2665
 msgid ""
 " Takes multiple pictures based on the resolutions supported by the camera "
 "and\n"
@@ -6666,47 +7295,91 @@ msgid ""
 msgstr " 在系統從暫停狀態恢復後，根據攝影機所支援的解析度來拍攝多張相片，並檢查它們的檔案大小及確認其為有效的格式。"
 
 #. description
-#: ../jobs/suspend.txt.in:2736
-msgid "Pointing device tests after suspend."
-msgstr "在系統從暫停恢復後的指向裝置測試。"
-
-#. summary
-#: ../jobs/suspend.txt.in:2754
-msgid "Create click tests for pointing devices after suspend."
-msgstr ""
-
-#. description
-#: ../jobs/suspend.txt.in:2759
-msgid "Click tests for pointing devices after suspend."
+#: ../jobs/suspend.txt.in:2677
+msgid ""
+"PURPOSE:\n"
+"    This will test your {product} device after suspend.\n"
+"STEPS:\n"
+"    1. Move the cursor with your {product}.\n"
+"VERIFICATION:\n"
+"    Did the cursor move?"
 msgstr ""
 
 #. summary
-#: ../jobs/suspend.txt.in:2784
-msgid "Compiz support tests after suspend"
-msgstr ""
+#: ../jobs/suspend.txt.in:2694
+msgid "Check post suspend button functionality for {product}"
+msgstr "檢查系統從暫停狀態恢復後 {product} 的按鈕功能"
 
 #. description
-#: ../jobs/suspend.txt.in:2806
+#: ../jobs/suspend.txt.in:2695
+msgid ""
+"PURPOSE:\n"
+"    This will test the buttons of your {product} device after suspend\n"
+"STEPS:\n"
+"    1. Click the left button with your {product}.\n"
+"    2. Click the right button with your {product}.\n"
+"    3. Click the middle button with your {product} (if available).\n"
+"    4. Double-click the left button with your {product}.\n"
+"VERIFICATION:\n"
+"    Did these buttons work as expected?"
+msgstr ""
+"目的：\n"
+"    本測試將會在系統從暫停狀態恢復後測試您 {product} 裝置上的按鈕\n"
+"步驟：\n"
+"    1. 按下您 {product} 裝置上的左鍵\n"
+"    2. 按下您 {product} 裝置上的右鍵\n"
+"    3. 按下您 {product} 裝置上的中鍵 (若有的話)\n"
+"    4. 雙擊您 {product} 裝置上的左鍵\n"
+"檢查：\n"
+"    這些按鈕的運作是否一如預期？"
+
+#. description
+#: ../jobs/suspend.txt.in:2715
+msgid "Check that {product} hardware is able to run compiz after suspend"
+msgstr "檢查系統從暫停狀態恢復後 Compiz 是否能在 {vendor} {product} 硬體上執行"
+
+#. summary
+#: ../jobs/suspend.txt.in:2716
+msgid "Test Compiz support for {product} after suspend"
+msgstr "在系統從暫停狀態恢復後測試 {product} 對 Compiz 的支援度"
+
+#. description
+#: ../jobs/suspend.txt.in:2725
 msgid "Check that the hardware is able to run compiz after suspend"
-msgstr ""
+msgstr "檢查系統從暫停狀態恢復後能夠執行 Compiz"
 
 #. summary
-#: ../jobs/suspend.txt.in:2807
+#: ../jobs/suspend.txt.in:2726
 msgid "Test Compiz support after suspend"
-msgstr ""
+msgstr "在系統從暫停狀態恢復後測試 Compiz 支援度"
 
 #. summary
-#: ../jobs/suspend.txt.in:2812
-msgid "glxgears tests after suspend"
-msgstr ""
-
-#. summary
-#: ../jobs/suspend.txt.in:2842
-msgid "Test that glxgears works after suspend"
+#: ../jobs/suspend.txt.in:2736
+msgid "Test that glxgears works for {vendor} {product} after suspend"
 msgstr ""
 
 #. description
-#: ../jobs/suspend.txt.in:2843
+#: ../jobs/suspend.txt.in:2737
+msgid ""
+"PURPOSE:\n"
+"    This test tests the basic 3D capabilities of your {vendor} {product} "
+"video card after suspend\n"
+"STEPS:\n"
+"    1. Click \"Test\" to execute an OpenGL demo. Press ESC at any time to "
+"close.\n"
+"    2. Verify that the animation is not jerky or slow.\n"
+"VERIFICATION:\n"
+"    1. Did the 3d animation appear?\n"
+"    2. Was the animation free from slowness/jerkiness?"
+msgstr ""
+
+#. summary
+#: ../jobs/suspend.txt.in:2755
+msgid "Test that glxgears works after suspend"
+msgstr "在系統從暫停狀態恢復後測試 glxgear"
+
+#. description
+#: ../jobs/suspend.txt.in:2756
 msgid ""
 "PURPOSE:\n"
 "    This test tests the basic 3D capabilities of your $product video card "
@@ -6719,19 +7392,28 @@ msgid ""
 "    1. Did the 3d animation appear?\n"
 "    2. Was the animation free from slowness/jerkiness?"
 msgstr ""
+"目的：\n"
+"    本測試將會在系統從暫停狀態恢復後檢查您的 $product 視訊控制卡的基本 3D 功能\n"
+"步驟：\n"
+"    1. 按下「測試」來播放 OpenGL 樣本，隨時可以按下 ESC 鍵關閉它\n"
+"    2. 檢查動畫是否沒有出現遲鈍或跳動的異常情形\n"
+"檢查：\n"
+"    1. 3D 動畫有出現嗎？\n"
+"    2. 動畫是否沒有出現遲鈍或跳動的異常情形"
 
 #. summary
-#: ../jobs/suspend.txt.in:2856
-msgid "Display video test after suspend"
+#: ../jobs/suspend.txt.in:2776
+msgid ""
+"Test that video can be displayed after suspend with {vendor} {product}"
 msgstr ""
 
 #. summary
-#: ../jobs/suspend.txt.in:2887
+#: ../jobs/suspend.txt.in:2794
 msgid "Test that video can be displayed after suspend"
-msgstr ""
+msgstr "檢查在系統從暫停狀態恢復後是否能正常播放影片"
 
 #. description
-#: ../jobs/suspend.txt.in:2888
+#: ../jobs/suspend.txt.in:2795
 msgid ""
 "PURPOSE:\n"
 "    This test will test the default display after suspend with a sample "
@@ -6741,32 +7423,134 @@ msgid ""
 "VERIFICATION:\n"
 "    Do you see color bars and static?"
 msgstr ""
-
-#. summary
-#: ../jobs/suspend.txt.in:2899
-msgid "Driver version tests after suspend"
-msgstr ""
+"目的：\n"
+"    本測試將會在系統從暫停狀態恢復後用一樣本影片對預設螢幕進行測試\n"
+"步驟：\n"
+"    1. 點擊「測試」來進行影片播放測試\n"
+"檢查：\n"
+"    您有看到色條與雜訊嗎？"
 
 #. description
-#: ../jobs/suspend.txt.in:2920
+#: ../jobs/suspend.txt.in:2811
+msgid ""
+"Parses Xorg.0.Log and discovers the running X driver and version after "
+"suspend for the {vendor} {product} graphics card"
+msgstr ""
+
+#. summary
+#: ../jobs/suspend.txt.in:2812
+msgid "Test X driver/version after suspend for {vendor} {product}"
+msgstr "在系統從暫停狀態恢復後對 {vendor} {product} 進行 X 驅動程式 / 版本測試"
+
+#. description
+#: ../jobs/suspend.txt.in:2821
 msgid ""
 "Parses Xorg.0.Log and discovers the running X driver and version after "
 "suspend"
+msgstr "在系統從暫停狀態恢復後分析 Xorg.0.Log 來取得 X 驅動程式與版本資訊"
+
+#. summary
+#: ../jobs/suspend.txt.in:2822
+msgid "Test X driver/version after suspend"
+msgstr "在系統從暫停狀態恢復後進行 X 驅動程式 / 版本測試"
+
+#. description
+#: ../jobs/suspend.txt.in:2831
+msgid "Run Firmware Test Suite (fwts) oops tests after suspend."
+msgstr "在系統從暫停狀態恢復後執行 Firmware Test Suite (fwts) oops 測試。"
+
+#. description
+#: ../jobs/suspend.txt.in:2843
+msgid "Attaches the FWTS oops results log to the submission after suspend"
+msgstr "在系統從暫停狀態恢復後將 FWTS oops 測試結果附加到測試報告中"
+
+#. name
+#: ../jobs/thunderbolt.pxu:3
+msgid "Thunderbolt Support "
 msgstr ""
 
 #. summary
-#: ../jobs/suspend.txt.in:2921
-msgid "Test X driver/version after suspend"
+#: ../jobs/thunderbolt.pxu:13
+msgid "Storage insert detection on Thunderbolt"
 msgstr ""
 
 #. description
-#: ../jobs/suspend.txt.in:2930
-msgid "Run Firmware Test Suite (fwts) oops tests after suspend."
+#: ../jobs/thunderbolt.pxu:14
+msgid ""
+"PURPOSE:\n"
+"    This test will check if the insertion of a Thunderbolt HDD could be "
+"detected\n"
+"STEPS:\n"
+"    1. Click 'Test' to begin the test. This test will\n"
+"       timeout and fail if the insertion has not been detected within 40 "
+"seconds.\n"
+"    2. Plug a Thunderbolt HDD into an available Thunderbolt port, if it's "
+"not\n"
+"       mounted automatically, please click the HDD icon to mount it.\n"
+"VERIFICATION:\n"
+"    The verification of this test is automated. Do not change the "
+"automatically\n"
+"    selected result"
+msgstr ""
+
+#. summary
+#: ../jobs/thunderbolt.pxu:35
+msgid "Storage test on Thunderbolt"
 msgstr ""
 
 #. description
-#: ../jobs/suspend.txt.in:2942
-msgid "Attaches the FWTS oops results log to the submission after suspend"
+#: ../jobs/thunderbolt.pxu:36 ../units/dock.pxu:1016
+msgid ""
+"This is an automated test which performs read/write operations on an "
+"attached Thunderbolt HDD"
+msgstr ""
+
+#. summary
+#: ../jobs/thunderbolt.pxu:48
+msgid "Storage removal detection on Thunderbolt"
+msgstr ""
+
+#. description
+#: ../jobs/thunderbolt.pxu:49
+msgid ""
+"PURPOSE:\n"
+"    This test will check the system can detect the removal of a Thunderbolt "
+"HDD\n"
+"STEPS:\n"
+"    1. Click 'Test' to begin the test. This test will timeout and fail if\n"
+"       the removal has not been detected within 20 seconds.\n"
+"    2. Remove the previously attached Thunderbolt HDD from the Thunderbolt "
+"port.\n"
+"VERIFICATION:\n"
+"    The verification of this test is automated. Do not change the "
+"automatically\n"
+"    selected result"
+msgstr ""
+
+#. summary
+#: ../jobs/thunderbolt.pxu:67
+msgid "Daisy-chain testing for Thunderbolt storage and display device"
+msgstr ""
+
+#. description
+#: ../jobs/thunderbolt.pxu:68
+msgid ""
+"PURPOSE:\n"
+"    This test will check if your system can support daisy-chaining of a "
+"storage\n"
+"    and a monitor over Thunderbolt port\n"
+"STEPS:\n"
+"    1. Connect your Thunderbolt monitor to your systems\n"
+"    2. Connect and mount your Thunderbolt HDD to another Thunderbolt port of "
+"the\n"
+"       monitor (you can do this with HDD first as well)\n"
+"    3. Click 'Test' to perform the storage test on the Thunderbolt HDD\n"
+"VERIFICATION:\n"
+"    1. The verification for storage is automated, please select the result "
+"combine\n"
+"       with the result for the display.\n"
+"    2. Was the desktop displayed correctly on the Thunderbolt-connected "
+"screen?"
 msgstr ""
 
 #. description
@@ -6873,6 +7657,14 @@ msgid ""
 "VERIFICATION:\n"
 "    Did the tap trigger a new tab to be opened?"
 msgstr ""
+"目的：\n"
+"    檢查觸發角功能的運作是否正常\n"
+"步驟：\n"
+"    1. 啟動瀏覽器\n"
+"    2. 到任何一個網站，將游標移動到一個超連結上\n"
+"    3. 點擊觸控板的右上角\n"
+"檢查\n"
+"    點擊後該連結有在新頁籤中開啟嗎？"
 
 #. description
 #: ../jobs/touchpad.txt.in:105
@@ -7044,11 +7836,18 @@ msgid ""
 "VERIFICATION:\n"
 "    Did the mouse cursor move without interruption?"
 msgstr ""
+"目的：\n"
+"    觸控板連續移動檢查\n"
+"步驟：\n"
+"    1. 當準備好時請按下「測試」，並在螢幕上顯示的測試視窗內持續的移動您的游標\n"
+"    您會需要將您的手指放在觸控板上連續移動十秒鐘\n"
+"檢查：\n"
+"    游標移動的情形是否正常不中斷？"
 
 #. name
 #: ../jobs/touchscreen.txt.in:3
 msgid "Touchscreen"
-msgstr ""
+msgstr "觸控螢幕"
 
 #. description
 #: ../jobs/touchscreen.txt.in:13
@@ -7117,6 +7916,13 @@ msgid ""
 "VERIFICATION:\n"
 "    Did the blue square change size following the gesture?"
 msgstr ""
+"目的：\n"
+"    檢查觸控螢幕縮放手勢\n"
+"步驟：\n"
+"    1. 進行測試\n"
+"    2. 用兩隻手指縮放畫面中的藍色方框，在它變成綠色之後放開\n"
+"檢查：\n"
+"    藍色方框有根據您的手勢改變大小嗎？"
 
 #. summary
 #: ../jobs/touchscreen.txt.in:88
@@ -7135,6 +7941,13 @@ msgid ""
 "VERIFICATION:\n"
 "    Did the blue square rotate following the gesture?"
 msgstr ""
+"目的：\n"
+"    檢查觸控螢幕旋轉手勢\n"
+"步驟：\n"
+"    1. 進行測試\n"
+"    2. 用兩隻手指旋轉畫面中的藍色方框，在它變成綠色之後放開\n"
+"檢查：\n"
+"    藍色方框有根據您的手勢旋轉嗎？"
 
 #. description
 #: ../jobs/touchscreen.txt.in:108
@@ -7185,6 +7998,14 @@ msgid ""
 "VERIFICATION:\n"
 "    Did you see the green circles around the three fingers?"
 msgstr ""
+"目的：\n"
+"    檢查三指點擊功能的運作是否正常\n"
+"步驟：\n"
+"    1. 進行測試\n"
+"    2. 同時用三指點擊螢幕\n"
+"    3. 當三隻手指在螢幕上時，您應該會看到指示器告訴您它們有被辨認到\n"
+"檢查：\n"
+"    您有看到綠色圓圈出現在三隻手指周圍嗎？"
 
 #. description
 #: ../jobs/touchscreen.txt.in:160
@@ -7199,6 +8020,14 @@ msgid ""
 "VERIFICATION:\n"
 "    Did you see the green circles around the four fingers?"
 msgstr ""
+"目的：\n"
+"    檢查四指點擊功能的運作是否正常\n"
+"步驟：\n"
+"    1. 進行測試\n"
+"    2. 同時用四指點擊螢幕\n"
+"    3. 當四隻手指在螢幕上時，您應該會看到指示器告訴您它們有被辨認到\n"
+"檢查：\n"
+"    您有看到綠色圓圈出現在四隻手指周圍嗎？"
 
 #. description
 #: ../jobs/usb.txt.in:6
@@ -7216,6 +8045,13 @@ msgid ""
 "VERIFICATION:\n"
 "    Were the drives detected?"
 msgstr ""
+"目的：\n"
+"    本測試將會檢查您的系統能否偵測到 USB 儲存裝置\n"
+"步驟\n"
+"    1. 將一個或多個 USB 隨身碟或硬碟接上電腦\n"
+"    2. 點擊「測試」\n"
+"檢查：\n"
+"    外接硬碟有被偵測到嗎？"
 
 #. description
 #: ../jobs/usb.txt.in:29
@@ -7231,6 +8067,14 @@ msgid ""
 "VERIFICATION:\n"
 "    Did the device work as expected?"
 msgstr ""
+"目的：\n"
+"    本測試將會檢查您是否可以使用 USB 人機介面裝置\n"
+"步驟：\n"
+"    1. 啟動 USB 鍵盤或滑鼠\n"
+"    2. 若是測試滑鼠，請測試左右鍵點擊，雙擊以及移動游標\n"
+"    3. 若是測試鍵盤，請進行測試來打開測試用小工具，在該工具裡輸入一些文字後將其關閉\n"
+"檢查：\n"
+"    這些裝置的運作是否一如預期？"
 
 #. description
 #: ../jobs/usb.txt.in:45
@@ -7246,6 +8090,14 @@ msgid ""
 "    The verification of this test is automated. Do not change the\n"
 "    automatically selected result."
 msgstr ""
+"目的：\n"
+"    本測試將會檢查系統是否能偵測到 USB 儲存裝置的插入\n"
+"步驟：\n"
+"    1. 按下「測試」鈕將一個 USB 儲存裝置插到 USB 埠上\n"
+"       (註：本測試將在 20 秒後逾時)\n"
+"    2. 在此測試結束後請不要移除該裝置\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/usb.txt.in:64
@@ -7262,6 +8114,14 @@ msgid ""
 "    The verification of this test is automated. Do not change the\n"
 "    automatically selected result."
 msgstr ""
+"目的：\n"
+"    本測試將會檢查系統是否能偵測到 USB 3.0 儲存裝置的插入\n"
+"步驟：\n"
+"    1. 按下「測試」鈕將一個 USB 3.0 儲存裝置插到 USB 3.0 埠上\n"
+"       (註：本測試將在 20 秒後逾時)\n"
+"    2. 在此測試結束後請不要移除該裝置\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/usb.txt.in:82
@@ -7277,7 +8137,7 @@ msgid ""
 "    automatically selected result."
 msgstr ""
 "目的：\n"
-"    本測是將會檢查系統是否能正確偵測到 USB 儲存裝置的移除\n"
+"    本測試將會檢查系統是否能正確偵測到 USB 儲存裝置的移除\n"
 "步驟：\n"
 "    1. 點擊「測試」鈕並移除 USB 裝置\n"
 "       (註：本測試將在 20 秒後逾時)\n"
@@ -7298,7 +8158,7 @@ msgid ""
 "    automatically selected result."
 msgstr ""
 "目的：\n"
-"    本測是將會檢查系統是否能正確偵測到 USB 3.0 儲存裝置的移除\n"
+"    本測試將會檢查系統是否能正確偵測到 USB 3.0 儲存裝置的移除\n"
 "步驟：\n"
 "    1. 點擊「測試」鈕並移除 USB 3.0 裝置\n"
 "       (註：本測試將在 20 秒後逾時)\n"
@@ -7368,6 +8228,8 @@ msgid ""
 "randomly created data.  It requires that a USB stick is plugged into an "
 "available USB port before running the certification suite."
 msgstr ""
+"透過對隨機產生的資料進行寫入 / 讀取 / 比對來測試系統上的 USB 2.0 或 1.1 埠，這會需要在啟動本認證測試套件前將一支 USB "
+"隨身碟接上可用的 USB 埠。"
 
 #. description
 #: ../jobs/usb.txt.in:191
@@ -7377,6 +8239,8 @@ msgid ""
 "available USB port before running the certification suite. Additionally, it "
 "will only work with USB sticks and ports rated for USB 3.0 speeds or faster."
 msgstr ""
+"透過對隨機產生的資料進行寫入 / 讀取 / 比對來測試系統上的 USB 3.0 埠，這會需要在啟動本認證測試套件前將一支 USB 隨身碟接上可用的 "
+"USB 埠。另外，這只有在 USB 隨身碟與連接埠都是 3.0 或更快的規格時才會成功。"
 
 #. description
 #: ../jobs/usb.txt.in:200
@@ -7405,428 +8269,11 @@ msgstr ""
 "    剛裝置是否能在所有的 USB 連接埠上運作？"
 
 #. description
-#: ../jobs/user_apps.txt.in:7
-msgid ""
-"PURPOSE:\n"
-" This test will check that the update manager can find updates.\n"
-"STEPS:\n"
-" 1. Click Test to launch update-manager.\n"
-" 2. Follow the prompts and if updates are found, install them.\n"
-" 3. When Update Manager has finished, please close the app by clicking the "
-"Close button in the lower right corner.\n"
-"VERIFICATION:\n"
-" Did Update manager find and install updates (Pass if no updates are found,\n"
-" but Fail if updates are found but not installed)"
-msgstr ""
-"目的：\n"
-" 本測試將會檢查更新管理員是否能找到更新檔\n"
-"步驟：\n"
-" 1. 按下「測試」來啟動更新管理員\n"
-" 2. 依照提示操作，如果有找到更新請進行安裝\n"
-" 3. 當安裝管理員完成工作後請將其關閉\n"
-"檢查：\n"
-" 安裝管理員有找到並安裝更新嗎？(如果沒有找到更新檔請選擇 Pass，若有找到更新但無法安裝請選擇 Fail)"
-
-#. description
-#: ../jobs/user_apps.txt.in:24
-msgid ""
-"PURPOSE:\n"
-" This test will check that the file browser can create a new folder.\n"
-"STEPS:\n"
-" 1. Click Test to open the File Browser.\n"
-" 2. On the menu bar, click File -> Create Folder.\n"
-" 3. In the name box for the new folder, enter the name Test Folder and hit "
-"Enter.\n"
-" 4. Close the File browser.\n"
-"VERIFICATION:\n"
-" Do you now have a new folder called Test Folder?"
-msgstr ""
-"目的：\n"
-" 本測試將會檢查檔案瀏覽器能夠建立新資料夾\n"
-"步驟：\n"
-" 1. 按下「測試」來開啟檔案瀏覽器\n"
-" 2. 在選單列點擊「檔案」->「建立資料夾」\n"
-" 3. 在新資料夾的名稱欄中輸入「Test Folder」後按下 Enter 鍵\n"
-" 4. 關閉檔案瀏覽器\n"
-"檢查：\n"
-" 您是否有個名為 Test Folder 的新資料夾？"
-
-#. description
-#: ../jobs/user_apps.txt.in:40
-msgid ""
-"PURPOSE:\n"
-" This test will check that the file browser can copy a folder\n"
-"STEPS:\n"
-" 1. Click Test to open the File Browser.\n"
-" 2. Right click on the folder called Test Folder and click on Copy.\n"
-" 3. Right Click on any white area in the window and click on Paste.\n"
-" 4. Right click on the folder called Test Folder(copy) and click Rename.\n"
-" 5. Enter the name Test Data in the name box and hit Enter.\n"
-" 6. Close the File browser.\n"
-"VERIFICATION:\n"
-" Do you now have a folder called Test Data?"
-msgstr ""
-"目的：\n"
-" 本測試將會檢查檔案瀏覽器能夠複製新資料夾\n"
-"步驟：\n"
-" 1. 按下「測試」來開啟檔案瀏覽器\n"
-" 2. 在名為 Test Folder 的資料夾上按右鍵並點選「複製」\n"
-" 3. 在視窗中的任何一個空白區域按右鍵並點選「貼上」\n"
-" 4. 在名為 Test Folder(copy) 的資料夾上按右鍵並點選「重新命名」\n"
-" 5. 在名稱欄中輸入「Test Data」後按下 Enter 鍵\n"
-" 6. 關閉檔案瀏覽器\n"
-"檢查：\n"
-" 您是否有個名為 Test Data 的新資料夾？"
-
-#. description
-#: ../jobs/user_apps.txt.in:58
-msgid ""
-"PURPOSE:\n"
-" This test will verify that the file browser can move a folder.\n"
-"STEPS:\n"
-" 1. Click Test to open the File Browser.\n"
-" 2. Click and drag the folder called Test Data onto the icon called Test "
-"Folder.\n"
-" 3. Release the button.\n"
-" 4. Double click the folder called Test Folder to open it up.\n"
-" 5. Close the File Browser.\n"
-"VERIFICATION:\n"
-" Was the folder called Test Data successfully moved into the folder called "
-"Test Folder?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:75
-msgid ""
-"PURPOSE:\n"
-" This test will check that the file browser can create a new file.\n"
-"STEPS:\n"
-" 1. Click Select Test to open the File Browser.\n"
-" 2. Right click in the white space and click Create Document -> Empty "
-"Document.\n"
-" 3. Enter the name Test File 1 in the name box and hit Enter.\n"
-" 4. Close the File browser.\n"
-"VERIFICATION:\n"
-" Do you now have a file called Test File 1?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:91
-msgid ""
-"PURPOSE:\n"
-" This test will check that the file browser can copy a file.\n"
-"STEPS:\n"
-" 1. Click Test to open the File Browser.\n"
-" 2. Right click on the file called Test File 1 and click Copy.\n"
-" 3. Right click in the white space and click Paste.\n"
-" 4. Right click on the file called Test File 1(copy) and click Rename.\n"
-" 5. Enter the name Test File 2 in the name box and hit Enter.\n"
-" 6. Close the File Browser.\n"
-"VERIFICATION:\n"
-" Do you now have a file called Test File 2?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:109
-msgid ""
-"PURPOSE:\n"
-" This test will check that the file browser can move a file.\n"
-"STEPS:\n"
-" 1. Click Test to open the File Browser.\n"
-" 2. Click and drag the file called Test File 2 onto the icon for the folder "
-"called Test Data.\n"
-" 3. Release the button.\n"
-" 4. Double click the icon for Test Data to open that folder up.\n"
-" 5. Close the File Browser.\n"
-"VERIFICATION:\n"
-" Was the file Test File 2 successfully moved into the Test Data folder?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:126
-msgid ""
-"PURPOSE:\n"
-" This test will check that the file browser can delete a file.\n"
-"STEPS:\n"
-" 1. Click Test to open the File Browser.\n"
-" 2. Right click on the file called Test File 1 and click on Move To Trash.\n"
-" 3. Verify that Test File 1 has been removed.\n"
-" 4. Close the File Browser.\n"
-"VERIFICATION:\n"
-"  Is Test File 1 now gone?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:142
-msgid ""
-"PURPOSE:\n"
-" This test will check that the file browser can delete a folder.\n"
-"STEPS:\n"
-" 1. Click Test to open the File Browser.\n"
-" 2. Right click on the folder called Test Folder and click on Move To "
-"Trash.\n"
-" 3. Verify that the folder was deleted.\n"
-" 4. Close the file browser.\n"
-"VERIFICATION:\n"
-" Has Test Folder been successfully deleted?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:223
-msgid "Common Document Types Test"
-msgstr "常見文件類型測試"
-
-#. description
-#: ../jobs/user_apps.txt.in:246
-msgid ""
-"PURPOSE:\n"
-" This test will check that Firefox can render a basic web page.\n"
-"STEPS:\n"
-" 1. Select Test to launch Firefox and view the test web page.\n"
-"VERIFICATION:\n"
-" Did the Ubuntu Test page load correctly?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:260
-msgid ""
-"PURPOSE:\n"
-" This test will check that Firefox can run flash applications. Note: this "
-"may\n"
-" require installing additional software to successfully complete.\n"
-"STEPS:\n"
-" 1. Select Test to launch Firefox and view a sample Flash test.\n"
-"VERIFICATION:\n"
-" Did you see the text?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:275
-msgid ""
-"PURPOSE:\n"
-" This test will check that Firefox can play a Flash video. Note: this may\n"
-" require installing additional software to successfully complete.\n"
-"STEPS:\n"
-" 1. Select Test to launch Firefox and view a short flash video.\n"
-"VERIFICATION:\n"
-" Did the video play correctly?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:292
-msgid ""
-"PURPOSE:\n"
-" This test will check that Firefox can play a Quicktime (.mov) video file.\n"
-" Note: this may require installing additional software to successfully\n"
-" complete.\n"
-"STEPS:\n"
-" 1. Select Test to launch Firefox with a sample video.\n"
-"VERIFICATION:\n"
-" Did the video play using a plugin?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:307
-msgid ""
-"PURPOSE:\n"
-" This test will check that Empathy messaging client works.\n"
-"STEPS:\n"
-" 1. Select Test to launch Empathy.\n"
-" 2. Configure it to connect to the Facebook Chat service.\n"
-" 3. Once you have completed the test, please quit Empathy to continue here.\n"
-"VERIFICATION:\n"
-" Were you able to connect correctly and send/receive messages?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:322
-msgid ""
-"PURPOSE:\n"
-" This test will check that Empathy messaging client works.\n"
-"STEPS:\n"
-" 1. Select Test to launch Empathy.\n"
-" 2. Configure it to connect to the Google Talk (gtalk) service.\n"
-" 3. Once you have completed the test, please quit Empathy to continue here.\n"
-"VERIFICATION:\n"
-" Were you able to connect correctly and send/receive messages?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:337
-msgid ""
-"PURPOSE:\n"
-" This test will check that Empathy messaging client works.\n"
-"STEPS:\n"
-" 1. Select Test to launch Empathy.\n"
-" 2. Configure it to connect to the Jabber service.\n"
-" 3. Once you have completed the test, please quit Empathy to continue here.\n"
-"VERIFICATION:\n"
-" Were you able to connect correctly and send/receive messages?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:352
-msgid ""
-"PURPOSE:\n"
-" This test will check that Empathy messaging client works.\n"
-"STEPS:\n"
-" 1. Select Test to launch Empathy.\n"
-" 2. Configure it to connect to the AOL Instant Messaging (AIM) service.\n"
-" 3. Once you have completed the test, please quit Empathy to continue here.\n"
-"VERIFICATION:\n"
-" Were you able to connect correctly and send/receive messages?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:367
-msgid ""
-"PURPOSE:\n"
-" This test will check that Empathy messaging client works.\n"
-"STEPS:\n"
-" 1. Select Test to launch Empathy.\n"
-" 2. Configure it to connect to the Microsoft Network (MSN) service.\n"
-" 3. Once you have completed the test, please quit Empathy to continue here.\n"
-"VERIFICATION:\n"
-" Were you able to connect correctly and send/receive messages?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:382
-msgid ""
-"PURPOSE:\n"
-" This test will check that Evolution works.\n"
-"STEPS:\n"
-" 1. Commence the test to launch Evolution.\n"
-" 2. Configure it to connect to a POP3 account.\n"
-"VERIFICATION:\n"
-" Were you able to receive and read e-mail correctly?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:396
-msgid ""
-"PURPOSE:\n"
-" This test will check that Evolution works.\n"
-"STEPS:\n"
-" 1. Commence the test to launch Evolution.\n"
-" 2. Configure it to connect to a IMAP account.\n"
-"VERIFICATION:\n"
-" Were you able to receive and read e-mail correctly?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:410
-msgid ""
-"PURPOSE:\n"
-" This test will check that Evolution works.\n"
-"STEPS:\n"
-" 1. Commence the test to launch Evolution.\n"
-" 2. Configure it to connect to a SMTP account.\n"
-"VERIFICATION:\n"
-" Were you able to send e-mail without errors?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:424
-msgid ""
-"PURPOSE:\n"
-" This test checks that gcalctool (Calculator) works.\n"
-"STEPS:\n"
-" Commence the test to open the calculator.\n"
-"VERIFICATION:\n"
-" Did it launch correctly?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:438
-msgid ""
-"PURPOSE:\n"
-" This test checks that gcalctool (Calculator) works.\n"
-"STEPS:\n"
-" Commence the test to open the calculator and perform:\n"
-" 1. Simple math functions (+,-,/,*)\n"
-" 2. Nested math functions ((,))\n"
-" 3. Fractional math\n"
-" 4. Decimal math\n"
-"VERIFICATION:\n"
-" Did the functions perform as expected?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:456
-msgid ""
-"PURPOSE:\n"
-" This test checks that gcalctool (Calculator) works.\n"
-"STEPS:\n"
-" Commence the test to open the calculator and perform:\n"
-"  1. Memory set\n"
-"  2. Memory reset\n"
-"  3. Memory last clear\n"
-"  4. Memory clear\n"
-"VERIFICATION:\n"
-" Did the functions perform as expected?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:474
-msgid ""
-"PURPOSE:\n"
-" This test checks that gcalctool (Calculator) works.\n"
-"STEPS:\n"
-" Commence the test to open the calculator and perform:\n"
-"  1. Cut\n"
-"  2. Copy\n"
-"  3. Paste\n"
-"VERIFICATION:\n"
-" Did the functions perform as expected?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:490
-msgid ""
-"PURPOSE:\n"
-" This test checks that gedit works.\n"
-"STEPS:\n"
-" 1. Commence the test to open gedit.\n"
-" 2. Enter some text and save the file (make a note of the file name you "
-"use), then close gedit.\n"
-"VERIFICATION:\n"
-" Did this perform as expected?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:505
-msgid ""
-"PURPOSE:\n"
-" This test checks that gedit works.\n"
-"STEPS:\n"
-" 1. Commence the test to open gedit, and re-open the file you created "
-"previously.\n"
-" 2. Edit then save the file, then close gedit.\n"
-"VERIFICATION:\n"
-" Did this perform as expected?"
-msgstr ""
-
-#. description
-#: ../jobs/user_apps.txt.in:519
-msgid ""
-"PURPOSE:\n"
-" This test will check that Gnome Terminal works.\n"
-"STEPS:\n"
-" 1. Commence the test to open Terminal.\n"
-" 2. Type 'ls' and press enter. You should see a list of files and folder in "
-"your home directory.\n"
-" 3. Close the terminal window.\n"
-"VERIFICATION:\n"
-" Did this perform as expected?"
-msgstr ""
-
-#. description
 #: ../jobs/virtualization.txt.in:12
 msgid ""
 "Verifies that a KVM guest can be created and booted using an Ubuntu Server "
 "cloud image."
-msgstr ""
+msgstr "檢查是否能用 Ubuntu 雲端伺服器映像檔建立 KVM 虛擬機器並成功開機。"
 
 #. summary
 #: ../jobs/virtualization.txt.in:15
@@ -7950,6 +8397,16 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11b/g 通訊協定以 WPA 加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 B 與 G 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為 WPA2 並確定密碼與先前設定的 ROUTER_PSK 變數相符\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/wireless.txt.in:298
@@ -7970,6 +8427,16 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11b/g 通訊協定以無加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 B 與 G 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為無安全保護之設定\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/wireless.txt.in:338
@@ -7992,6 +8459,16 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11n 通訊協定以 WPA 加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 N 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為 WPA2 並確定密碼與先前設定的 ROUTER_PSK 變數相符\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/wireless.txt.in:378
@@ -8012,6 +8489,16 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11n 通訊協定以無加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 N 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為無安全保護之設定\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/wireless.txt.in:418
@@ -8034,6 +8521,16 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11ac 通訊協定以 WPA 加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 802.11ac 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為 WPA2 並確定密碼與先前設定的 ROUTER_PSK 變數相符\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/wireless.txt.in:458
@@ -8054,6 +8551,16 @@ msgid ""
 "    Verification is automated, do not change the automatically selected "
 "result."
 msgstr ""
+"目的：\n"
+"    測試本系統的無線網路裝置是否能夠採用 802.11ac 通訊協定以無加密之設定連上路由器。\n"
+"步驟：\n"
+"    1. 打開您的路由器設定工具\n"
+"    2. 將設定改為僅接受 802.11ac 無線通訊協定的連線\n"
+"    3. 確定 SSID 已設定為 ROUTER_SSID\n"
+"    4. 將安全性設定為無安全保護之設定\n"
+"    5. 進行測試來建立並測試到路由器的連線\n"
+"檢查：\n"
+"    本測試將會進行自動檢查，請不要修改自動判斷的測試結果。"
 
 #. description
 #: ../jobs/wireless.txt.in:497
@@ -8092,15 +8599,17 @@ msgstr ""
 " 這需要您事先將路由器設定為僅接受使用 802.11b 無線通訊協定的連線。"
 
 #. description
-#: ../jobs/wireless.txt.in:605
+#: ../jobs/wireless.txt.in:604
 msgid ""
 "This test executes iperf to generate a load on the network device "
 "{__index__} ({interface}) and then performs a ping test to watch for dropped "
 "packets and very large latency periods."
 msgstr ""
+"本測試透過執行 iperf 在 {__index__} ({interface}) 網路裝置上產生負載，接著再進行 ping "
+"測試並觀察封包遺失率以及延遲情形。"
 
 #. description
-#: ../jobs/wireless.txt.in:633
+#: ../jobs/wireless.txt.in:632
 msgid ""
 " Test that the system's wireless hardware can connect to a router using the\n"
 " 802.11g protocol. This requires that you have a router pre-configured to "
@@ -8111,21 +8620,21 @@ msgstr ""
 " 這需要您事先將路由器設定為僅接受使用 802.11g 無線通訊協定的連線。"
 
 #. description
-#: ../jobs/wireless.txt.in:644
+#: ../jobs/wireless.txt.in:643
 msgid ""
 "Test that the MAC80211 modules are loaded and wireless extensions are "
 "working."
 msgstr "檢查是否已載入 MAC80211 模組且無線網路介面是否正常運作中。"
 
 #. description
-#: ../jobs/wireless.txt.in:657
+#: ../jobs/wireless.txt.in:655
 msgid ""
 "This test executes iwconfig requests against wireless device {__index__} "
 "({interface})."
 msgstr "本測試會對 {__index__} ({interface}) 無線網路裝置執行 iwconfig 指令。"
 
 #. description
-#: ../jobs/wireless.txt.in:666
+#: ../jobs/wireless.txt.in:664
 msgid ""
 "PURPOSE:\n"
 "    This test will check whether or not your driver responds to rfkill "
@@ -8149,8 +8658,1059 @@ msgstr ""
 "    對話框中有出現 hard 或 soft blocks 嗎？"
 
 #. purpose
-#: ../jobs/wireless.txt.in:691
+#: ../jobs/wireless.txt.in:688
 msgid ""
 "User verification of whether the observed transfer throughput is acceptable "
 "for the type and maximum speed of wireless device {__index__} ({interface})."
+msgstr ""
+"使用者確認在 {__index__} ({interface}) 無線裝置上觀察到的傳輸速度對於此介面的類別以及理論最大速度來說是否可以接受。"
+
+#. name
+#: ../units/autotesting.pxu:2
+msgid "Automated Tests"
+msgstr ""
+
+#. description
+#: ../units/autotesting.pxu:4
+msgid ""
+"   This test plan is used for automated testing of the test cases "
+"themselves.\n"
+"   The resources jobs are needed for a valid submission, so they are "
+"included\n"
+"   explicitly, even if they are usually run implicitly by jobs requiring "
+"them."
+msgstr ""
+
+#. name
+#: ../units/default.pxu:2
+msgid "Default Tests"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:4
+msgid "Docking test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:5
+msgid "   This test will check the device can be used after docking."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:7
+msgid "   1. Dock the device to the docking unit."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:9
+msgid "   Is the device working as expected after being docked?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:15
+msgid "DisplayPort test on the dock"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:17
+msgid "   This test will check the DisplayPort(s) on the dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:29
+msgid "DVI port test on the dock"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:31
+msgid "   This test will check the DVI port(s) on the dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:43
+msgid "HDMI port test on the dock"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:45
+msgid "   This test will check the HDMI port(s) on the dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:57
+msgid "VGA port test on the dock"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:59
+msgid "   This test will check the VGA port(s) on the dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:71
+msgid "Multiple monitors test while docked"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:73
+msgid ""
+"   This test verifies that multi-monitor output works using the dock. You "
+"will need at least two external monitors to perform this test."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:75
+msgid ""
+"   Skip this test if your video card or the dock do not support multiple "
+"monitors.\n"
+"   1. If your dock provides more than one monitor outputs, connect two "
+"monitors\n"
+"   2. Open the \"Displays\" tool (open the dash and search for "
+"\"Displays\")\n"
+"   3. Configure your output to provide one desktop across all the monitors\n"
+"   4. Open any application and drag its window from one monitor to the next."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:81
+msgid ""
+"   Was the stretched desktop displayed correctly across all the screens?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:87
+msgid "Video Out hotkey test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:89
+msgid "   Validate that the External Video hotkey is working as expected"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:91
+msgid ""
+"   1. Plug in an external monitor\n"
+"   2. Press the display hotkey to change the monitors configuration"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:94
+msgid ""
+"   Check that the video signal can be mirrored, extended, displayed on "
+"external or onboard only."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:102
+msgid "List audio devices"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:117
+msgid "HDMI audio test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:127
+msgid "   Dock HDMI audio interface verification"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:129
+msgid ""
+"   1. Plug an external HDMI device with sound to the dock (use only one "
+"HDMI/DisplayPort/Thunderbolt interface at a time for this test)\n"
+"   2. Go to the Sound settings and make sure the correct Output is selected\n"
+"   3. Click the Test button"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:143
+msgid "DisplayPort audio test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:153
+msgid "   Dock DisplayPort audio interface verification"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:155
+msgid ""
+"   1. Plug an external DisplayPort device with sound to the dock (use only "
+"one HDMI/DisplayPort/Thunderbolt interface at a time for this test)\n"
+"   2. Go to the Sound settings and make sure the correct Output is selected\n"
+"   3. Click the Test button"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:165
+msgid "Headphones output test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:179
+msgid ""
+"   This test will check that headphones connector works correctly.\n"
+"   (Skip this test if there is no headphone connector on the dock)"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:182
+msgid ""
+"   1. Connect a pair of headphones to the dock\n"
+"   2. Click the Test button to play a sound to your audio device"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:185
+msgid ""
+"   Did you hear a sound through the headphones and did the sound play "
+"without any distortion, clicks or other strange noises from your headphones?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:191
+msgid "External microphone plugged to the dock to record sound test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:205
+msgid ""
+"   This test will check that recording sound using an external microphone "
+"works correctly\n"
+"   (Skip this test if the dock does not have a microphone connector)"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:208
+msgid ""
+"   1. Connect a microphone to the dock's microphone port\n"
+"   2. Click \"Test\", then speak into the external microphone\n"
+"   3. After a few seconds, your speech will be played back to you"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:212
+msgid "   Did you hear your speech played back?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:218
+msgid "Collect audio-related system information"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:230
+msgid "Attach audio hardware data log to results"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:239
+msgid "Line-out connection test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:240
+msgid ""
+"    Check that external line-out connection works correctly\n"
+"    (Skip this test if dock does not have a line out connector)"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:243
+msgid ""
+"    1. Insert cable to speakers (with built-in amplifiers) on the dock's "
+"line-out port\n"
+"    2. Open system sound preferences, 'Output' tab, select 'Line-out' on the "
+"connector list. Click the Test button\n"
+"    3. On the system sound preferences, select 'Internal Audio' on the "
+"device list and click 'Test Speakers' to check left and right channel"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:247
+msgid ""
+"    1. Do you hear a sound in the speakers? The internal speakers should "
+"*not* be muted automatically\n"
+"    2. Do you hear the sound coming out on the corresponding channel?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:255
+msgid "Line-in connection test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:268
+msgid ""
+"   Check that external line-in connection works correctly\n"
+"   (Skip this test if the dock does not have a line in connector)"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:271
+msgid ""
+"   1. Use a cable to connect the dock's line-in port to an external line-out "
+"source.\n"
+"   2. Open system sound preferences, 'Input' tab, select 'Line-in' on the "
+"connector list. Click the Test button\n"
+"   3. After a few seconds, your recording will be played back to you."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:275
+msgid "   Did you hear your recording?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:282
+msgid "Headphones recognized when plugged to the dock test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:287
+msgid ""
+"   Check that system detects speakers or headphones being plugged in\n"
+"   (Skip this test if the dock does not have headphones connector)"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:290
+msgid ""
+"   1. Prepare a pair of headphones or speakers with a standard 3.5mm jack\n"
+"   2. Locate the speaker / headphone jack on the dock under test\n"
+"   3. Run the test (you have 30 seconds from now on)\n"
+"   4. Plug headphones or speakers into the appropriate jack\n"
+"   5. Unplug the device for subsequent tests."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:304
+msgid "Microphone recognized when plugged to the dock test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:309
+msgid ""
+"   Check that system detects a microphone being plugged in\n"
+"   (Skip this test if the dock does not have a microphone connector)"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:312
+msgid ""
+"   1. Prepare a microphone with a standard 3.5mm jack\n"
+"   2. Locate the microphone jack on the dock under test.\n"
+"      Keep in mind that it may be shared with the headphone jack.\n"
+"   3. Run the test (you have 30 seconds from now on)\n"
+"   4. Plug the microphone into the appropriate jack\n"
+"   5. Unplug the device for subsequent tests."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:319
+msgid ""
+"   Verification is automatic, no action is required.\n"
+"   The test times out after 30 seconds (and fails in that case)."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:330
+msgid "Ping test using dock's Ethernet connectivity"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:331
+msgid "   Tests whether the system has a working Internet connection."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:337
+msgid ""
+"   Was the test able to ping the network using the Ethernet connection?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:347
+msgid "NTP sync test using dock's Ethernet connectivity"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:348
+msgid "   Test to see if we can sync local clock to an NTP server"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:350
+msgid ""
+"   1. Make sure the dock is connected to network using an Ethernet cable\n"
+"   2. Make sure the laptop itself is not connected to any Ethernet cable\n"
+"   3. Launch the test"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:354
+msgid ""
+"   Was the test able to synchronize system time using the Ethernet "
+"connection?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:362
+msgid "USB HID device test"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:376
+msgid "USB drive insertion test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:378
+msgid ""
+"   This test will check that the system correctly detects the insertion of\n"
+"   a USB storage device plugged on the dock"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:395
+msgid "USB3 drive insertion test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:397
+msgid ""
+"   This test will check that the system correctly detects the insertion of\n"
+"   a USB 3.0 storage device"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:414
+msgid "USB drive removal test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:416
+msgid ""
+"   This test will check that the system correctly detects the removal of\n"
+"   a USB storage device"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:430
+msgid "USB3 drive removal test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:432
+msgid ""
+"   This test will check that the system correctly detects the removal of\n"
+"   a USB 3.0 storage device"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:447
+msgid "USB drive storage test"
+msgstr ""
+
+#. description
+#: ../units/dock.pxu:449
+msgid ""
+"This test is automated and executes after the dock/usb_insert test is run."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:457
+msgid "USB3 drive storage test"
+msgstr ""
+
+#. description
+#: ../units/dock.pxu:459
+msgid ""
+"This test is automated and executes after the dock/usb3_insert test is run."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:465
+msgid "Battery charging when docked test"
+msgstr ""
+
+#. description
+#: ../units/dock.pxu:471
+msgid ""
+"This test will make sure the laptop is being charged while connected to the "
+"dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:478
+msgid "Network status before suspend"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:485
+msgid "Audio status before suspend"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:495
+msgid "Suspend the device, dock it and resume it"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:496
+msgid ""
+"   This test will check the device can be suspended, docked and resumed "
+"properly"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:498
+msgid ""
+"   1. If the laptop is currently docked, undock it now\n"
+"   2. Suspend the laptop (e.g. by closing its lid)\n"
+"   3. Dock the laptop\n"
+"   4. Resume the laptop (e.g. by pressing the Power button on the dock)"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:503
+msgid "   Is the device working as expected after being docked and resumed?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:511
+msgid "Network gateway ping after suspend"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:518
+msgid "USB drive insertion after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:520
+msgid ""
+"   This test will check that the system correctly detects the insertion of\n"
+"   a USB storage device plugged on the dock after suspend"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:523
+msgid ""
+"   1. Click \"Test\" and insert a USB storage device, preferably a HDD,\n"
+"      in one of the dock's port.\n"
+"      Although a USB pen drive may be used it might cause performance\n"
+"      related tests to fail. (Note: this test will time-out after 20\n"
+"      seconds.)\n"
+"   2. Do not unplug the device after the test."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:538
+msgid "USB3 drive insertion after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:540
+msgid ""
+"   This test will check that the system correctly detects the insertion of\n"
+"   a USB 3.0 storage device after suspend"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:543
+msgid ""
+"   1. Click \"Test\" and insert a USB 3.0 storage device, preferably a HDD,\n"
+"      in one of the dock's USB 3.0 port. Although a USB 3.0 pen drive may\n"
+"      be used it might cause performance related tests to fail.\n"
+"      (Note: this test will time-out after 20 seconds.)\n"
+"   2. Do not unplug the device after the test."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:557
+msgid "USB drive removal after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:559
+msgid ""
+"   This test will check that the system correctly detects the removal of\n"
+"   a USB storage device after suspend"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:562
+msgid ""
+"   1. Click \"Test\" and remove the USB device from the dock.\n"
+"      (Note: this test will time-out after 20 seconds.)"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:573
+msgid "USB3 drive removal after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:575
+msgid ""
+"   This test will check that the system correctly detects the removal of\n"
+"   a USB 3.0 storage device after suspend"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:578
+msgid ""
+"   1. Click \"Test\" and remove the USB 3.0 device from the dock.\n"
+"      (Note: this test will time-out after 20 seconds.)"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:581
+msgid ""
+"   The verification of this test is automated. Do not change the\n"
+"   automatically selected result."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:590
+msgid "USB drive storage test after resuming"
+msgstr ""
+
+#. description
+#: ../units/dock.pxu:592
+msgid ""
+"This test is automated and executes after the dock/usb-insert test is run."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:600
+msgid "USB3 drive storage test after resuming"
+msgstr ""
+
+#. description
+#: ../units/dock.pxu:602
+msgid ""
+"This test is automated and executes after the dock/usb3-insert test is run."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:609
+msgid "USB HID device test after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:611
+msgid "   This test will check that you can use a USB HID device"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:613
+msgid ""
+"   1. Enable either a USB mouse or keyboard\n"
+"   2. For mice, perform actions such as moving the pointer, right and left "
+"button clicks and double clicks\n"
+"   3. For keyboards, click the Test button to lauch a small tool. Type some "
+"text and close the tool."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:617
+msgid "   Did the device work as expected?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:623
+msgid "DisplayPort test on the dock after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:625
+msgid ""
+"   This test will check the DisplayPort(s) on the dock after resuming."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:627
+msgid ""
+"   Skip this test if the dock does not have a DisplayPort.\n"
+"   1. Connect a display (if not already connected) to the DisplayPort on the "
+"dock\n"
+"   2. Repeat step 1 for each additional DisplayPorts, if any"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:637
+msgid "DVI port test on the dock after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:639
+msgid "   This test will check the DVI port(s) on the dock after resuming."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:641
+msgid ""
+"   Skip this test if the dock does not have a DVI port.\n"
+"   1. Connect a display (if not already connected) to the DVI port on the "
+"dock\n"
+"   2. Repeat step 1 for each additional DVI port, if any"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:651
+msgid "HDMI port test on the dock after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:653
+msgid "   This test will check the HDMI port(s) on the dock after resuming."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:655
+msgid ""
+"   Skip this test if the dock does not have a HDMI port.\n"
+"   1. Connect a display (if not already connected) to the HDMI port on the "
+"dock\n"
+"   2. Repeat step 1 for each additional HDMI port, if any"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:665
+msgid "VGA port test on the dock after resuming"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:667
+msgid "   This test will check the VGA port(s) on the dock after resuming."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:669
+msgid ""
+"   Skip this test if the dock does not have a VGA port.\n"
+"   1. Connect a display (if not already connected) to the VGA port on the "
+"dock\n"
+"   2. Repeat step 1 for each additional VGA port, if any"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:679
+msgid "Suspend the device, undock it and resume it"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:680
+msgid ""
+"   This test will check the device can be suspended, undocked and resumed "
+"properly"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:682
+msgid ""
+"   1. If the laptop is currently undocked, dock it now\n"
+"   2. Suspend the laptop (e.g. by closing its lid)\n"
+"   3. Undock the laptop\n"
+"   4. Resume the laptop (e.g. by pressing its Power button)"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:687
+msgid ""
+"   Is the device working as expected after being undocked and resumed?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:694
+msgid "Wireless connection after suspend (WPA BG)"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:717
+msgid "Wireless connection after suspend (Open BG)"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:740
+msgid "Wireless connection after suspend (WPA N)"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:763
+msgid "Wireless connection after suspend (Open N)"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:786
+msgid "Wireless connection after suspend (WPA AC)"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:810
+msgid "Wireless connection after suspend (Open AC)"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:833
+msgid "Audio after resuming test"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:846
+msgid "Record playback after resuming"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:863
+msgid "ExpressCard slot verification"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:865
+msgid ""
+"   This will verify that an ExpressCard slot on the dock can detect inserted "
+"devices."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:867
+msgid ""
+"   Skip this test if you do not have an ExpressCard slot on the dock.\n"
+"   1. Plug an ExpressCard device into the ExpressCard slot"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:870
+msgid "   Was the device correctly detected?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:876
+msgid "FireWire HDD insertion test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:879
+msgid ""
+"   This test will check the system can detect the insertion of a FireWire "
+"HDD on the dock"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:881
+msgid ""
+"   (Skip this test id there is no FireWire connector on the dock)\n"
+"   1. Click 'Test' to begin the test. This test will\n"
+"      timeout and fail if the insertion has not been detected within 20 "
+"seconds.\n"
+"   2. Plug a FireWire HDD into an available FireWire port."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:893
+msgid "FireWire HDD storage test"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:904
+msgid "FireWire HDD removal test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:907
+msgid ""
+"   This test will check the system can detect the removal of a FireWire HDD"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:909
+msgid ""
+"   1. Click 'Test' to begin the test. This test will timeout and fail if\n"
+"      the removal has not been detected within 20 seconds.\n"
+"   2. Remove the previously attached FireWire HDD from the FireWire port on\n"
+"      the dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:921
+msgid "eSATA HDD insertion test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:924
+msgid ""
+"   This test will check the system can detect the insertion of an eSATA HDD "
+"on the dock"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:926
+msgid ""
+"   (Skip this test if there are no eSATA connectors on the dock)\n"
+"   1. Click 'Test' to begin the test. This test will\n"
+"      timeout and fail if the insertion has not been detected within 20 "
+"seconds.\n"
+"   2. Plug an eSATA HDD into an available eSATA port on the dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:938
+msgid "eSATA HDD storage test"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:949
+msgid "eSATA HDD removal test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:952
+msgid ""
+"   This test will check the system can detect the removal of an eSATA HDD "
+"from the dock"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:954
+msgid ""
+"   1. Click 'Test' to begin the test. This test will timeout and fail if\n"
+"      the removal has not been detected within 20 seconds.\n"
+"   2. Remove the previously attached eSATA HDD from the eSATA port on the "
+"dock."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:966
+msgid "Optical media (CD) read test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:967
+msgid "   This test will check the dock's ability to read CD media"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:969
+msgid ""
+"   (Skip this test if the dock does not have an optical reader)\n"
+"   1. Insert appropriate non-blank media into your optical drive(s). Movie "
+"and Audio Disks may not work. Self-created data disks have the greatest "
+"chance of working.\n"
+"   2. Try to copy a few files from the optical media to the computer."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:973
+msgid "   Are the files properly copied to the computer?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:980
+msgid "Optical media (CD-RW, DVD-RW) writing test"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:981
+msgid ""
+"   This test will check the dock's ability to write CD/DVD media.\n"
+"   Depending on what the dock's optical drive support, you will need\n"
+"   a blank CD-R, CD-RW, DVD-R and/or DVD-RW."
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:985
+msgid ""
+"   1. Insert a blank CD-R into the dock's drive\n"
+"   2. Open Brasero Disc Burner and write some files on the CD-R\n"
+"   3. Repeat steps 1-2 for other compatible media (CD-RW, DVD-R, DVD-RW)"
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:989
+msgid "   Are all kinds of discs properly written?"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:997
+msgid "Thunderbolt storage insertion detection"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:998
+msgid ""
+"   This test will check if the connection of a Thunderbolt HDD to the dock "
+"could be detected"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:1000
+msgid ""
+"   1. Click 'Test' to begin the test. This test will\n"
+"      timeout and fail if the insertion has not been detected within 40 "
+"seconds.\n"
+"   2. Plug a Thunderbolt HDD into an available Thunderbolt port on the "
+"dock;\n"
+"      if it's not mounted automatically, please click the HDD icon to mount "
+"it."
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:1015
+msgid "Thunderbolt storage test"
+msgstr ""
+
+#. summary
+#: ../units/dock.pxu:1025
+msgid "Thunderbolt storage removal detection"
+msgstr ""
+
+#. purpose
+#: ../units/dock.pxu:1026
+msgid ""
+"   This test will check the system can detect the removal of a Thunderbolt "
+"HDD"
+msgstr ""
+
+#. steps
+#: ../units/dock.pxu:1028
+msgid ""
+"   1. Click 'Test' to begin the test. This test will timeout and fail if\n"
+"      the removal has not been detected within 20 seconds.\n"
+"   2. Remove the previously attached Thunderbolt HDD from the Thunderbolt "
+"port."
+msgstr ""
+
+#. verification
+#: ../units/dock.pxu:1032
+msgid ""
+"   The verification of this test is automated. Do not change the "
+"automatically\n"
+"   selected result"
+msgstr ""
+
+#. name
+#: ../units/hwsubmit.pxu:2
+msgid "All HW Information Submit Tests"
+msgstr ""
+
+#. name
+#: ../units/smoke.pxu:2
+msgid "All Smoke Tests"
+msgstr ""
+
+#. description
+#: ../units/smoke.pxu:4
+msgid ""
+"   This is an example test plan to start from.\n"
+"   To use, copy this file and add the jobs you want to run to the copy. "
+"Delete\n"
+"   these comments. DO NOT delete the first 9 jobs in tis file.\n"
+"   They are resource gathering jobs and are necessary to do any testing at "
+"all."
 msgstr ""
