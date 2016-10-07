@@ -12,8 +12,8 @@
 /* Define to 1 if <linux/nl80211.h> defines NL80211_BAND_ATTR_VHT_CAPA */
 #undef HAVE_NL80211_BAND_ATTR_VHT_CAPA
 
-/* Define to 1 if <linux/nl80211.h> defines NL80211_BAND_ATTR_VHT_MSC_SET */
-#undef HAVE_NL80211_BAND_ATTR_VHT_MSC_SET
+/* Define to 1 if <linux/nl80211.h> defines NL80211_BAND_ATTR_VHT_MCS_SET */
+#undef HAVE_NL80211_BAND_ATTR_VHT_MCS_SET
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H

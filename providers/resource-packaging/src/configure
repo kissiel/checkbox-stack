@@ -4521,7 +4521,7 @@ fi
 rm -f conftest*
 
 
-$as_echo "#define HAVE_NL80211_BAND_ATTR_VHT_MSC_SET 0" >>confdefs.h
+$as_echo "#define HAVE_NL80211_BAND_ATTR_VHT_MCS_SET 0" >>confdefs.h
 
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -4530,7 +4530,7 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 _ACEOF
 if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
   $EGREP "NL80211_BAND_ATTR_VHT_MCS_SET" >/dev/null 2>&1; then :
-  $as_echo "#define HAVE_NL80211_BAND_ATTR_VHT_MSC_SET 1" >>confdefs.h
+  $as_echo "#define HAVE_NL80211_BAND_ATTR_VHT_MCS_SET 1" >>confdefs.h
 
 fi
 rm -f conftest*
