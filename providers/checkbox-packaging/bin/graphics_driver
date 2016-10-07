@@ -190,6 +190,8 @@ class XorgLog(object):
 
             # For NVIDIA
             m = re.search(r'\(II\) (.*)\(\d+\): Setting mode "(.*?):', line)
+            if not m:
+                m = re.search(r'\(II\) (.*)\(\d+\): Setting mode "(NULL)"', line)
             if m:
                 self.displays[display_name] = display
                 self.video_driver = m.group(1)
@@ -309,7 +311,7 @@ def is_laptop():
 def hybrid_graphics_check(xlog):
     '''Check for Hybrid Graphics'''
     card_id1 = re.compile('.*0300: *(.+):(.+) \(.+\)')
-    card_id2 = re.compile('.*0300: *(.+):(.+)')
+    card_id2 = re.compile('.*03..: *(.+):(.+)')
     cards_dict = {'8086': 'Intel', '10de': 'NVIDIA', '1002': 'AMD'}
     cards = []
     drivers = []

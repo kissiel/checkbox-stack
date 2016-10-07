@@ -23,7 +23,7 @@ _description:
 
 plugin: user-interact
 id: esata/remove
-depends: esata/storage-test
+depends: esata/insert
 command: removable_storage_watcher remove ata_serial_esata
 _description:
  PURPOSE:
@@ -35,3 +35,4 @@ _description:
  VERIFICATION:
      The verification of this test is automated. Do not change the automatically
      selected result
+

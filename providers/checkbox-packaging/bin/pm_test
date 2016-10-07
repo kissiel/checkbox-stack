@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import signal
 
 from argparse import ArgumentParser, SUPPRESS
 from calendar import timegm
@@ -143,7 +144,11 @@ class PowerManagementOperation(object):
         logging.info('Executing new {0!r} operation...'
                      .format(self.args.pm_operation))
         logging.debug('Executing: {0!r}...'.format(command_str))
-        subprocess.Popen(command_str, shell=True)
+        # The PM operation is performed asynchronously so let's just wait
+        # indefinitely until it happens and someone comes along to kill us.
+        # This addresses LP: #1413134
+        subprocess.check_call(command_str, shell=True)
+        signal.pause()
 
     def summary(self):
         """
@@ -569,7 +574,7 @@ class SudoersConfigurator(object):
         """
         logging.debug('Enabling user to execute test as root...')
         command = ("sed -i -e '$a{mark}\\n"
-                   "{user} ALL=NOPASSWD: /usr/bin/python' "
+                   "{user} ALL=NOPASSWD: /usr/bin/python3' "
                    "{filename}".format(mark=self.MARK,
                                        user=self.user,
                                        script=os.path.realpath(__file__),
@@ -597,7 +602,7 @@ class AutoStartFile(object):
 [Desktop Entry]
 Name={pm_operation} test
 Comment=Verify {pm_operation} works properly
-Exec=sudo /usr/bin/python {script} -r {repetitions} -w {wakeup} --hardware-delay {hardware_delay} --pm-delay {pm_delay} --min-pm-time {min_pm_time} --max-pm-time {max_pm_time} --append --total {total} --start {start} --pm-timestamp {pm_timestamp} {silent} --log-level={log_level} --log-dir={log_dir} {pm_operation}
+Exec=sudo /usr/bin/python3 {script} -r {repetitions} -w {wakeup} --hardware-delay {hardware_delay} --pm-delay {pm_delay} --min-pm-time {min_pm_time} --max-pm-time {max_pm_time} --append --total {total} --start {start} --pm-timestamp {pm_timestamp} {silent} --log-level={log_level} --log-dir={log_dir} {pm_operation}
 Type=Application
 X-GNOME-Autostart-enabled=true
 Hidden=false
@@ -617,6 +622,11 @@ Hidden=false
         autostart_directory = os.path.join(config_directory, 'autostart')
         if not os.path.exists(autostart_directory):
             os.makedirs(autostart_directory)
+            user_id = os.getenv('PKEXEC_UID') or os.getenv('SUDO_UID')
+            group_id = os.getenv('PKEXEC_UID') or os.getenv('SUDO_GID')
+            if user_id:
+                os.chown(config_directory, int(user_id), int(group_id))
+                os.chown(autostart_directory, int(user_id), int(group_id))
 
         basename = '{0}.desktop'.format(os.path.basename(__file__))
         self.desktop_filename = os.path.join(autostart_directory,

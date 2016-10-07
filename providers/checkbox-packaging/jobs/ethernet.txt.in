@@ -11,7 +11,7 @@ _description: Test to detect the available network controllers
 plugin: shell
 id: ethernet/info_automated
 requires:
- package.name == 'network-manager'
+ executable.name == 'ip'
  device.category == 'NETWORK'
 command: udev_resource | filter_templates -w "category=NETWORK"| awk "/path: / { print \$2 }"| xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do network_info \$i; done"
 estimated_duration: 30.0
@@ -33,6 +33,7 @@ _description:
      Did a notification show and was the connection correctly established?
 
 plugin: local
+_summary: Automated test to walk multiple network cards and test each one in sequence.
 id: ethernet/multi_nic
 requires: device.category == 'NETWORK'
 _description: Automated test to walk multiple network cards and test each one in sequence.
@@ -46,8 +47,8 @@ command:
   device.path == "$1"
  user: root
  environ: TEST_TARGET_FTP TEST_TARGET_IPERF TEST_USER TEST_PASS
- command: network test -i $2 -t iperf --fail-threshold 80
- estimated_duration: 330.0
+ command: network test -i $2 -t iperf --fail-threshold 80 --datasize 200
+ estimated_duration: 1850.0
  description:
   Testing for NIC $2
  EOF
@@ -77,7 +78,7 @@ requires:
  package.name == 'iperf'
 command:
  cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=NETWORK" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: user-verify
+ plugin: user-interact-verify
  user: root
  id: ethernet/maximum_bandwidth_$2
  requires: device.path == "$1"
@@ -88,8 +89,9 @@ command:
       User verification of whether the observed transfer throughput is acceptable
       for the type and maximum speed of each ethernet interface.
   STEPS:
-      1. Read the network test summary and confirm that the throughput is acceptable.
-      2. If needed, click "Test" again to repeat the transfer test.
+      1. Click "Test".
+      2. Read the network test summary and confirm that the throughput is acceptable.
+      3. If needed, click "Test" again to repeat the transfer test.
   VERIFICATION:
      Was the reported throughput acceptable for the type and maximum speed of this interface?
  EOF
@@ -97,6 +99,7 @@ _description:
  This test executes a maximum throughput test against all the ethernet devices found on the system.
 
 plugin: local
+_summary: Automated test that tests performance of each wired network device under stress.
 id: ethernet/stress_performance
 requires:
   device.category == 'NETWORK'

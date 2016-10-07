@@ -9,7 +9,7 @@ command:
    echo "Hard block is applied to WiFi device. Please remove and retest."
    exit 1
  fi
- wireless_networks=`nmcli -f SSID dev wifi list`
+ wireless_networks=`(nmcli -f SSID dev wifi list 2>/dev/null || nmcli -f SSID dev wifi)`
  if [ `echo "$wireless_networks" | wc -l` -gt 1 ]; then
    echo "Wireless networks discovered: "
    echo "$wireless_networks"
@@ -52,7 +52,15 @@ requires:
  environment.ROUTERS == 'multiple'
 user: root
 environ: WPA_BG_SSID WPA_BG_PSK
-command: trap "nmcli con delete id $WPA_BG_SSID" EXIT; create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $WPA_BG_SSID" EXIT
+    if create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
  Tests that the systems wireless hardware can connect to a router using WPA
@@ -65,7 +73,15 @@ requires:
  environment.ROUTERS == 'multiple'
 user: root
 environ: OPEN_BG_SSID
-command: trap "nmcli con delete id $OPEN_BG_SSID" EXIT; create_connection wifi $OPEN_BG_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $OPEN_BG_SSID" EXIT
+    if create_connection wifi $OPEN_BG_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
  Tests that the systems wireless hardware can connect to a router using no
@@ -76,10 +92,17 @@ id: wireless/wireless_connection_wpa_n
 requires:
  device.category == 'WIRELESS'
  environment.ROUTERS == 'multiple'
- IEEE_80211.n == 'supported'
 user: root
 environ: WPA_N_SSID WPA_N_PSK
-command: trap "nmcli con delete id $WPA_N_SSID" EXIT; create_connection wifi $WPA_N_SSID --security=wpa --key=$WPA_N_PSK && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $WPA_N_SSID" EXIT
+    if create_connection wifi $WPA_N_SSID --security=wpa --key=$WPA_N_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
  Tests that the systems wireless hardware can connect to a router using WPA
@@ -90,10 +113,17 @@ id: wireless/wireless_connection_open_n
 requires:
  device.category == 'WIRELESS'
  environment.ROUTERS == 'multiple'
- IEEE_80211.n == 'supported'
 user: root
 environ: OPEN_N_SSID
-command: trap "nmcli con delete id $OPEN_N_SSID" EXIT; create_connection wifi $OPEN_N_SSID &&  gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $OPEN_N_SSID" EXIT
+    if create_connection wifi $OPEN_N_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
  Tests that the systems wireless hardware can connect to a router using no
@@ -107,7 +137,15 @@ requires:
  IEEE_80211.ac == 'supported'
 user: root
 environ: WPA_AC_SSID WPA_AC_PSK
-command: trap "nmcli con delete id $WPA_AC_SSID" EXIT; create_connection wifi $WPA_AC_SSID --security=wpa --key=$WPA_AC_PSK && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $WPA_AC_SSID" EXIT
+    if create_connection wifi $WPA_AC_SSID --security=wpa --key=$WPA_AC_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
  Tests that the systems wireless hardware can connect to a router using WPA
@@ -121,7 +159,15 @@ requires:
  IEEE_80211.ac == 'supported'
 user: root
 environ: OPEN_AC_SSID
-command: trap "nmcli con delete id $OPEN_AC_SSID" EXIT; create_connection wifi $OPEN_AC_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $OPEN_AC_SSID" EXIT
+    if create_connection wifi $OPEN_AC_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
  Tests that the systems wireless hardware can connect to a router using no
@@ -134,17 +180,25 @@ requires:
  environment.ROUTERS == 'single'
 user: root
 environ: ROUTER_SSID ROUTER_PSK
-command: trap "nmcli con delete id $ROUTER_SSID" EXIT; create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $ROUTER_SSID" EXIT
+    if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 120.0
 _description:
  PURPOSE:
      Tests that the systems wireless hardware can connect to a router using WPA
      security and the 802.11b/g protocols.
  STEPS:
-     1. Open your routers configuration tool
+     1. Open your router's configuration tool
      2. Change the settings to only accept connections on the B and G wireless bands
-     3. Make sure the SSID is set to ROUTER_SSID
-     4. Change the security settings to use WPA2 and ensure the PSK matches that set in ROUTER_PSK
+     3. Make sure the SSID is set to the contents of the ROUTER_SSID environment variable
+     4. Change the security settings to use WPA2 and ensure the PSK matches what is set in the ROUTER_PSK environment variable
      5. Click the 'Test' button to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
@@ -156,16 +210,24 @@ requires:
  environment.ROUTERS == 'single'
 user: root
 environ: ROUTER_SSID
-command: trap "nmcli con delete id $ROUTER_SSID" EXIT; create_connection wifi $ROUTER_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $ROUTER_SSID" EXIT
+    if create_connection wifi $ROUTER_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 120.0
 _description:
  PURPOSE:
      Tests that the systems wireless hardware can connect to a router using
      no security and the 802.11b/g protocols.
  STEPS:
-     1. Open your routers configuration tool
+     1. Open your router's configuration tool
      2. Change the settings to only accept connections on the B and G wireless bands
-     3. Make sure the SSID is set to ROUTER_SSID
+     3. Make sure the SSID is set to the contents of the ROUTER_SSID environment variable
      4. Change the security settings to use no security
      5. Click the 'Test' button to create a connection to the router and test the connection
  VERIFICATION:
@@ -176,21 +238,28 @@ id: wireless/wireless_connection_wpa_n_manual
 requires:
  device.category == 'WIRELESS'
  environment.ROUTERS == 'single'
- IEEE_80211.n == 'supported'
  IEEE_80211.band_5GHz == 'supported'
 user: root
 environ: ROUTER_SSID ROUTER_PSK
-command: trap "nmcli con delete id $ROUTER_SSID" EXIT; create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $ROUTER_SSID" EXIT
+    if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 120.0
 _description:
  PURPOSE:
      Tests that the systems wireless hardware can connect to a router using WPA
      security and the 802.11n protocols.
  STEPS:
-     1. Open your routers configuration tool
+     1. Open your router's configuration tool
      2. Change the settings to only accept connections on the N wireless band
-     3. Make sure the SSID is set to ROUTER_SSID
-     4. Change the security settings to use WPA2 and ensure the PSK matches that set in ROUTER_PSK
+     3. Make sure the SSID is set to the contents of the ROUTER_SSID environment variable
+     4. Change the security settings to use WPA2 and ensure the PSK matches what is set in the ROUTER_PSK environment variable
      5. Click the 'Test' button to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
@@ -200,20 +269,27 @@ id: wireless/wireless_connection_open_n_manual
 requires:
  device.category == 'WIRELESS'
  environment.ROUTERS == 'single'
- IEEE_80211.n == 'supported'
  IEEE_80211.band_5GHz == 'supported'
 user: root
 environ: ROUTER_SSID
-command: trap "nmcli con delete id $ROUTER_SSID" EXIT; create_connection wifi $ROUTER_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $ROUTER_SSID" EXIT
+    if create_connection wifi $ROUTER_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 120.0
 _description:
  PURPOSE:
      Tests that the systems wireless hardware can connect to a router using
      no security and the 802.11n protocol.
  STEPS:
-     1. Open your routers configuration tool
+     1. Open your router's configuration tool
      2. Change the settings to only accept connections on the N wireless band
-     3. Make sure the SSID is set to ROUTER_SSID
+     3. Make sure the SSID is set to the contents of the ROUTER_SSID environment variable
      4. Change the security settings to use no security
      5. Click the 'Test' button to create a connection to the router and test the connection
  VERIFICATION:
@@ -227,7 +303,15 @@ requires:
  IEEE_80211.ac == 'supported'
 user: root
 environ: ROUTER_SSID ROUTER_PSK
-command: trap "nmcli con delete id $ROUTER_SSID" EXIT; create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $ROUTER_SSID" EXIT
+    if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 120.0
 _description:
  PURPOSE:
@@ -236,8 +320,8 @@ _description:
  STEPS:
      1. Open your router's configuration tool
      2. Change the settings to only accept connections with the 802.11ac protocol.
-     3. Make sure the SSID is set to ROUTER_SSID
-     4. Change the security settings to use WPA2 and ensure the PSK matches that set in ROUTER_PSK
+     3. Make sure the SSID is set to the contents of the ROUTER_SSID environment variable
+     4. Change the security settings to use WPA2 and ensure the PSK matches what is set in the ROUTER_PSK environment variable
      5. Click the 'Test' button to create a connection to the router and test the connection
  VERIFICATION:
      Verification is automated, do not change the automatically selected result.
@@ -250,16 +334,24 @@ requires:
  IEEE_80211.ac == 'supported'
 user: root
 environ: ROUTER_SSID
-command: trap "nmcli con delete id $ROUTER_SSID" EXIT; create_connection wifi $ROUTER_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $ROUTER_SSID" EXIT
+    if create_connection wifi $ROUTER_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 120.0
 _description:
  PURPOSE:
      Tests that the systems wireless hardware can connect to a router using
      no security and the 802.11ac protocol.
  STEPS:
-     1. Open your routers configuration tool
+     1. Open your router's configuration tool
      2. Change the settings to only accept connections with the 802.11ac protocol.
-     3. Make sure the SSID is set to ROUTER_SSID
+     3. Make sure the SSID is set to the contents of the ROUTER_SSID environment variable
      4. Change the security settings to use no security
      5. Click the 'Test' button to create a connection to the router and test the connection
  VERIFICATION:
@@ -272,10 +364,18 @@ requires:
  device.category == 'WIRELESS'
 user: root
 environ: WPA_BG_SSID WPA_BG_PSK SERVER_IPERF
-command: trap "nmcli con delete id $WPA_BG_SSID" EXIT; create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK && iperf -c $SERVER_IPERF -t 300 -i 30
+command:
+    trap "nmcli con delete id $WPA_BG_SSID" EXIT
+    if create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        iperf -c $SERVER_IPERF -t 300 -i 30
+    else
+        exit 1
+    fi
 estimated_duration: 330.0
 _description:
- Tests the performance of a systems wireless connection through the iperf tool.
+ Tests the performance of a system's wireless connection through the iperf tool.
 
 plugin: shell
 id: wireless/monitor_wireless_connection_udp
@@ -284,10 +384,18 @@ requires:
  device.category == 'WIRELESS'
 user: root
 environ: WPA_BG_SSID WPA_BG_PSK SERVER_IPERF
-command: trap "nmcli con delete id $WPA_BG_SSID" EXIT; create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK && iperf -c $SERVER_IPERF -t 300 -i 30 -u -b 100m -p 5050
+command:
+    trap "nmcli con delete id $WPA_BG_SSID" EXIT
+    if create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        iperf -c $SERVER_IPERF -t 300 -i 30 -u -b 100m -p 5050
+    else
+        exit 1
+    fi
 estimated_duration: 330.0
 _description:
- Tests the performance of a systems wireless connection through the iperf tool, using UDP packets.
+ Tests the performance of a system's wireless connection through the iperf tool, using UDP packets.
 
 plugin: shell
 id: wireless/wireless_connection_open_a
@@ -296,7 +404,15 @@ requires:
  IEEE_80211.band_5GHz == 'supported'
 user: root
 environ: OPEN_A_SSID
-command: trap "nmcli con delete id $OPEN_A_SSID" EXIT; create_connection wifi $OPEN_A_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $OPEN_A_SSID" EXIT
+    if create_connection wifi $OPEN_A_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
   Test that the system's wireless hardware can connect to a router using the
@@ -309,7 +425,15 @@ requires:
  device.category == 'WIRELESS'
 user: root
 environ: OPEN_B_SSID
-command: trap "nmcli con delete id $OPEN_B_SSID" EXIT; create_connection wifi $OPEN_B_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $OPEN_B_SSID" EXIT
+    if create_connection wifi $OPEN_B_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
   Test that the system's wireless hardware can connect to a router using the
@@ -317,6 +441,7 @@ _description:
   respond to requests on the 802.11b protocol.
 
 plugin: local
+_summary: Automated test that tests performance of each wireless network device under stress.
 id: wireless/stress_performance
 requires:
   device.category == 'NETWORK'
@@ -339,7 +464,15 @@ requires:
  device.category == 'WIRELESS'
 user: root
 environ: OPEN_G_SSID
-command: trap "nmcli con delete id $OPEN_G_SSID" EXIT; create_connection wifi $OPEN_G_SSID && gateway_ping_test --interface=`nmcli dev status | awk '/802-11-wireless/ {print $1}'`
+command:
+    trap "nmcli con delete id $OPEN_G_SSID" EXIT
+    if create_connection wifi $OPEN_G_SSID; then
+        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
+        iw dev $INTERFACE link
+        gateway_ping_test --interface=$INTERFACE
+    else
+        exit 1
+    fi
 estimated_duration: 30.0
 _description:
   Test that the system's wireless hardware can connect to a router using the
@@ -394,7 +527,7 @@ requires:
  package.name == 'iperf'
 command:
  cat <<'EOF' | run_templates -s 'udev_resource | filter_templates -w "category=WIRELESS" | awk "/path: / { print \$2 }" | xargs -n 1 sh -c "for i in \`ls /sys\$0/net 2>/dev/null\`; do echo \$0 \$i; done"'
- plugin: user-verify
+ plugin: user-interact-verify
  user: root
  id: wireless/maximum_bandwidth_$2
  requires: device.path == "$1"
@@ -405,8 +538,9 @@ command:
       User verification of whether the observed transfer throughput is acceptable
       for the type and maximum speed of each wireless interface.
   STEPS:
-      1. Read the network test summary and confirm that the throughput is acceptable.
-      2. If needed, click "Test" again to repeat the transfer test.
+      1. Click "Test".
+      2. Read the network test summary and confirm that the throughput is acceptable.
+      3. If needed, click "Test" again to repeat the transfer test.
   VERIFICATION:
      Was the reported throughput acceptable for the type and maximum speed of this interface?
  EOF

@@ -33,7 +33,6 @@
 [type: gettext/rfc822deb] jobs/panel_clock_test.txt.in
 [type: gettext/rfc822deb] jobs/panel_reboot.txt.in
 [type: gettext/rfc822deb] jobs/peripheral.txt.in
-[type: gettext/rfc822deb] jobs/piglit.txt.in
 [type: gettext/rfc822deb] jobs/power-management.txt.in
 [type: gettext/rfc822deb] jobs/rendercheck.txt.in
 [type: gettext/rfc822deb] jobs/server-services.txt.in
@@ -76,7 +75,7 @@ bin/dns_server_test
 [type: gettext/python] bin/frequency_governors_test
 [type: gettext/python] bin/fresh_rate_info
 [type: gettext/python] bin/fwts_test
-[type: gettext/python] bin/gateway_ping_test
+bin/gateway_ping_test
 bin/gcov_tarball
 [type: gettext/python] bin/glob_test
 [type: gettext/python] bin/gpu_test
@@ -112,7 +111,6 @@ bin/network_wait
 [type: gettext/python] bin/optical_detect
 [type: gettext/python] bin/optical_read_test
 bin/optical_write_test
-[type: gettext/python] bin/piglit_test
 [type: gettext/python] bin/pm_log_check
 [type: gettext/python] bin/pm_test
 [type: gettext/python] bin/process_wait

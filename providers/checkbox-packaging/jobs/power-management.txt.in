@@ -1,5 +1,6 @@
 plugin: manual
 id: power-management/shutdown-boot
+estimated_duration: 300.0
 _description:
  PURPOSE:
      This test will check your system shutdown/booting cycle.
@@ -13,6 +14,7 @@ _description:
 plugin: shell
 id: power-management/fwts_wakealarm
 environ: PLAINBOX_SESSION_SHARE
+estimated_duration: 25.0
 user: root
 _description: Test ACPI Wakealarm (fwts wakealarm)
 requires:
@@ -22,6 +24,7 @@ command: fwts_test -f aborted -t wakealarm -l $PLAINBOX_SESSION_SHARE/fwts-wakea
 plugin: attachment
 id: power-management/fwts_wakealarm-log-attach
 depends: power-management/fwts_wakealarm
+estimated_duration: 2.0
 _description: Attach log from fwts wakealarm test
 requires:
  package.name == 'fwts'
@@ -29,6 +32,7 @@ command: [ -e ${PLAINBOX_SESSION_SHARE}/fwts-wakealarm.log ] && cat ${PLAINBOX_S
 
 plugin: user-interact-verify
 id: power-management/poweroff
+estimated_duration: 120.0
 depends: power-management/fwts_wakealarm
 user: root
 environ: PLAINBOX_SESSION_SHARE
@@ -36,6 +40,7 @@ requires:
  package.name == 'upstart'
  package.name == 'fwts'
 command: pm_test poweroff --log-level=debug --log-dir=$PLAINBOX_SESSION_SHARE
+flags: noreturn
 _description:
  PURPOSE:
   This test will check the system's ability to power-off and boot.
@@ -51,18 +56,21 @@ _description:
 
 plugin: attachment
 id: power-management/poweroff-log-attach
-command: tar cvfz power-management_poweroff.tgz $PLAINBOX_SESSION_SHARE/*poweroff.1.log && cat $PLAINBOX_SESSION_SHARE/power-management_poweroff.tgz
+estimated_duration: 1.0
+command: tar cvfz ${PLAINBOX_SESSION_SHARE}/power-management_poweroff.tgz ${PLAINBOX_SESSION_SHARE}/*poweroff.1.log && cat ${PLAINBOX_SESSION_SHARE}/power-management_poweroff.tgz
 _description:
  This will attach any logs from the power-management/poweroff test to the results.
 
 plugin: user-interact-verify
 id: power-management/reboot
+estimated_duration: 120.0
 user: root
 environ: PLAINBOX_SESSION_SHARE
 requires:
  package.name == 'upstart'
  package.name == 'fwts'
 command: pm_test reboot --log-level=debug --log-dir=$PLAINBOX_SESSION_SHARE
+flags: noreturn
 _description:
  PURPOSE:
   This test will check the system's ability to reboot cleanly.
@@ -76,12 +84,14 @@ _description:
 
 plugin: attachment
 id: power-management/reboot-log-attach
-command: tar cvfz power-management_reboot.tgz $PLAINBOX_SESSION_SHARE/*reboot.1.log && cat $PLAINBOX_SESSION_SHARE/power-management_reboot.tgz
+estimated_duration: 1.0
+command: tar cvfz ${PLAINBOX_SESSION_SHARE}/power-management_reboot.tgz ${PLAINBOX_SESSION_SHARE}/*reboot.1.log && cat ${PLAINBOX_SESSION_SHARE}/power-management_reboot.tgz
 _description:
  This will attach any logs from the power-management/reboot test to the results.
 
 plugin: manual
 id: power-management/lid
+estimated_duration: 120.0
 requires: dmi.product in ['Notebook','Laptop','Portable']
 _description:
  PURPOSE:
@@ -91,8 +101,9 @@ _description:
  VERIFICATION:
     Does closing your laptop lid cause your system to suspend?
 
-plugin: user-interact
+plugin: user-interact-verify
 id: power-management/lid_close
+estimated_duration: 60.0
 requires: device.product == 'Lid Switch'
 command:
  for i in `seq 20`; do
@@ -109,8 +120,9 @@ _description:
  VERIFICATION:
      Did the screen turn off while the lid was closed?
 
-plugin: user-interact
+plugin: user-interact-verify
 id: power-management/lid_open
+estimated_duration: 60.0
 requires: device.product == 'Lid Switch'
 command:
  for i in `seq 20`; do
@@ -134,6 +146,7 @@ id: power-management/rtc
 requires:
   rtc.state == 'supported'
   package.name == 'util-linux'
+  cpuinfo.other != 'emulated by qemu'
 user: root
 command: hwclock -r
 estimated_duration: 0.02
@@ -142,12 +155,15 @@ _description:
 
 plugin: shell
 id: power-management/tickless_idle
+estimated_duration: 1.0
+requires: cpuinfo.platform in ('i386', 'x86_64', 'ppc64el', 'pSeries')
 _description: Check to see if CONFIG_NO_HZ is set in the kernel (this is just a simple regression check)
 command:
  zgrep 'CONFIG_NO_HZ=y' /boot/config-`uname -r` >/dev/null 2>&1 || ( echo "WARNING: Tickless Idle is NOT set" >&2 && exit 1 )
 
 plugin: manual
 id: power-management/unplug_ac
+estimated_duration: 30.0
 _description:
  PURPOSE:
      This test will ensure that the AC is unplugged for the battery drain tests to run.
@@ -158,6 +174,7 @@ _description:
 
 plugin: shell
 id: power-management/battery_drain_idle
+estimated_duration: 90.0
 requires: package.name == 'upower'
 depends: power-management/unplug_ac
 _description: Checks the battery drain during idle.  Reports time until empty
@@ -167,6 +184,7 @@ command:
 
 plugin: shell
 id: power-management/battery_drain_movie
+estimated_duration: 90.0
 requires:
  package.name == 'upower'
 depends: power-management/unplug_ac
@@ -177,6 +195,7 @@ command:
 
 plugin: shell
 id: power-management/battery_drain_sleep
+estimated_duration: 140.0
 user: root
 requires:
  package.name == 'upower'
@@ -189,6 +208,7 @@ command:
 
 plugin: manual
 id: power-management/plug_ac
+estimated_duration: 30.0
 depends: power-management/battery_drain_idle power-management/battery_drain_movie power-management/battery_drain_sleep
 _description:
  PURPOSE:
@@ -201,6 +221,7 @@ _description:
 
 plugin: user-interact-verify
 id: power-management/reboot_manual
+estimated_duration: 120.0
 user:root
 command: shutdown -r now
 _description:
@@ -219,6 +240,7 @@ _description:
 
 plugin: user-interact-verify
 id: power-management/shutdown_manual
+estimated_duration: 120.0
 user: root
 command: shutdown -h now
 _description:
@@ -234,3 +256,4 @@ _description:
      successfully otherwise, Select 'No' to indicate there was a problem.
  VERIFICATION:
      Did the system shutdown and boot correctly?
+
