@@ -13,7 +13,6 @@ from plainbox.provider_manager import setup
 class SourceDistributionCommandExt(SourceDistributionCommand):
     # Overridden version of SourceDistributionCommand that handles autotools
     __doc__ = SourceDistributionCommand.__doc__
-    _INCLUDED_ITEMS = SourceDistributionCommand._INCLUDED_ITEMS + ['COPYING']
     _GENERATED_ITEMS = [
         'INSTALL',
         'Makefile.in',
@@ -43,9 +42,10 @@ class SourceDistributionCommandExt(SourceDistributionCommand):
             os.remove(os.path.join(self.src_dir, item))
 
 setup(
-    name='2013.com.canonical.certification:plainbox-resources',
-    version="0.22",
+    name='plainbox-provider-resource-generic',
+    namespace='2013.com.canonical.certification',
+    version="0.23",
     description=N_("PlainBox resources provider"),
-    gettext_domain='plainbox-provider-resource',
+    gettext_domain='plainbox-provider-resource-generic',
     deprecated=False, strict=False,
 )

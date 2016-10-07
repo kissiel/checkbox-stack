@@ -8,7 +8,7 @@ Depends: python3 (>= 3.2)
 # and bin/xinput_resource
 unit: packaging meta-data
 os-id: debian
-Depends: python3-checkbox-support (>= 0.2)
+Depends: python3-checkbox-support (>= 0.22)
 
 # This is for bin/display_resource
 unit: packaging meta-data
@@ -25,7 +25,7 @@ Depends: dmidecode [!armel !mips !mipsel !powerpc !ppc64el !s390x]
 # This is for bin/dpkg_resource
 unit: packaging meta-data
 os-id: debian
-Depends: dpkg (>= 1.13),
+Depends: dpkg (>= 1.13)
 
 # This is for bin/gconf_resource
 unit: packaging meta-data
@@ -196,6 +196,7 @@ command:
 id: block_device
 estimated_duration: 0.08
 plugin: resource
+user: root
 command: block_device_resource
 _description: Create resource info for removable block devices
 
