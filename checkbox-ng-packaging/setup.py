@@ -44,10 +44,9 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # mocked away in 'plainbox/docs/conf.py'. This speeds up the build process.
 # and makes it independent on any packages that are hard to get in a virtualenv
 if on_rtd:
-    install_requires = []
+    install_requires = ['plainbox >= 0.5.3',]
 else:
     install_requires = [
-        'checkbox-support >= 0.2',
         'guacamole >= 0.9',
         'plainbox >= 0.5.3',
         'requests >= 1.0',
@@ -55,7 +54,7 @@ else:
 
 setup(
     name="checkbox-ng",
-    version="0.29",
+    version="0.30.0rc1",
     url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",
@@ -65,9 +64,9 @@ setup(
     description="Checkbox - Command Line Test Runner",
     long_description=long_description,
     install_requires=install_requires,
-    scripts = ['launchers/checkbox-cli'],
     entry_points={
         'console_scripts': [
+            'checkbox-cli=checkbox_ng.launcher.checkbox_cli:main',
             'checkbox=checkbox_ng.main:main',
             'checkbox-submit=checkbox_ng.main:submit',
             'checkbox-launcher=checkbox_ng.main:launcher',
@@ -75,8 +74,6 @@ setup(
         'plainbox.transport': [
             'certification='
             'checkbox_ng.certification:CertificationTransport',
-            'launchpad='
-            'checkbox_ng.launchpad:LaunchpadTransport',
         ],
     },
     include_package_data=True)
