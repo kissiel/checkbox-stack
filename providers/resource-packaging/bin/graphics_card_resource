@@ -124,7 +124,7 @@ def main():
     try:
         for index, record in enumerate(video_devices, 1):
             record['index'] = index
-            if not subprocess.call(['dpkg-query', '-W', 'amdgpu-pro'],
+            if not subprocess.call(['dpkg-query', '-W', 'vulkan-amdgpu-pro'],
                                    stderr=subprocess.STDOUT,
                                    stdout=subprocess.DEVNULL):
                 record['driver'] = 'amdgpu-pro'
@@ -146,6 +146,14 @@ def main():
                     fake_vendor = "PCI ID unknown"
                 record['vendor'] = fake_vendor
                 record['vendor_slug'] = slugify(fake_vendor)
+            if 'driver' not in record:
+                record['driver'] = 'unknown'
+            # lp:1636060 – If discrete GPU is using amdgpu driver,
+            # we set the prime_offload_gpu flag to 'On'
+            if index == 2 and record['driver'] == 'amdgpu':
+                record['prime_offload_gpu'] = 'On'
+            else:
+                record['prime_offload_gpu'] = 'Off'
             # Finally, print the record
             items = ["{key}: {value}".format(key=k, value=record[k])
                      for k in sorted(record.keys())]
