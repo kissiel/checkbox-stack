@@ -1,4 +1,5 @@
 #!/usr/bin/env checkbox-cli
+
 [launcher]
 app_id = 2013.com.canonical.certification:certification-server
 launcher_version = 1
