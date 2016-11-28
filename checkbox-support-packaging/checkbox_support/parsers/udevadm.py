@@ -22,6 +22,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from collections import OrderedDict
+from subprocess import check_output, CalledProcessError
 import re
 import string
 
@@ -124,6 +125,7 @@ class UdevadmDevice(object):
         "_stack",
         "_bus",
         "_interface",
+        "_mac",
         "_product",
         "_product_id",
         "_subproduct_id",
@@ -141,6 +143,7 @@ class UdevadmDevice(object):
         self._stack = stack
         self._bus = None
         self._interface = None
+        self._mac = None
         self._product = None
         self._product_id = None
         self._subproduct_id = None
@@ -789,6 +792,22 @@ class UdevadmDevice(object):
                 return 'UNKNOWN'
         return None
 
+    @property
+    def mac(self):
+        if self._mac is not None:
+            return self._mac
+        if self.category in ("NETWORK", "WIRELESS"):
+            if "ID_NET_NAME_MAC" in self._environment:
+                mac = self._environment["ID_NET_NAME_MAC"][3:]
+                return ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
+            else:
+                return 'UNKNOWN'
+        return None
+
+    @mac.setter
+    def mac(self, value):
+        self._mac = value
+
     @interface.setter
     def interface(self, value):
         self._interface = value
@@ -796,7 +815,8 @@ class UdevadmDevice(object):
     def as_json(self):
         attributes = ("path", "bus", "category", "driver", "product_id",
                       "vendor_id", "subproduct_id", "subvendor_id", "product",
-                      "vendor", "interface", "name", "product_slug", "vendor_slug")
+                      "vendor", "interface", "mac", "name", "product_slug",
+                      "vendor_slug")
 
         return {a: getattr(self, a) for a in attributes if getattr(self, a)}
 
@@ -1033,10 +1053,10 @@ def known_to_be_video_device(vendor_id, product_id, pci_class, pci_subclass):
 
 class UdevResult(object):
     def __init__(self):
-        self.devices = {"device_list": []}
+        self.devices = {"devices": []}
 
     def addDevice(self, device):
-        self.devices["device_list"].append(device)
+        self.devices["devices"].append(device)
 
 
 def parse_udevadm_output(output, lsblk=None, bits=None):
@@ -1046,6 +1066,13 @@ def parse_udevadm_output(output, lsblk=None, bits=None):
     :returns: :class:`UdevadmParser` object that corresponds to the
     parsed input
     """
+    if lsblk is None:
+        try:
+            lsblk = check_output(
+                ['lsblk', '-i', '-n', '-P', '-o', 'KNAME,TYPE,MOUNTPOINT'],
+                universal_newlines=True)
+        except CalledProcessError as exc:
+            lsblk = ''
     udev = UdevadmParser(output, lsblk, bits)
     result = UdevResult()
     udev.run(result)
