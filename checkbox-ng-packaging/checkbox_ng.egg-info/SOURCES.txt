@@ -6,7 +6,6 @@ setup.py
 checkbox_ng/__init__.py
 checkbox_ng/certification.py
 checkbox_ng/config.py
-checkbox_ng/launchpad.py
 checkbox_ng/main.py
 checkbox_ng/misc.py
 checkbox_ng/test_certification.py
@@ -29,6 +28,10 @@ checkbox_ng/commands/newcli.py
 checkbox_ng/commands/sru.py
 checkbox_ng/commands/submit.py
 checkbox_ng/commands/test_sru.py
+checkbox_ng/launcher/__init__.py
+checkbox_ng/launcher/checkbox_cli.py
+checkbox_ng/launcher/stages.py
+checkbox_ng/launcher/subcommands.py
 contrib/checkbox-ci-installed-notifier.service
 contrib/checkbox-ci-mailer.service
 contrib/checkbox-sru.service
@@ -55,4 +58,3 @@ docs/units/resource.rst
 docs/units/rfc822.rst
 docs/units/template.rst
 docs/units/test-plan.rst
-launchers/checkbox-cli
