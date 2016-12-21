@@ -38,7 +38,7 @@ with open(os.path.join(base_dir, "README.rst"), encoding="UTF-8") as stream:
 
 setup(
     name="checkbox-support",
-    version="0.29.0",
+    version="0.30.0rc6",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     test_suite='checkbox_support.tests.test_suite',
@@ -74,6 +74,9 @@ setup(
              "_info_attachment_output"),
             ("bto=checkbox_support.parsers.image_info:parse_bto_attachment"
              "_output"),
+        ],
+        'console_scripts': [
+            "checkbox-support-run_watcher=checkbox_support.scripts.run_watcher:main",
         ],
     },
 )

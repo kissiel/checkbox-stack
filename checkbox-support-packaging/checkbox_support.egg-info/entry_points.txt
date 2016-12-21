@@ -1,3 +1,6 @@
+[console_scripts]
+checkbox-support-run_watcher = checkbox_support.scripts.run_watcher:main
+
 [plainbox.parsers]
 bto = checkbox_support.parsers.image_info:parse_bto_attachment_output
 buildstamp = checkbox_support.parsers.image_info:parse_buildstamp_attachment_output
