@@ -4,6 +4,7 @@ README.rst
 setup.cfg
 setup.py
 checkbox_support/__init__.py
+checkbox_support/log_watcher.py
 checkbox_support/udev.py
 checkbox_support.egg-info/PKG-INFO
 checkbox_support.egg-info/SOURCES.txt
@@ -147,6 +148,7 @@ checkbox_support/parsers/tests/udevadm_data/XEON.txt
 checkbox_support/scripts/__init__.py
 checkbox_support/scripts/audio_settings.py
 checkbox_support/scripts/gputest_benchmark.py
+checkbox_support/scripts/run_watcher.py
 checkbox_support/scripts/tests/__init__.py
 checkbox_support/scripts/tests/test_audio_settings.py
 checkbox_support/scripts/tests/test_gputest_benchmark.py
