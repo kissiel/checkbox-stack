@@ -1,5 +1,6 @@
 [console_scripts]
 checkbox-support-fwts_test = checkbox_support.scripts.fwts_test:main
+checkbox-support-network = checkbox_support.scripts.network:main
 checkbox-support-run_watcher = checkbox_support.scripts.run_watcher:main
 
 [plainbox.parsers]
