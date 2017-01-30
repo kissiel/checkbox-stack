@@ -33,6 +33,7 @@ mandatory_include:
     miscellanea/get_maas_version
     miscellanea/efi_boot_mode                  certification-status=blocker
     miscellanea/secure_boot_mode               certification-status=non-blocker
+    miscellanea/efi_pxeboot                    certification-status=non-blocker
     miscellanea/cpus_are_not_samples
     miscellanea/dmitest_server
     info/disk_partitions
@@ -42,6 +43,7 @@ include:
     info/hdparm_.*.txt                         certification-status=non-blocker
     miscellanea/ipmi_test                      certification-status=blocker
     miscellanea/bmc_info                       certification-status=non-blocker
+    miscellanea/fwupdate                       certification-status=non-blocker
     benchmarks/disk/hdparm-read_.*             certification-status=blocker
     benchmarks/disk/hdparm-cache-read_.*       certification-status=blocker
     cpu/clocktest                              certification-status=blocker
