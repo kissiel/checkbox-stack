@@ -229,7 +229,7 @@ one of the following values:
   will be hidden, output of other job types will be printed
 - ``hide-automated`` - output of shell jobs as well as attachment and resource
   jobs will be hidden. Only interactive job command's output will be shown
-- ``hide`` - same as ``hide-automated``. This value is depracated, use
+- ``hide`` - same as ``hide-automated``. This value is deprecated, use
   ``hide-automated``
 
 Default value: ``show``
@@ -238,6 +238,24 @@ Default value: ``show``
 
     Individual jobs can have their output hidden by specifying
     'suppress-output' in their definition.
+
+``verbosity``
+
+This setting makes checkbox report more information from checkbox internals.
+Possible values are:
+
+- ``normal`` - report only warnings and errors.
+- ``verbose`` - report important events that take place during execution (E.g.
+  adding units, starting jobs, changing the state of the session)
+
+- ``degug`` - print out everything
+
+Default value: ``normal``
+
+.. note::
+
+    You can also change this behavior when invoking Checkbox by using
+    ``--verbose`` and ``--debug`` options respectively.
 
 Restart section
 ===============
