@@ -117,6 +117,15 @@ class Launcher(Command, MainLoopStage):
             # it's a legacy launcher, use legacy way of running commands
             from checkbox_ng.tools import CheckboxLauncherTool
             raise SystemExit(CheckboxLauncherTool().main(sys.argv[1:]))
+        logging_level = {
+            'normal': logging.WARNING,
+            'verbose': logging.INFO,
+            'debug': logging.DEBUG,
+        }[self.launcher.verbosity]
+        if not ctx.args.verbose and not ctx.args.debug:
+            # Command line args take precendence
+            logging.basicConfig(level=logging_level)
+
         if self.launcher.ui_type in ['converged', 'converged-silent']:
             # Stop processing the launcher config and call the QML ui
             qml_main_file = os.path.join('/usr/share/checkbox-converged',
@@ -233,7 +242,8 @@ class Launcher(Command, MainLoopStage):
             cmd = self._pick_action_cmd([
                 Action('r', _("resume this session"), 'resume'),
                 Action('n', _("next session"), 'next'),
-                Action('c', _("create new session"), 'create')
+                Action('c', _("create new session"), 'create'),
+                Action('d', _("delete old sessions"), 'delete'),
             ], _("Do you want to resume session {0!a}?").format(candidate.id))
             if cmd == 'next':
                 continue
@@ -242,6 +252,10 @@ class Launcher(Command, MainLoopStage):
             elif cmd == 'resume':
                 self._resume_session(candidate)
                 return True
+            elif cmd == 'delete':
+                ids = [candidate.id for candidate in resume_candidates]
+                self._delete_old_sessions(ids)
+                return False
 
     def _resume_session(self, session):
         metadata = self.ctx.sa.resume_session(session.id)
@@ -279,6 +293,10 @@ class Launcher(Command, MainLoopStage):
         self.ctx.sa.update_app_blob(json.dumps(
             {'testplan_id': tp_id, }).encode("UTF-8"))
         self.ctx.sa.bootstrap()
+
+    def _delete_old_sessions(self, ids):
+        completed_ids = [s[0] for s in self.ctx.sa.get_old_sessions()]
+        self.ctx.sa.delete_sessions(completed_ids + ids)
 
     def _interactively_pick_test_plan(self):
         test_plan_ids = self.ctx.sa.get_test_plans()
@@ -605,6 +623,14 @@ class Launcher(Command, MainLoopStage):
         parser.add_argument(
             '--dont-suppress-output', action='store_true', default=False,
             help=_('Absolutely always show command output'))
+        # the next to options are and should be exact copies of what the
+        # top-level command offers - this is here so when someone launches
+        # checkbox-cli through launcher, they have those options available
+        parser.add_argument('-v', '--verbose', action='store_true', help=_(
+            'print more logging from checkbox'))
+        parser.add_argument('--debug', action='store_true', help=_(
+            'print debug messages from checkbox'))
+
 
 
 class CheckboxUI(NormalUI):
