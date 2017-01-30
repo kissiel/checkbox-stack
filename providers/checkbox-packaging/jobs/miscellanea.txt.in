@@ -72,6 +72,20 @@ environ: PLAINBOX_SESSION_SHARE
 command:
  fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_results.log
 
+plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
+id: miscellanea/fwupdate
+estimated_duration: 1.0
+depends: miscellanea/efi_boot_mode
+requires:
+  cpuinfo.platform in ("i386", "x86_64", "aarch64", "armhf")
+  package.name == 'fwupdate'
+_description:
+ Determine if EFI firmware supports update from OS.
+_summary:
+ Check for firmware update support.
+command: fwupdate -s
+
 plugin: attachment
 category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/fwts_results.log
@@ -132,6 +146,20 @@ command: boot_mode_test secureboot
 
 plugin: shell
 category_id: 2013.com.canonical.plainbox::miscellanea
+estimated_duration: 0.5
+user: root
+id: miscellanea/efi_pxeboot
+requires:
+ cpuinfo.platform in ("i386", "x86_64", "aarch64")
+depends: miscellanea/efi_boot_mode
+_summary: Test that system booted from the network
+_description: 
+ Test to verify that the system booted from the network.
+ Works only on EFI-based systems.
+command: efi-pxeboot
+
+plugin: shell
+category_id: 2013.com.canonical.plainbox::miscellanea
 id: miscellanea/bmc_info
 requires: 
  package.name == 'ipmitool'
@@ -163,7 +191,7 @@ id: miscellanea/dmitest_server
 requires: package.name == 'dmidecode'
 estimated_duration: 0.5
 user: root
-command: dmitest --test_versions --test_serials server
+command: dmitest --test_versions server
 _description:
  Sanity check of DMI system identification data (for servers)
 _summary:
@@ -275,15 +303,9 @@ plugin: shell
 category_id: 2013.com.canonical.plainbox::miscellanea
 estimated_duration: 0.1
 id: miscellanea/get_maas_version
-command:
- if [ -s /etc/installed-by-maas ]; then 
-   cat /etc/installed-by-maas
- else
-   echo "MAAS VERSION NOT FOUND" >&2
-   false
- fi
+command: maas-version-check
 _description: If system was installed via MAAS from a cert server, the MAAS version used should be contained in /etc/installed-by-maas
-_summary: Attach MAAS version used to deploy the SUT
+_summary: Verify MAAS version used to deploy the SUT
 
 plugin: shell
 category_id: 2013.com.canonical.plainbox::miscellanea
