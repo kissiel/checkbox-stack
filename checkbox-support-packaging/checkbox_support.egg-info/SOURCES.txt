@@ -134,6 +134,7 @@ checkbox_support/parsers/tests/udevadm_data/HP_PAVILIONSLEEKBOOK14_ACCELEROMETER
 checkbox_support/parsers/tests/udevadm_data/HP_PRO2110.txt
 checkbox_support/parsers/tests/udevadm_data/HP_PROBOOK6550B_ACCELEROMETER.txt
 checkbox_support/parsers/tests/udevadm_data/IBM_PSERIES_POWER7.txt
+checkbox_support/parsers/tests/udevadm_data/IBM_s390x_DASD.txt
 checkbox_support/parsers/tests/udevadm_data/INTEL_NUC_SNAPPY.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_E431.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_E445.txt
