@@ -82,8 +82,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'CheckboxNG'
-copyright = '2013-2016, Checkbox Developers'
+project = 'Checkbox'
+copyright = '2013-2017, Checkbox Developers'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -132,6 +132,7 @@ pygments_style = 'sphinx'
 
 # -- Options for HTML output -------------------------------------------------
 
+# html_theme_path = ['_templates']
 html_theme = 'default'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -258,7 +259,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'checkbox_ng', 'CheckboxNG Documentation',
+    ('index', 'checkbox_ng', 'Checkbox Documentation',
      ['Checkbox Developers'], 1),
     ('stack', 'checkbox-stack', 'description of the checkbox stack',
      ['Checkbox Developers'], 1),
@@ -274,8 +275,8 @@ man_show_urls = True
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'CheckboxNG', 'CheckboxNG Documentation',
-     'Checkbox Developers', 'CheckboxNG', 'One line description of project.',
+    ('index', 'Checkbox', 'Checkbox Documentation',
+     'Checkbox Developers', 'Checkbox', 'Checkbox is a flexible test automation software. It’s the main tool used in Ubuntu Certification program.',
      'Miscellaneous'),
 ]
 
