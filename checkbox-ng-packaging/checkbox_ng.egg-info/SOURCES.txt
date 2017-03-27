@@ -15,6 +15,7 @@ checkbox_ng/test_misc.py
 checkbox_ng/tests.py
 checkbox_ng/tools.py
 checkbox_ng/ui.py
+checkbox_ng/urwid_ui.py
 checkbox_ng.egg-info/PKG-INFO
 checkbox_ng.egg-info/SOURCES.txt
 checkbox_ng.egg-info/dependency_links.txt

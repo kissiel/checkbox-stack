@@ -30,6 +30,7 @@ import operator
 import os
 import re
 import sys
+import time
 
 from guacamole import Command
 
@@ -48,7 +49,6 @@ from plainbox.impl.secure.origin import Origin
 from plainbox.impl.secure.qualifiers import select_jobs
 from plainbox.impl.secure.qualifiers import FieldQualifier
 from plainbox.impl.secure.qualifiers import PatternMatcher
-from plainbox.impl.session.assistant import SA_RESTARTABLE
 from plainbox.impl.session.jobs import InhibitionCause
 from plainbox.impl.session.restart import detect_restart_strategy
 from plainbox.impl.session.restart import get_strategy_by_name
@@ -58,10 +58,9 @@ from plainbox.impl.transport import get_all_transports
 from plainbox.public import get_providers
 
 from checkbox_ng.launcher.stages import MainLoopStage
-from checkbox_ng.misc import SelectableJobTreeNode
-from checkbox_ng.ui import ScrollableTreeNode
-from checkbox_ng.ui import ShowMenu
-from checkbox_ng.ui import ShowRerun
+from checkbox_ng.urwid_ui import CategoryBrowser
+from checkbox_ng.urwid_ui import ReRunBrowser
+from checkbox_ng.urwid_ui import test_plan_browser
 
 _ = gettext.gettext
 
@@ -160,10 +159,19 @@ class Launcher(Command, MainLoopStage):
                 "checkbox-ng")
             if 'submission_files' in self.launcher.stock_reports:
                 print("Reports will be saved to: {}".format(self.base_dir))
+            # we initialize the nb of attempts for all the selected jobs...
+            for job_id in self.ctx.sa.get_dynamic_todo_list():
+                job_state = self.ctx.sa.get_job_state(job_id)
+                job_state.attempts = self.launcher.max_attempts
+            # ... before running them
             self._run_jobs(self.ctx.sa.get_dynamic_todo_list())
-            if self.is_interactive:
+            if self.is_interactive and not self.launcher.auto_retry:
                 while True:
                     if not self._maybe_rerun_jobs():
+                        break
+            elif self.launcher.auto_retry:
+                while True:
+                    if not self._maybe_auto_retry_jobs():
                         break
             self._export_results()
             ctx.sa.finalize_session()
@@ -310,24 +318,22 @@ class Launcher(Command, MainLoopStage):
             key=lambda tp_id: self.ctx.sa.get_test_plan(tp_id).name)
         test_plan_names = [self.ctx.sa.get_test_plan(tp_id).name for tp_id in
                            filtered_tp_ids]
-        preselected_indecies = []
+        preselected_index = None
         if self.launcher.test_plan_default_selection:
             try:
-                preselected_indecies = [test_plan_names.index(
+                preselected_index = test_plan_names.index(
                     self.ctx.sa.get_test_plan(
-                        self.launcher.test_plan_default_selection).name)]
+                        self.launcher.test_plan_default_selection).name)
             except KeyError:
                 _logger.warning(_('%s test plan not found'),
                                 self.launcher.test_plan_default_selection)
-                preselected_indecies = []
+                preselected_index = None
         try:
-            selected_index = self.ctx.display.run(
-                ShowMenu(_("Select test plan"),
-                         test_plan_names, preselected_indecies,
-                         multiple_allowed=False))[0]
-        except IndexError:
+            selected_index = test_plan_browser(
+                _("Select test plan"), test_plan_names, preselected_index)
+            return filtered_tp_ids[selected_index]
+        except (IndexError, TypeError):
             return None
-        return filtered_tp_ids[selected_index]
 
     def _pick_jobs_to_run(self):
         if self.launcher.test_selection_forced:
@@ -335,15 +341,11 @@ class Launcher(Command, MainLoopStage):
             return
         job_list = [self.ctx.sa.get_job(job_id) for job_id in
                     self.ctx.sa.get_static_todo_list()]
-        tree = SelectableJobTreeNode.create_simple_tree(self.ctx.sa, job_list)
-        for category in tree.get_descendants():
-            category.expanded = False
-        title = _('Choose tests to run on your system:')
-        self.ctx.display.run(ScrollableTreeNode(tree, title))
+        wanted_set = CategoryBrowser(
+            _("Choose tests to run on your system:"), self.ctx.sa).run()
         # NOTE: tree.selection is correct but ordered badly. To retain
         # the original ordering we should just treat it as a mask and
         # use it to filter jobs from get_static_todo_list.
-        wanted_set = frozenset([job.id for job in tree.selection])
         job_id_list = [job_id for job_id in self.ctx.sa.get_static_todo_list()
                        if job_id in wanted_set]
         self.ctx.sa.use_alternate_selection(job_id_list)
@@ -379,36 +381,73 @@ class Launcher(Command, MainLoopStage):
         if result:
             self.ctx.sa.use_job_result(last_job, result)
 
+    def _maybe_auto_retry_jobs(self):
+        # create a list of jobs that qualify for rerunning
+        retry_candidates = self._get_auto_retry_candidates()
+        # bail-out early if no job qualifies for rerunning
+        if not retry_candidates:
+            return False
+        # we wait before retrying
+        delay = self.launcher.delay_before_retry
+        _logger.info(_("Waiting {} seconds before retrying failed"
+                       " jobs...".format(delay)))
+        time.sleep(delay)
+        candidates = []
+        # include resource jobs that jobs to retry depend on
+        resources_to_rerun = []
+        for job in retry_candidates:
+            job_state = self.ctx.sa.get_job_state(job.id)
+            for inhibitor in job_state.readiness_inhibitor_list:
+                if inhibitor.cause == InhibitionCause.FAILED_DEP:
+                    resources_to_rerun.append(inhibitor.related_job)
+        # reset outcome of jobs that are selected for re-running
+        for job in retry_candidates + resources_to_rerun:
+            self.ctx.sa.get_job_state(job.id).result = MemoryJobResult({})
+            candidates.append(job.id)
+            _logger.info("{}: {} attempts".format(
+                job.id,
+                self.ctx.sa.get_job_state(job.id).attempts
+            ))
+        self._run_jobs(candidates)
+        return True
+
+    def _get_auto_retry_candidates(self):
+        """Get all the tests that might be selected for an automatic retry."""
+        def retry_predicate(job_state):
+            return job_state.result.outcome in (IJobResult.OUTCOME_FAIL,) \
+                   and job_state.effective_auto_retry != 'no'
+        retry_candidates = []
+        todo_list = self.ctx.sa.get_static_todo_list()
+        job_states = {job_id: self.ctx.sa.get_job_state(job_id) for job_id
+                      in todo_list}
+        for job_id, job_state in job_states.items():
+            if retry_predicate(job_state) and job_state.attempts > 0:
+                retry_candidates.append(self.ctx.sa.get_job(job_id))
+        return retry_candidates
+
     def _maybe_rerun_jobs(self):
         # create a list of jobs that qualify for rerunning
         rerun_candidates = self._get_rerun_candidates()
         # bail-out early if no job qualifies for rerunning
         if not rerun_candidates:
             return False
-        tree = SelectableJobTreeNode.create_rerun_tree(self.ctx.sa,
-                                                        rerun_candidates)
-        # nothing to select in root node and categories - bailing out
-        if not tree.jobs and not tree._categories:
-            return False
-        # deselect all by default
-        tree.set_descendants_state(False)
-        self.ctx.display.run(ShowRerun(tree, _("Select jobs to re-run")))
-        wanted_set = frozenset(tree.selection)
+        wanted_set = ReRunBrowser(
+            _("Select jobs to re-run"), self.ctx.sa, rerun_candidates).run()
         if not wanted_set:
             # nothing selected - nothing to run
             return False
         rerun_candidates = []
         # include resource jobs that selected jobs depend on
         resources_to_rerun = []
-        for job in wanted_set:
-            job_state = self.ctx.sa.get_job_state(job.id)
+        for job_id in wanted_set:
+            job_state = self.ctx.sa.get_job_state(job_id)
             for inhibitor in job_state.readiness_inhibitor_list:
                 if inhibitor.cause == InhibitionCause.FAILED_DEP:
-                    resources_to_rerun.append(inhibitor.related_job)
+                    resources_to_rerun.append(inhibitor.related_job.id)
         # reset outcome of jobs that are selected for re-running
-        for job in list(wanted_set) + resources_to_rerun:
-            self.ctx.sa.get_job_state(job.id).result = MemoryJobResult({})
-            rerun_candidates.append(job.id)
+        for job_id in list(wanted_set) + resources_to_rerun:
+            self.ctx.sa.get_job_state(job_id).result = MemoryJobResult({})
+            rerun_candidates.append(job_id)
         self._run_jobs(rerun_candidates)
         return True
 
@@ -526,6 +565,22 @@ class Launcher(Command, MainLoopStage):
                 options = "secure_id={}".format(secure_id)
             else:
                 options = ""
+            self.transports[transport] = cls(url, options)
+        elif tr_type == 'submission-service':
+            secure_id = self.launcher.transports[transport].get(
+                'secure_id', None)
+            if not secure_id and self.is_interactive:
+                secure_id = input(self.C.BLUE(_('Enter secure-id:')))
+            if secure_id:
+                options = "secure_id={}".format(secure_id)
+            else:
+                options = ""
+            if self.launcher.transports[transport].get('staging', False):
+                url = ('https://submission.staging.canonical.com/'
+                       '1.0/submission/hardware/{}'.format(secure_id))
+            else:
+                url = ('https://submission.canonical.com/'
+                       '1.0/submission/hardware/{}'.format(secure_id))
             self.transports[transport] = cls(url, options)
 
     def _export_results(self):
@@ -799,7 +854,7 @@ class List(Command):
             '-a', '--attrs', default=False, action="store_true",
             help=_("show object attributes"))
         parser.add_argument(
-            '-f', '--format', default='id: {id}\n{tr_summary}\n', type=str,
+            '-f', '--format', type=str,
             help=_(("output format, as passed to print function. "
                 "Use '?' to list possible values")))
 
@@ -816,6 +871,11 @@ class List(Command):
                     all_keys.update(job.keys())
                 print(list(all_keys))
                 return
+            if not ctx.args.format:
+                # setting default in parser.add_argument would apply to all
+                # the list invocations. We want default to be present only for
+                # the 'all-jobs' group.
+                ctx.args.format = 'id: {id}\n{tr_summary}\n'
             for job in jobs:
                 unescaped = ctx.args.format.replace(
                     '\\n', '\n').replace('\\t', '\t')
@@ -831,7 +891,7 @@ class List(Command):
                     job['unit_type'] = 'job'
                 print(unescaped.format(**DefaultKeyedDict(None, job)), end='')
             return
-        if ctx.args.format:
+        elif ctx.args.format:
             print(_("--format applies only to 'all-jobs' group.  Ignoring..."))
         print_objs(ctx.args.GROUP, ctx.args.attrs)
 

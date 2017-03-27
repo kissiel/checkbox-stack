@@ -6,4 +6,5 @@ checkbox-submit = checkbox_ng.main:submit
 
 [plainbox.transport]
 certification = checkbox_ng.certification:CertificationTransport
+submission-service = checkbox_ng.certification:CertificationTransport
 
