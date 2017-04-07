@@ -93,7 +93,7 @@ class TestUdevadmParser(TestCase, UdevadmDataMixIn):
         if with_lsblk:
             lsblk = self.get_lsblk(name)
         return parse_udevadm_output(
-            self.get_text(name), lsblk, 64)["devices"]
+            self.get_text(name), lsblk, 64)
 
     def count(self, devices, category):
         return len([d for d in devices if d.category == category])
@@ -351,7 +351,7 @@ E: UDEV_LOG=3
         expected_devices = [("NetXtreme BCM5720 Gigabit Ethernet PCIe",
                              "NETWORK", "pci", 0x14E4, 0x165F, 4),
                             ]
-        self.assertEqual(len(devices), 250)
+        self.assertEqual(len(devices), 252)
         self.assertEqual(self.count(devices, "NETWORK"), 4)
         self.assertEqual(self.count(devices, "AUDIO"), 0)
         self.assertEqual(self.count(devices, "VIDEO"), 1)
@@ -360,7 +360,7 @@ E: UDEV_LOG=3
 
     def test_REALTEK_CARD_READER_AND_NVME(self):
         devices = self.parse("REALTEK_CARD_READER_AND_NVME")
-        self.assertEqual(len(devices), 126)
+        self.assertEqual(len(devices), 127)
         self.assertEqual(self.count(devices, "VIDEO"), 1)
         self.assertEqual(self.count(devices, "AUDIO"), 4)
         self.assertEqual(self.count(devices, "KEYBOARD"), 1)
@@ -374,6 +374,21 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "BLUETOOTH"), 1)
         self.assertEqual(self.count(devices, "WIRELESS"), 1)
         self.assertEqual(self.count(devices, "DISK"), 2)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+
+    def test_TOSHIBA_NVME(self):
+        devices = self.parse("TOSHIBA_NVME")
+        self.assertEqual(len(devices), 128)
+        self.assertEqual(self.count(devices, "VIDEO"), 2)
+        self.assertEqual(self.count(devices, "AUDIO"), 2)
+        self.assertEqual(self.count(devices, "KEYBOARD"), 1)
+        self.assertEqual(self.count(devices, "TOUCHPAD"), 1)
+        self.assertEqual(self.count(devices, "CARDREADER"), 1)
+        self.assertEqual(self.count(devices, "MOUSE"), 1)
+        self.assertEqual(self.count(devices, "CAPTURE"), 1)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 1)
+        self.assertEqual(self.count(devices, "WIRELESS"), 2)
+        self.assertEqual(self.count(devices, "DISK"), 1)
         self.assertEqual(self.count(devices, "NETWORK"), 1)
 
     def test_HOME_MADE(self):
@@ -551,7 +566,7 @@ E: UDEV_LOG=3
                             ("82579LM Gigabit Network Connection",
                              "NETWORK", "pci", 0x8086, 0x1502),
                             ("H5321 gw",
-                             "NETWORK", "usb", 0x0bdb, 0x1926)
+                             "WWAN", "usb", 0x0bdb, 0x1926)
                             ]
         self.assertEqual(len(devices), 103)
         # Check that the Thinkpad hotkeys are not a CAPTURE device
@@ -563,7 +578,7 @@ E: UDEV_LOG=3
         self.assertEqual(
             devices[54].vendor,
             "Ericsson Business Mobile Networks BV")
-        self.assertEqual(devices[54].category, "NETWORK")
+        self.assertEqual(devices[54].category, "WWAN")
         self.assertEqual(self.count(devices, "VIDEO"), 1)
         self.assertEqual(self.count(devices, "AUDIO"), 9)
         # Logitech Illuminated keyboard + T430S keyboard + KVM
@@ -578,7 +593,8 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "DISK"), 1)
         self.assertEqual(self.count(devices, "RAID"), 0)
         self.assertEqual(self.count(devices, "BLUETOOTH"), 1)
-        self.assertEqual(self.count(devices, "NETWORK"), 2)
+        self.assertEqual(self.count(devices, "NETWORK"), 1)
+        self.assertEqual(self.count(devices, "WWAN"), 1)
         self.assertEqual(self.count(devices, "CAPTURE"), 2)
         self.assertEqual(self.count(devices, "WIRELESS"), 1)
         self.verify_devices(devices, expected_devices)
@@ -751,8 +767,8 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "RAID"), 0)
         self.assertEqual(self.count(devices, "DISK"), 1)
 
-    def test_IBM_PSERIES_P8(self):
-        # Apparnently a virtualized system on a pSeries P8
+    def test_IBM_PSERIES_P7(self):
+        # Apparently a virtualized system on a pSeries P7
         # Quite bare-bones, server-oriented system
         devices = self.parse("IBM_PSERIES_POWER7")
         self.assertEqual(self.count(devices, "VIDEO"), 0)
@@ -772,6 +788,27 @@ E: UDEV_LOG=3
         self.assertEqual(self.count(devices, "RAID"), 0)
         self.assertEqual(self.count(devices, "DISK"), 2)
         self.assertEqual(len(devices), 4)
+
+    def test_IBM_PSERIES_P8(self):
+        # server-oriented system
+        devices = self.parse("IBM_PSERIES_POWER8")
+        self.assertEqual(self.count(devices, "VIDEO"), 0)
+        self.assertEqual(self.count(devices, "AUDIO"), 0)
+        self.assertEqual(self.count(devices, "KEYBOARD"), 0)
+        self.assertEqual(self.count(devices, "TOUCHPAD"), 0)
+        self.assertEqual(self.count(devices, "CARDREADER"), 0)
+        self.assertEqual(self.count(devices, "CDROM"), 1)
+        self.assertEqual(self.count(devices, "FIREWIRE"), 0)
+        self.assertEqual(self.count(devices, "MOUSE"), 0)
+        self.assertEqual(self.count(devices, "ACCELEROMETER"), 0)
+        self.assertEqual(self.count(devices, "TOUCHSCREEN"), 0)
+        self.assertEqual(self.count(devices, "WIRELESS"), 0)
+        self.assertEqual(self.count(devices, "NETWORK"), 4)
+        self.assertEqual(self.count(devices, "BLUETOOTH"), 0)
+        self.assertEqual(self.count(devices, "CAPTURE"), 0)
+        self.assertEqual(self.count(devices, "RAID"), 2)
+        self.assertEqual(self.count(devices, "DISK"), 9)
+        self.assertEqual(len(devices), 46)
 
     def test_XEON(self):
         devices = self.parse("XEON")
@@ -819,7 +856,7 @@ E: UDEV_LOG=3
         # Ignore virtual devices created by Dell iDRAC manager
         # See https://bugs.launchpad.net/bugs/1308702
         devices = self.parse("DELL_IDRAC")
-        self.assertEqual(len(devices), 243)
+        self.assertEqual(len(devices), 244)
         self.assertEqual(self.count(devices, "CDROM"), 1)
         self.assertEqual(self.count(devices, "DISK"), 2)
         self.assertEqual(self.count(devices, "FLOPPY"), 0)
@@ -883,6 +920,14 @@ E: UDEV_LOG=3
         devices = self.parse("IBM_s390x_DASD")
         self.assertEqual(len(devices), 8)
         self.assertEqual(self.count(devices, "DISK"), 3)
+
+    def test_MELLANOX_40GBPS(self):
+        # An IBM Power S822LC with a 40 Gbps Mellanox NIC reported too few
+        # network devices because one device's name (enP8p1s0) was a
+        # substring of another (enP8p1s0d1), and was therefore ignored. See
+        # https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1675091
+        devices = self.parse("MELLANOX_40GBPS")
+        self.assertEqual(self.count(devices, "NETWORK"), 8)
 
     def verify_devices(self, devices, expected_device_list):
         """

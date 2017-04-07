@@ -205,6 +205,8 @@ class UdevadmDevice(object):
                 devtype = self._environment["DEVTYPE"]
                 if devtype in ("wlan", "wimax"):
                     return "WIRELESS"
+                elif devtype == "wwan":
+                    return "WWAN"
             # Ralink and realtek SDIO wireless
             if "INTERFACE" in self._environment:
                 if (self.driver and
@@ -424,12 +426,18 @@ class UdevadmDevice(object):
                     # A QEMU/KVM virtual disk, but should be treated
                     # as DISK nonetheless
                     return "DISK"
-                if self.driver == 'nvme' and self.bus == 'pci':
+                if self.driver == 'nvme' and self.bus in ('pci', 'nvme'):
                     # NVMe device in PCIe bus, this should also be
                     # treated as DISK as it presents block devices
                     # we need to test, and is a valid disk device
                     # we need to report.
                     return "DISK"
+                if '/dev/mapper' in self._environment.get('DEVLINKS', ''):
+                    if "ID_FS_TYPE" in self._environment:
+                        if self._environment["ID_FS_TYPE"] != 'swap':
+                            return "DISK"
+                    else:
+                        return "DISK"
                 if self.driver == 'dasd-eckd':
                     # IBM s390x DASD device types
                     return "DISK"
@@ -496,11 +504,15 @@ class UdevadmDevice(object):
     def driver(self):
         if "DRIVER" in self._environment:
             return self._environment["DRIVER"]
-        # Check parent device for driver
+        # Check parent devices for driver
         if self._stack:
             parent = self._stack[-1]
             if "DRIVER" in parent._environment:
                 return parent._environment["DRIVER"]
+            if self.bus == 'nvme' and parent._stack:
+                parent = parent._stack[-1]
+                if "DRIVER" in parent._environment:
+                    return parent._environment["DRIVER"]
         return None
 
     @property
@@ -560,8 +572,11 @@ class UdevadmDevice(object):
         if match:
             return int(match.group("product_id"), 16)
         # disk
-        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
             parent = self._stack[-1]
+            return parent.product_id
+        elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
+            parent = self._stack[-2]
             return parent.product_id
         # canbus
         if "DEVLINKS" in self._environment:
@@ -597,8 +612,11 @@ class UdevadmDevice(object):
                 vendor_id = 9
             return vendor_id
         # disk
-        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
             parent = self._stack[-1]
+            return parent.vendor_id
+        elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
+            parent = self._stack[-2]
             return parent.vendor_id
         # canbus
         if "DEVLINKS" in self._environment:
@@ -619,8 +637,11 @@ class UdevadmDevice(object):
             pci_subsys_id = self._environment["PCI_SUBSYS_ID"]
             subvendor_id, subproduct_id = pci_subsys_id.split(":")
             return int(subproduct_id, 16)
-        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
             parent = self._stack[-1]
+            return parent.subproduct_id
+        elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
+            parent = self._stack[-2]
             return parent.subproduct_id
         return None
 
@@ -636,8 +657,11 @@ class UdevadmDevice(object):
             pci_subsys_id = self._environment["PCI_SUBSYS_ID"]
             subvendor_id, subproduct_id = pci_subsys_id.split(":")
             return int(subvendor_id, 16)
-        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
             parent = self._stack[-1]
+            return parent.subvendor_id
+        elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
+            parent = self._stack[-2]
             return parent.subvendor_id
         return None
 
@@ -677,8 +701,10 @@ class UdevadmDevice(object):
         elif (self._environment.get("DEVTYPE") == "disk" and
                 "ID_MODEL_ENC" in self._environment):
             return decode_id(self._environment["ID_MODEL_ENC"])
-        elif self.driver == "nvme" and self.bus == 'pci' and self._stack:
-            parent = self._stack[-1]
+        elif self.driver == "nvme" and self.bus in ('pci', 'misc'):
+            return self.name
+        elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
+            parent = self._stack[-2]
             if parent.product:
                 return parent.product
             else:
@@ -747,6 +773,8 @@ class UdevadmDevice(object):
             if "canbus" in self._environment["DEVLINKS"]:
                 if "ID_MODEL_ENC" in self._environment:
                     return decode_id(self._environment["ID_MODEL_ENC"])
+            if "/dev/mapper" in self._environment["DEVLINKS"]:
+                return self.name
 
         return None
 
@@ -780,8 +808,11 @@ class UdevadmDevice(object):
 
         if "ID_VENDOR_FROM_DATABASE" in self._environment:
             return self._environment["ID_VENDOR_FROM_DATABASE"]
-        if self.driver == "nvme" and self.bus == 'pci' and self._stack:
+        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
             parent = self._stack[-1]
+            return parent.vendor
+        elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
+            parent = self._stack[-2]
             return parent.vendor
 
         # bluetooth (if USB base class is vendor specific)
@@ -820,7 +851,7 @@ class UdevadmDevice(object):
     def interface(self):
         if self._interface is not None:
             return self._interface
-        if self.category in ("NETWORK", "WIRELESS"):
+        if self.category in ("NETWORK", "WIRELESS", "WWAN"):
             if "INTERFACE" in self._environment:
                 return self._environment["INTERFACE"]
             else:
@@ -831,7 +862,7 @@ class UdevadmDevice(object):
     def mac(self):
         if self._mac is not None:
             return self._mac
-        if self.category in ("NETWORK", "WIRELESS"):
+        if self.category in ("NETWORK", "WIRELESS", "WWAN"):
             if "ID_NET_NAME_MAC" in self._environment:
                 mac = self._environment["ID_NET_NAME_MAC"][3:]
                 return ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
@@ -876,6 +907,13 @@ class UdevadmParser(object):
         if device.major == "94":
             return False
 
+        # Keep /dev/mapper devices (non swap)
+        if '/dev/mapper' in device._environment.get('DEVLINKS', ''):
+            if "ID_FS_TYPE" in device._environment:
+                if device._environment["ID_FS_TYPE"] == 'swap':
+                    return True
+            return False
+
         # Ignore devices without bus information
         if not device.bus:
             return True
@@ -888,7 +926,7 @@ class UdevadmParser(object):
         # Do not ignore nvme devices on the pci bus, these are to be treated
         # as disks (categorization is done elsewhere). Note that the *parent*
         # device will have no category, though it's not ignored per se.
-        if device.bus == 'pci' and device.driver == 'nvme':
+        if device.bus in ('pci', 'nvme') and device.driver == 'nvme':
             return False
         # Do not ignore eMMC drives (pad.lv/1522768)
         if ("ID_PART_TABLE_TYPE" in device._environment and
@@ -1043,21 +1081,38 @@ class UdevadmParser(object):
                     self.devices[device._raw_path] = device
             stack.append(device)
 
+        dev_mapper_devices = []
+        for d in self.devices.values():
+            if d.category == 'DISK':
+                if '/dev/mapper' in d._environment.get('DEVLINKS', ''):
+                    if "ID_FS_TYPE" in d._environment:
+                        if d._environment["ID_FS_TYPE"] != 'swap':
+                            dev_mapper_devices.append(d)
+                    else:
+                        dev_mapper_devices.append(d)
+
         for device in list(self.devices.values()):
-            if device.category in ("NETWORK", "WIRELESS", "OTHER"):
+            if device.category in ("NETWORK", "WIRELESS", "WWAN", "OTHER"):
                 dev_interface = [
                     d for d in self.devices.values()
-                    if d.category in ("NETWORK", "WIRELESS") and
+                    if d.category in ("NETWORK", "WIRELESS", "WWAN") and
                     device._raw_path != d._raw_path and
-                    device._raw_path in d._raw_path
+                    device._raw_path + '/' in d._raw_path
                 ]
                 if dev_interface:
                     dev_interface = dev_interface.pop()
+                    if dev_interface.interface == 'UNKNOWN':
+                        continue
                     dev_interface.bus = device.bus
                     dev_interface.product_id = device.product_id
                     dev_interface.vendor_id = device.vendor_id
                     dev_interface.subproduct_id = device.subproduct_id
                     dev_interface.subvendor_id = device.subvendor_id
+                    self.devices.pop(device._raw_path, None)
+            # If dev/mapper list devices then they take precedence over the
+            # other block devices
+            if dev_mapper_devices and device.category == 'DISK':
+                if device not in dev_mapper_devices:
                     self.devices.pop(device._raw_path, None)
 
         [result.addDevice(device) for device in self.devices.values()]
@@ -1092,10 +1147,10 @@ def known_to_be_video_device(vendor_id, product_id, pci_class, pci_subclass):
 
 class UdevResult(object):
     def __init__(self):
-        self.devices = {"devices": []}
+        self.devices = []
 
     def addDevice(self, device):
-        self.devices["devices"].append(device)
+        self.devices.append(device)
 
 
 def parse_udevadm_output(output, lsblk=None, bits=None):
