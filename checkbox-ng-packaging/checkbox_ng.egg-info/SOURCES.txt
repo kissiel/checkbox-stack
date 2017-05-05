@@ -40,6 +40,7 @@ contrib/com.canonical.certification.PlainBox1.service
 docs/bugs.rst
 docs/conf.py
 docs/configs.rst
+docs/custom-app.rst
 docs/index.rst
 docs/intro.rst
 docs/launcher-tutorial.rst
