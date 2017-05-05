@@ -27,7 +27,7 @@ mandatory_include:
     udev-summary_attachment
     lsmod_attachment
     miscellanea/get_make_and_model
-    miscellanea/get_maas_version
+    miscellanea/get_maas_version               certification-status=blocker
     miscellanea/efi_boot_mode                  certification-status=blocker
     miscellanea/efi_pxeboot                    certification-status=non-blocker
     miscellanea/cpus_are_not_samples
@@ -39,7 +39,8 @@ include:
     info/hdparm_.*.txt                         certification-status=non-blocker
     benchmarks/disk/hdparm-read_.*
     benchmarks/disk/hdparm-cache-read_.*
-     cpu/clocktest                              certification-status=blocker
+    cpu/purely_id                              certification-status=non-blocker
+    cpu/clocktest                              certification-status=blocker
     cpu/scaling_test                           certification-status=blocker
     cpu/scaling_test-log-attach                certification-status=non-blocker
     cpu/maxfreq_test                           certification-status=blocker
@@ -65,6 +66,7 @@ include:
     usb/detect                                 certification-status=non-blocker
     usb/storage-preinserted                    certification-status=blocker
     usb3/storage-preinserted                   certification-status=blocker
+    virtualization/verify_lxd                  certification-status=non-blocker
     virtualization/kvm_check_vm                certification-status=blocker
     info/kvm_output                            certification-status=non-blocker
 bootstrap_include:
