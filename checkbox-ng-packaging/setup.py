@@ -55,7 +55,7 @@ else:
 
 setup(
     name="checkbox-ng",
-    version="0.33.0rc1",
+    version="0.33.0rc2",
     url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",
@@ -76,7 +76,7 @@ setup(
             'certification='
             'checkbox_ng.certification:CertificationTransport',
             'submission-service='
-            'checkbox_ng.certification:CertificationTransport',
+            'checkbox_ng.certification:SubmissionServiceTransport',
         ],
     },
     include_package_data=True)
