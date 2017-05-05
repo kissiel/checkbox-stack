@@ -58,8 +58,10 @@ def device_rotation(name):
     Check the device queue/rotational parameter to determine if it's a spinning
     device or a non-spinning device, which indicates it's an SSD.
     """
-    with open('/sys/block/%s/device/block/%s/queue/rotational' % (name, name),
-              "rt") as f:
+    path = '/sys/block/{0}/device/block/{0}/queue/rotational'.format(name)
+    if not os.path.exists(path):
+        return 'no'
+    with open(path, "rt") as f:
         if f.read(1) == '1':
             return 'yes'
 
@@ -135,21 +137,20 @@ def smart_support(name):
                     break
     return supported
 
-for path in glob('/sys/block/*/device'):
-    name = re.sub('.*/(.*?)/device', '\g<1>', path)
+for path in glob('/sys/block/*/device') + glob('/sys/block/*/dm'):
+    name = re.sub('.*/(.*?)/(device|dm)', '\g<1>', path)
     state = device_state(name)
     usb2 = usb_support(name, 2.00)
     usb3 = usb_support(name, 3.00)
     rotation = device_rotation(name)
     smart = smart_support(name)
-    # FIXME: Remove leading block device name when the requirements
-    # checking code in Checkbox allows it
     print("""\
-%(name)s_state: %(state)s
-%(name)s_usb2: %(usb2)s
-%(name)s_usb3: %(usb3)s
-%(name)s_rotation: %(rotation)s
-%(name)s_smart: %(smart)s
+name: %(name)s
+state: %(state)s
+usb2: %(usb2)s
+usb3: %(usb3)s
+rotation: %(rotation)s
+smart: %(smart)s
 """ % {"name": name,
        "state": state,
        "usb2": usb2,

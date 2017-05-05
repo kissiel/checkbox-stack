@@ -1,0 +1,253 @@
+#!/usr/bin/env python3
+# Copyright 2017 Canonical Ltd.
+# All rights reserved.
+#
+# Written by:
+#    Authors: Jonathan Cave <jonathan.cave@canonical.com>
+
+import json
+import io
+import logging
+import os
+import sys
+import time
+
+from guacamole import Command
+import requests
+import requests_unixsocket
+
+from collections import namedtuple
+
+
+SNAPD_BASE_URL = 'http+unix://%2Frun%2Fsnapd.socket'
+
+
+class SnapdQuery(Command):
+
+    def __init__(self):
+        self._session = requests_unixsocket.Session()
+
+    def get(self, path):
+        r = self._session.get(SNAPD_BASE_URL + path)
+        if r.status_code != requests.codes.ok:
+            logging.error("Got error {} attempting to access {}".format(
+                          r.status_code, path))
+            sys.exit(1)
+        return r
+
+    def post(self, path, data=None):
+        res = self._session.post(SNAPD_BASE_URL + path, data=data)
+        if not res.ok:
+            logging.error("Got error %i attempting to access %s",
+                          res.status_code, path)
+            sys.exit(1)
+        return res.json()
+
+
+class AssertionQuery(SnapdQuery):
+
+    prefix = '/v2/assertions/'
+
+    def convert(self, assertion):
+        """ Super naive Assertion parser
+
+        No attempt to handle assertions with a body. Discards signatures based
+        on lack of colon characters.
+        """
+        data = self.get(self.prefix + assertion)
+        count = int(data.headers['X-Ubuntu-Assertions-Count'])
+        if count > 0:
+            for line in io.StringIO(data.text):
+                if line.strip() == "":
+                    print()
+                if ':' in line:
+                    print(line.strip())
+        return count
+
+
+class ModelAssertion(AssertionQuery):
+
+    def invoked(self, ctx):
+        count = self.convert('model')
+        if count == 0:
+            # Print a dummy assertion - not nice but really trick to use
+            # plainbox resources without some defualt value
+            print('type: model')
+            print('authority-id: None')
+            print('model: None')
+            print()
+
+
+class SerialAssertion(AssertionQuery):
+
+    def invoked(self, ctx):
+        count = self.convert('serial')
+        if count == 0:
+            # Print a dummy assertion - not nice but really trick to use
+            # plainbox resources without some defualt value
+            print('type: serial')
+            print('authority-id: None')
+            print('serial: None')
+            print()
+
+
+class Assertions(Command):
+
+    sub_commands = (
+        ('model', ModelAssertion),
+        ('serial', SerialAssertion),
+    )
+
+
+class Snaps(SnapdQuery):
+
+    prefix = '/v2/snaps'
+
+    def invoked(self, ctx):
+        data = self.get(self.prefix).json()
+
+        for snap in data['result']:
+            def print_field(key):
+                val = snap[key]
+                if val != "":
+                    print("{}: {}".format(key, val))
+            #  Whitelist of information that is of interest
+            keys = ['name', 'type', 'channel', 'version', 'revision',
+                    'developer', 'install-date', 'confinement', 'devmode']
+            for f in keys:
+                print_field(f)
+            print()
+
+
+class InterfacesQuery(SnapdQuery):
+
+    prefix = '/v2/interfaces'
+
+
+class Endpoints(InterfacesQuery):
+
+    def invoked(self, ctx):
+        data = self.get(self.prefix).json()
+
+        for plug in data['result']['plugs']:
+            def print_field(key):
+                val = plug[key]
+                if val != '':
+                    print('{}: {}'.format(key, val))
+            keys = ['snap', 'interface']
+            for f in keys:
+                print_field(f)
+            print('type: plug')
+            print('name: {}'.format(plug['plug']))
+            print()
+
+        for slot in data['result']['slots']:
+            def print_field(key):
+                val = slot[key]
+                if val != '':
+                    print('{}: {}'.format(key, val))
+            keys = ['snap', 'interface']
+            for f in keys:
+                print_field(f)
+            print('type: slot')
+            print('name: {}'.format(slot['slot']))
+            print()
+
+Connection = namedtuple(
+    'Connection',
+    ['target_snap', 'target_slot', 'plug_snap', 'plug_plug'])
+
+
+class Connections(InterfacesQuery):
+
+    def invoked(self, ctx):
+        for conn in self.get_connections():
+            print('slot: {}:{}'.format(conn.target_snap, conn.target_slot))
+            print('plug: {}:{}'.format(conn.plug_snap, conn.plug_plug))
+            print()
+
+    def get_connections(self):
+        data = self.get('/v2/interfaces').json()['result']
+        connections = []
+        if data['plugs'] is not None:
+            for plug in data['plugs']:
+                if 'connections' in plug:
+                    for con in plug['connections']:
+                        connections.append(Connection(
+                            con['snap'], con['slot'],
+                            plug['snap'], plug['plug']))
+        return connections
+
+
+class Connect(Connections):
+    """
+    Connect 'current snap' to other snaps.
+
+    The syntax of the command is A:B:C, where:
+        A - plug to be connected
+        B - target snap (snap the plug will connect to)
+        C - target slot (slot to connect to)
+
+        Note that originating snap is implied. $SNAP_NAME is used.
+
+    Example:
+
+        $ sudo snapd_resource interfaces connect \
+        udisks2:udisks2:service
+
+    Note that the program needs sudo to connect plugs.
+    """
+
+    def register_arguments(self, parser):
+        parser.add_argument(
+            'connection', nargs='+', default=[],
+            metavar='plug:target_snap:target_slot')
+
+    def invoked(self, ctx):
+        for conn in [spec.split(':') for spec in ctx.args.connection]:
+            if len(conn) != 3:
+                raise SystemExit("Bad connection description")
+            assert os.environ['SNAP_NAME']
+            snap = os.environ['SNAP_NAME']
+            existing_connections = self.get_connections()
+            new_connection = Connection(
+                target_snap=conn[1], target_slot=conn[2],
+                plug_snap=snap, plug_plug=conn[0])
+            if new_connection not in existing_connections:
+                self.connect(new_connection)
+
+    def connect(self, con):
+        json_data = json.dumps({
+            'action': 'connect',
+            'slots': [{'snap': con.target_snap, 'slot': con.target_slot}],
+            'plugs': [{'snap': con.plug_snap, 'plug': con.plug_plug}]
+        })
+        res = self.post('/v2/interfaces', json_data)
+        ready = False
+        while not ready:
+            # busy wait until snapd reports connection job as finised
+            time.sleep(0.5)
+            con_res = self.get('/v2/changes/{}'.format(res['change']))
+            ready = con_res.json()['result']['ready']
+
+
+class Interfaces(Command):
+
+    sub_commands = (
+        ('endpoints', Endpoints),
+        ('connections', Connections),
+        ('connect', Connect),
+    )
+
+
+class SnapdResource(Command):
+
+    sub_commands = (
+        ('assertions', Assertions),
+        ('snaps', Snaps),
+        ('interfaces', Interfaces),
+    )
+
+
+if __name__ == '__main__':
+    SnapdResource().main()
