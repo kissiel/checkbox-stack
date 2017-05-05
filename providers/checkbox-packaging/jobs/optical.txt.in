@@ -5,10 +5,7 @@ requires: device.category == 'CDROM'
 estimated_duration: 1.2
 _summary: Displays discovered optical drives
 _description: Detects optical drives (CD/DVD) attached to the system.
-command:
- cat <<'EOF' | run_templates -t -s 'udev_resource | filter_templates -w "category=CDROM"' | sed '/^$/d'
- $vendor $product
- EOF
+command: udev_resource -l CDROM
 
 unit: template
 template-resource: device
@@ -19,7 +16,7 @@ id: optical/read_{name}
 estimated_duration: 120.0
 user: root
 command: optical_read_test /dev/{name}
-description:
+_description:
  PURPOSE:
      This test will check your {product} device's ability to read CD media
  STEPS:
@@ -114,7 +111,7 @@ requires:
 estimated_duration: 120.0
 user: root
 command: set -o pipefail; optical_write_test /dev/{name} dvd | ansi_parser
-description:
+_description:
  PURPOSE:
      This test will check your system's {product} writing capabilities. This test requires a blank DVD-R or DVD+R.
  STEPS:
@@ -136,7 +133,7 @@ requires:
  optical_drive_{name}.dvd_write == 'supported'
 user: root
 command: set -o pipefail; optical_write_test /dev/{name} dvd | ansi_parser
-description:
+_description:
  This is an automated version of optical/dvd-write. It assumes you have already inserted a data DVD into your {product} optical drive prior to running Checkbox.
 
 plugin: user-interact-verify
@@ -167,7 +164,7 @@ requires:
  optical_drive_{name}.bd_read == "supported"
 user: root
 command: optical_read_test /dev/{name}
-description:
+_description:
  PURPOSE:
   This test will check your {product} device's ability to read Blu-Ray (BD) media
  STEPS:
@@ -189,7 +186,7 @@ requires:
 user: root
 command: set -o pipefail; optical_write_test /dev/{name} bd | ansi_parser
 estimated_duration: 120.00
-description:
+_description:
  PURPOSE:
   This test will check your {product} device's ability to write Blu-Ray (BD) media
  STEPS:
