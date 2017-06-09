@@ -2,6 +2,7 @@
 checkbox-support-fwts_test = checkbox_support.scripts.fwts_test:main
 checkbox-support-network = checkbox_support.scripts.network:main
 checkbox-support-run_watcher = checkbox_support.scripts.run_watcher:main
+checkbox-support-usb_read_write = checkbox_support.scripts.usb_read_write:run_read_write_test
 
 [plainbox.parsers]
 bto = checkbox_support.parsers.image_info:parse_bto_attachment_output

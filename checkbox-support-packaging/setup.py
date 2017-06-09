@@ -38,7 +38,7 @@ with open(os.path.join(base_dir, "README.rst"), encoding="UTF-8") as stream:
 
 setup(
     name="checkbox-support",
-    version="0.34.0",
+    version="0.35.0rc2",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     test_suite='checkbox_support.tests.test_suite',
@@ -82,6 +82,8 @@ setup(
                 "checkbox_support.scripts.fwts_test:main"),
             ("checkbox-support-network="
                 "checkbox_support.scripts.network:main"),
+            ("checkbox-support-usb_read_write="
+                "checkbox_support.scripts.usb_read_write:run_read_write_test"),
         ],
     },
 )
