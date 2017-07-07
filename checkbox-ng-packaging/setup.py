@@ -55,7 +55,7 @@ else:
 
 setup(
     name="checkbox-ng",
-    version="0.33.0",
+    version="0.34.0rc1",
     url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",
@@ -68,9 +68,6 @@ setup(
     entry_points={
         'console_scripts': [
             'checkbox-cli=checkbox_ng.launcher.checkbox_cli:main',
-            'checkbox=checkbox_ng.main:main',
-            'checkbox-submit=checkbox_ng.main:submit',
-            'checkbox-launcher=checkbox_ng.main:launcher',
         ],
         'plainbox.transport': [
             'certification='

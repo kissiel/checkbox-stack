@@ -42,12 +42,12 @@ checkbox-cli startprovider
 
 ``startprovider`` subcommand creates a new provider, e.g.::
 
-    $ checkbox-cli startprovider 2016.com.acme:example
+    $ checkbox-cli startprovider com.acme:example
 
 The command will also add example units to that provider, to create an empty
 provider, use ``--empty`` option, e.g.::
 
-    $ checkbox-cli --empty startprovider 2016.com.acme:another-example
+    $ checkbox-cli --empty startprovider com.acme:another-example
 
 
 checkbox-cli list
@@ -104,7 +104,7 @@ Example::
     with new line and tab respectively.
 
     When using own formatting, the jobs are not suffixed with a new line - you
-    have to explictly use it.
+    have to explicitly use it.
 
 
 checkbox-cli list-bootstrapped
@@ -112,14 +112,14 @@ checkbox-cli list-bootstrapped
 
 This special command list all the jobs that would be run on the device after
 the boostrapping phase, i.e. after all the resource jobs are run, and all
-of the templates were instatntiated.
+of the templates were instantiated.
 
 It requires an argument being the test plan for which the bootstrapping should
 execute.
 
 Example::
 
-    $ checkbox-cli list-bootstrapped 2013.com.canonical.certification::default
+    $ checkbox-cli list-bootstrapped com.canonical.certification::default
 
 
 checkbox-cli launcher
@@ -146,15 +146,15 @@ checkbox-cli run
 
 To just run one test plan, use the test plan's id as an argument, e.g.::
 
-    $ checkbox-cli run 2013.com.canonical.certification::smoke
+    $ checkbox-cli run com.canonical.certification::smoke
 
 To run a hand-picked set of jobs, use regex pattern(s) as arguments. Jobs
-with id matching the expresion will be run, e.g.::
+with id matching the expression will be run, e.g.::
 
-    $ checkbox-cli run 2016.com.acme:.*
+    $ checkbox-cli run com.acme:.*
 
 .. note::
-    The command above runs all jobs which id begins with ``2016.com.acme:``
+    The command above runs all jobs which id begins with ``com.acme:``
     will be run
 
 You can use multiple patterns to match against, e.g.::
