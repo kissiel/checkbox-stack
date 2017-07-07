@@ -1,30 +1,30 @@
-plugin: manual
-category_id: 2013.com.canonical.plainbox::led
 id: led/power
+_summary: Power LED behavior when powered
+_purpose:
+ Check power led is on when system is powered on
+_steps:
+ 1. Check power led when system is powered on
+_verification:
+ Power led is on when system is powered on
+plugin: manual
+category_id: com.canonical.plainbox::led
 estimated_duration: 15.0
-_description:
- PURPOSE:
-     Power LED verification
- STEPS:
-     1. Power LED should be on while device is switched on
- VERIFICATION:
-     Does the power LED light as expected?
 
-plugin: manual
-category_id: 2013.com.canonical.plainbox::led
 id: led/power-blink-suspend
-estimated_duration: 30.0
-depends: suspend/suspend_advanced
-_description:
- PURPOSE:
-     Power LED verification
- STEPS:
-     1. The Power LED should blink or change color while the system is suspended
- VERIFICATION:
-     Did the Power LED blink or change color while the system was suspended for the previous suspend test?
+_summary: Power LED behavior when suspended
+_purpose:
+ Check power led is blinking when system is in suspend
+_steps:
+ 1. Suspend the system
+ 2. Check power led when system is in suspend
+_verification:
+ Power led is blinking when system is in suspend
+plugin: manual
+category_id: com.canonical.plainbox::led
+estimated_duration: 180
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/suspend
 estimated_duration: 30.0
 depends: suspend/suspend_advanced
@@ -39,7 +39,7 @@ _description:
      Did the Suspend LED blink or change color while the system was suspended?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/battery-charging
 estimated_duration: 120.0
 _description:
@@ -52,7 +52,7 @@ _description:
      Did the battery indicator LED turn orange?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/battery-charged
 estimated_duration: 240.0
 _description:
@@ -66,7 +66,7 @@ _description:
      Does the orange battery LED shut off when system is fully charged?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/battery-low
 estimated_duration: 30.0
 _description:
@@ -79,7 +79,7 @@ _description:
      Does the LED light orange when battery is low?
 
 plugin: user-interact-verify
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/hdd
 estimated_duration: 30.0
 command: led_hdd_test
@@ -93,7 +93,7 @@ _description:
      Did the HDD LED light?
 
 plugin: user-interact-verify
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/numeric-keypad
 estimated_duration: 30.0
 command: keyboard_test
@@ -109,7 +109,7 @@ _description:
      2. Numbers should only be entered in the keyboard verification window when the LED is on
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/caps-lock
 estimated_duration: 30.0
 _description:
@@ -122,7 +122,7 @@ _description:
      Did the Cap Keys LED light as expected?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/wlan
 depends: keys/wireless
 estimated_duration: 60.0
@@ -137,7 +137,7 @@ _description:
      Did the WLAN LED turn on or change color as expected?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/wlan-disabled
 estimated_duration: 30.0
 depends: keys/wireless
@@ -151,24 +151,28 @@ _description:
  VERIFICATION:
      Did the WLAN LED turn off or change color as expected?
 
-plugin: manual
-category_id: 2013.com.canonical.plainbox::led
 id: led/bluetooth
-estimated_duration: 60.0
-depends: bluetooth/detect-output
-_description:
- PURPOSE:
-     Validate that the Bluetooth LED turns on and off when BT is enabled/disabled
- STEPS:
-     1. Switch bluetooth off from a hardware switch (if present)
-     2. Switch bluetooth back on
-     3. Switch bluetooth off from the panel applet
-     4. Switch bluetooth back on
- VERIFICATION:
-     Did the bluetooth LED turn off and on twice?
+_summary: Bluetooth LED behavior
+_purpose:
+ Check bluetooth LED behavior is correct
+_steps:
+ 1. Run following command to start bluetoothctl console:
+  sudo bluetoothctl -a
+ ***Following steps are run in bluetoothctl console***
+ 2. Power on the device:
+  power on
+ 3. Power off the device:
+  power off
+ 4. Quit bluetoothctl console
+  quit
+_verification:
+ Bluetooth LED is turned on in step 2, and turned off in step 3.
+plugin: manual
+category_id: com.canonical.plainbox::led
+estimated_duration: 180
 
 plugin: user-interact-verify
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/camera
 estimated_duration: 20.0
 depends: camera/detect
@@ -183,7 +187,7 @@ _description:
      Did the camera LED light?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/touchpad
 estimated_duration: 30.0
 _description:
@@ -198,7 +202,7 @@ _description:
      3. When the LED is off, the mouse pointer should not move on touchpad usage
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/wireless
 estimated_duration: 120.0
 _description:
@@ -215,7 +219,7 @@ _description:
      Did the WLAN/Bluetooth LED light as expected?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/mute
 depends: keys/mute
 estimated_duration: 30.0
@@ -230,7 +234,7 @@ _description:
      Did the Audio LED turn on and off or change color as expected?
 
 plugin: manual
-category_id: 2013.com.canonical.plainbox::led
+category_id: com.canonical.plainbox::led
 id: led/microphone-mute
 estimated_duration: 30.0
 depends: keys/microphone-mute
