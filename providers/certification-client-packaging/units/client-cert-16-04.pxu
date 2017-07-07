@@ -19,7 +19,6 @@ include:
     dpkg
     efi
     environment
-    gconf
     lsb
     meminfo
     mobilebroadband
@@ -127,7 +126,6 @@ include:
     monitor/2_svideo_.*                                    certification-status=blocker
     monitor/2_vga_.*                                       certification-status=blocker
     monitor/2_multi-head_.*                                certification-status=blocker
-    input/accelerometer_verify                             certification-status=non-blocker
     input/accelerometer                                    certification-status=non-blocker
     input/pointing_.*                                      certification-status=blocker
     input/clicking_.*                                      certification-status=blocker
@@ -339,7 +337,6 @@ include:
     miscellanea/dmitest_client
     benchmarks/disk/hdparm-read_.*
     benchmarks/disk/hdparm-cache-read_.*
-    benchmarks/graphics/gtkperf
     cpu/scaling_test                                       certification-status=blocker
     cpu/scaling_test-log-attach
     cpu/maxfreq_test                                       certification-status=blocker
@@ -391,7 +388,7 @@ bootstrap_include:
     fwts
     graphics_card
 mandatory_include:
-    2013.com.canonical.plainbox::collect-manifest
+    com.canonical.plainbox::collect-manifest
     miscellanea/device_check
     # Meta-job to include required resources, don't remove.
     miscellanea/submission-resources
