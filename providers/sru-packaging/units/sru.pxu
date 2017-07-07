@@ -1,5 +1,5 @@
 plugin: shell
-category_id: 2013.com.canonical.plainbox::graphics
+category_id: com.canonical.plainbox::graphics
 id: graphics/screenshot_opencv_validation
 requires: package.name == 'python-opencv'
 environ: EXTERNAL_WEBCAM_DEVICE
@@ -14,7 +14,7 @@ _description:
  Check that the screenshot matches the original file using OpenCV ORB detection.
 
 plugin: attachment
-category_id: 2013.com.canonical.plainbox::graphics
+category_id: com.canonical.plainbox::graphics
 id: screenshot_opencv_validation.jpg
 after: graphics/screenshot_opencv_validation
 command: [ -f ${PLAINBOX_SESSION_SHARE}/screenshot_opencv_validation.jpg ] && base64 ${PLAINBOX_SESSION_SHARE}/screenshot_opencv_validation.jpg
@@ -22,7 +22,7 @@ _description: Attaches the screenshot captured in graphics/screenshot_opencv_val
 _summary: Attach the screenshot captured for the automatically validated screenshot test
 
 id: sru
-_name: All SRU Tests
+_name: All SRU Tests (Ubuntu Desktop)
 unit: test plan
 _description:
     This test plan contains tests that are useful for validating a Stable
