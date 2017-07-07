@@ -115,7 +115,7 @@ Next let's define a Job that uses that resource.
 ::
 
     plugin: shell
-    category_id: 2013.com.canonical.plainbox::power-management
+    category_id: com.canonical.plainbox::power-management
     id: power-management/rtc
     requires:
       rtc.state == 'supported'
@@ -229,12 +229,12 @@ attribute equal to anything but ``dependent``.
 Now let's assume that we have exactly two resources in the ``xinput`` group::
 
     device_class: XITouchClass
-    touch_mode: dependant
+    touch_mode: dependent
 
     device_class: XITouchClass
     touch_mode: something else
 
-Now, this expression will evaluate to ``True``, as the second resource fulfils
+Now, this expression will evaluate to ``True``, as the second resource fulfills
 the requirements. Is this what the test designer had expected? That's hard to
 say. The problem here is that this expression can be understood as *at least
 one resource isn't something* **or** *all resources weren't something*. Both
