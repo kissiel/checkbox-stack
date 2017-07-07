@@ -4,6 +4,7 @@ README.rst
 setup.cfg
 setup.py
 checkbox_support/__init__.py
+checkbox_support/bt_helper.py
 checkbox_support/interactive_cmd.py
 checkbox_support/log_watcher.py
 checkbox_support/udev.py
@@ -29,9 +30,7 @@ checkbox_support/lib/bit.py
 checkbox_support/lib/conversion.py
 checkbox_support/lib/dmi.py
 checkbox_support/lib/input.py
-checkbox_support/lib/path.py
 checkbox_support/lib/pci.py
-checkbox_support/lib/template.py
 checkbox_support/lib/tz.py
 checkbox_support/lib/usb.py
 checkbox_support/parsers/__init__.py
