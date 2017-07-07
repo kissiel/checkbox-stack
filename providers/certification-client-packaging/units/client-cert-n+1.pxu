@@ -19,7 +19,6 @@ include:
     dpkg
     efi
     environment
-    gconf
     lsb
     meminfo
     mobilebroadband
@@ -243,6 +242,6 @@ bootstrap_include:
     fwts
     graphics_card
 mandatory_include:
-    2013.com.canonical.plainbox::collect-manifest
+    com.canonical.plainbox::collect-manifest
     # Meta-job to include required resources, don't remove.
     miscellanea/submission-resources
