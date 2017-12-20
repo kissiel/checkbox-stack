@@ -23,14 +23,14 @@ unit: test plan
 _name: USB Type-C tests
 _description: USB Type-C tests
 include:
-    usb-c/c-to-a-adapter/hid                   certification-status=non-blocker
-    usb-c/c-to-a-adapter/insert                certification-status=non-blocker
-    usb-c/c-to-a-adapter/storage-automated     certification-status=non-blocker
-    usb-c/c-to-a-adapter/remove                certification-status=non-blocker
-    usb-c/hid                                  certification-status=non-blocker
-    usb-c/insert                               certification-status=non-blocker
-    usb-c/storage-automated                    certification-status=non-blocker
-    usb-c/remove                               certification-status=non-blocker
+    usb-c/c-to-a-adapter/hid                   certification-status=blocker
+    usb-c/c-to-a-adapter/insert                certification-status=blocker
+    usb-c/c-to-a-adapter/storage-automated     certification-status=blocker
+    usb-c/c-to-a-adapter/remove                certification-status=blocker
+    usb-c/hid                                  certification-status=blocker
+    usb-c/insert                               certification-status=blocker
+    usb-c/storage-automated                    certification-status=blocker
+    usb-c/remove                               certification-status=blocker
 
 id: after-suspend-usb-cert-full
 unit: test plan
@@ -49,6 +49,20 @@ include:
     suspend/usb3_insert_after_suspend                      certification-status=blocker
     suspend/usb3_storage_automated_after_suspend           certification-status=blocker
     suspend/usb3_remove_after_suspend                      certification-status=blocker
+
+id: after-suspend-usb-c-cert-full
+unit: test plan
+_name: USB Type-C tests (after suspend)
+_description: USB Type-C tests (after suspend)
+include:
+    after-suspend-manual-usb-c/c-to-a-adapter/hid                   certification-status=blocker
+    after-suspend-manual-usb-c/c-to-a-adapter/insert                certification-status=blocker
+    after-suspend-manual-usb-c/c-to-a-adapter/storage-automated     certification-status=blocker
+    after-suspend-manual-usb-c/c-to-a-adapter/remove                certification-status=blocker
+    after-suspend-manual-usb-c/hid                                  certification-status=blocker
+    after-suspend-manual-usb-c/insert                               certification-status=blocker
+    after-suspend-manual-usb-c/storage-automated                    certification-status=blocker
+    after-suspend-manual-usb-c/remove                               certification-status=blocker
 
 id: usb-cert-blockers
 unit: test plan
@@ -70,6 +84,20 @@ include:
     usb3/storage-automated                     certification-status=blocker
     usb3/remove                                certification-status=blocker
 
+id: usb-c-cert-blockers
+unit: test plan
+_name: USB Type-C tests (certification blockers only)
+_description: USB Type-C tests (certification blockers only)
+include:
+    usb-c/c-to-a-adapter/hid                   certification-status=blocker
+    usb-c/c-to-a-adapter/insert                certification-status=blocker
+    usb-c/c-to-a-adapter/storage-automated     certification-status=blocker
+    usb-c/c-to-a-adapter/remove                certification-status=blocker
+    usb-c/hid                                  certification-status=blocker
+    usb-c/insert                               certification-status=blocker
+    usb-c/storage-automated                    certification-status=blocker
+    usb-c/remove                               certification-status=blocker
+
 id: after-suspend-usb-cert-blockers
 unit: test plan
 _name: USB tests (after suspend, certification blockers only)
@@ -87,3 +115,45 @@ include:
     suspend/usb3_insert_after_suspend                      certification-status=blocker
     suspend/usb3_storage_automated_after_suspend           certification-status=blocker
     suspend/usb3_remove_after_suspend                      certification-status=blocker
+
+id: after-suspend-usb-c-cert-blockers
+unit: test plan
+_name: USB Type-C tests (after suspend, certification blockers only)
+_description: USB Type-C tests (after suspend, certification blockers only)
+include:
+    after-suspend-manual-usb-c/c-to-a-adapter/hid                   certification-status=blocker
+    after-suspend-manual-usb-c/c-to-a-adapter/insert                certification-status=blocker
+    after-suspend-manual-usb-c/c-to-a-adapter/storage-automated     certification-status=blocker
+    after-suspend-manual-usb-c/c-to-a-adapter/remove                certification-status=blocker
+    after-suspend-manual-usb-c/hid                                  certification-status=blocker
+    after-suspend-manual-usb-c/insert                               certification-status=blocker
+    after-suspend-manual-usb-c/storage-automated                    certification-status=blocker
+    after-suspend-manual-usb-c/remove                               certification-status=blocker
+
+id: usb-preinserted
+unit: test plan
+_name: Automated USB write/read/compare tests on storage devices
+_description: Automated USB write/read/compare tests on storage devices
+include:
+    usb/storage-preinserted
+
+id: after-suspend-usb-preinserted
+unit: test plan
+_name: After suspend automated USB write/read/compare tests on storage devices
+_description: After suspend automated USB write/read/compare tests on storage devices
+include:
+    after-suspend-usb/storage-preinserted
+
+id: usb3-preinserted
+unit: test plan
+_name: Automated USB 3 write/read/compare tests on storage devices
+_description: Automated USB 3 write/read/compare tests on storage devices
+include:
+    usb3/storage-preinserted
+
+id: after-suspend-usb3-preinserted
+unit: test plan
+_name: After suspend automated USB 3 write/read/compare tests on storage devices
+_description: After suspend automated USB 3 write/read/compare tests on storage devices
+include:
+    after-suspend-usb3/storage-preinserted
