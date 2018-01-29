@@ -38,7 +38,7 @@ with open(os.path.join(base_dir, "README.rst"), encoding="UTF-8") as stream:
 
 setup(
     name="checkbox-support",
-    version="0.36.0",
+    version="0.37.0.dev0",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     test_suite='checkbox_support.tests.test_suite',
@@ -49,15 +49,15 @@ setup(
     long_description=long_description,
     package_data={"checkbox_support": ["parsers/cputable"]},
     install_requires=[
-        'lxml >= 2.3',
         'pyparsing >= 2.0.0',
-    ] + (['configparser'] if sys.version_info.major == 2 else []),
+        'requests >= 1.0',
+    ] + (['configparser'] if sys.version_info.major == 2 else []) + (
+        ['requests_unixsocket >= 0.1.2']
+        if sys.version_info >= (3, 5) else []),
     include_package_data=True,
     entry_points={
         'plainbox.parsers': [
             "pactl-list=checkbox_support.parsers.pactl:parse_pactl_output",
-            ("submission=checkbox_support.parsers.submission:parse_submission"
-             "_text"),
             "udevadm=checkbox_support.parsers.udevadm:parse_udevadm_output",
             ("modprobe=checkbox_support.parsers.modprobe:parse_modprobe_d"
              "_output"),
@@ -84,6 +84,10 @@ setup(
                 "checkbox_support.scripts.network:main"),
             ("checkbox-support-usb_read_write="
                 "checkbox_support.scripts.usb_read_write:run_read_write_test"),
+            ("checkbox-support-snap_configuration="
+                "checkbox_support.scripts.snap_configuration:main"),
+            ("checkbox-support-nmea_test="
+                "checkbox_support.scripts.nmea_test:main"),
         ],
     },
 )
