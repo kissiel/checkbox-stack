@@ -29,7 +29,7 @@ plugin: attachment
 category_id: com.canonical.plainbox::graphics
 id: screenshot_opencv_validation.jpg
 after: graphics/screenshot_opencv_validation
-command: [ -f ${PLAINBOX_SESSION_SHARE}/screenshot_opencv_validation.jpg ] && base64 ${PLAINBOX_SESSION_SHARE}/screenshot_opencv_validation.jpg
+command: [ -f ${PLAINBOX_SESSION_SHARE}/screenshot_opencv_validation.jpg ] && cat ${PLAINBOX_SESSION_SHARE}/screenshot_opencv_validation.jpg
 _description: Attaches the screenshot captured in graphics/screenshot_opencv_validation.
 _summary: Attach the screenshot captured for the automatically validated screenshot test
 
@@ -90,8 +90,6 @@ include:
     1_screenshot_.*.jpg
     graphics/1_screenshot_fullscreen_video_.*
     1_screenshot_fullscreen_video_.*.jpg
-    graphics/screenshot_opencv_validation
-    screenshot_opencv_validation.jpg
     install/apt-get-gets-updates
     mediacard/sd-preinserted
     memory/info
@@ -107,35 +105,30 @@ include:
     power-management/fwts_wakealarm-log-attach
     usb/detect
     usb/storage-preinserted
-    wireless/wireless_scanning
-    wireless/wireless_connection_wpa_bg
-    wireless/wireless_connection_open_bg
-    wireless/wireless_connection_wpa_n
-    wireless/wireless_connection_open_n
+    wireless/wireless_scanning_.*
+    wireless/wireless_connection_wpa_bg_nm_.*
+    wireless/wireless_connection_open_bg_nm_.*
+    wireless/wireless_connection_wpa_n_nm_.*
+    wireless/wireless_connection_open_n_nm_.*
     suspend/audio_before_suspend
-    suspend/bluetooth_obex_send_before_suspend
     suspend/bluetooth_obex_browse_before_suspend
-    suspend/bluetooth_obex_get_before_suspend
     suspend/cpu_before_suspend
     suspend/network_before_suspend
     suspend/memory_before_suspend
     suspend/suspend_advanced_auto
-    suspend/suspend-single-log-check
     suspend/suspend-single-log-attach
     suspend/audio_after_suspend_auto
     suspend/network_resume_time_auto
     suspend/wifi_resume_time_auto
     suspend/usb_storage_preinserted_after_suspend
     suspend/record_playback_after_suspend_auto
-    suspend/bluetooth_obex_send_after_suspend_auto
     suspend/bluetooth_obex_browse_after_suspend_auto
-    suspend/bluetooth_obex_get_after_suspend_auto
     suspend/cpu_after_suspend_auto
     suspend/memory_after_suspend_auto
-    suspend/wireless_connection_after_suspend_wpa_bg_auto
-    suspend/wireless_connection_after_suspend_open_bg_auto
-    suspend/wireless_connection_after_suspend_wpa_n_auto
-    suspend/wireless_connection_after_suspend_open_n_auto
+    after-suspend-wireless/wireless_connection_wpa_bg_nm_.*
+    after-suspend-wireless/wireless_connection_open_bg_nm_.*
+    after-suspend-wireless/wireless_connection_wpa_n_nm_.*
+    after-suspend-wireless/wireless_connection_open_n_nm_.*
     suspend/gpu_lockup_after_suspend
     suspend/screenshot_after_suspend
     screenshot_after_suspend.jpg
