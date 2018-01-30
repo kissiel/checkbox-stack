@@ -24,9 +24,7 @@ else:
     # Inject mock modules so that we can build the
     # documentation without having the real stuff available
     from plainbox.vendor import mock
-    for mod_name in ['lxml', 'xlsxwriter', 'dbus', 'dbus.lowlevel',
-                     'dbus.exceptions', 'dbus._compat', 'dbus.service',
-                     '_dbus_bindings']:
+    for mod_name in ['xlsxwriter']:
         sys.modules[mod_name] = mock.Mock()
         print("Mocked {}".format(mod_name))
 try:
@@ -64,10 +62,6 @@ intersphinx_mapping.update(
         'python', 'http://docs.python.org/',
         '/usr/share/doc/python{}/html/objects.inv'.format(
             '.'.join([str(x) for x in sys.version_info[0:2]]))))
-intersphinx_mapping.update(
-    check_object_path(
-        'plainbox', 'http://plainbox.readthedocs.org/en/latest/',
-        '/usr/share/doc/python3-plainbox-doc/html/objects.inv'))
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

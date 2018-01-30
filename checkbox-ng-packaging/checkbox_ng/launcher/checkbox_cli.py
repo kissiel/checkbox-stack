@@ -42,6 +42,7 @@ from plainbox.impl.launcher import LauncherDefinition
 from checkbox_ng.launcher.subcommands import (
     CheckConfig, Launcher, List, Run, StartProvider, Submit, ListBootstrapped
 )
+from checkbox_ng.launcher.remote import RemoteService, RemoteControl
 
 
 _ = gettext.gettext
@@ -76,7 +77,10 @@ class LauncherIngredient(Ingredient):
         if not context.args.launcher:
             # launcher not supplied from cli - using the default one
             launcher = DefaultLauncherDefinition()
-            configs = [launcher.config_filename]
+            configs = [
+                '/etc/xdg/{}'.format(launcher.config_filename),
+                os.path.expanduser(
+                    '~/.config/{}'.format(launcher.config_filename))]
         else:
             configs = [context.args.launcher]
             try:
@@ -93,17 +97,21 @@ class LauncherIngredient(Ingredient):
             generic_launcher.read_string(text)
             config_filename = os.path.expandvars(
                 generic_launcher.config_filename)
+            # if wrapper specifies just the basename
             if not os.path.split(config_filename)[0]:
-                configs += [
-                    '/etc/xdg/{}'.format(config_filename),
-                    os.path.expanduser('~/.config/{}'.format(config_filename))]
+                if "SNAP_DATA" in os.environ:
+                    configs = [context.args.launcher]
+                    configs.append(os.path.join(
+                        os.path.expandvars('$SNAP_DATA'), config_filename))
+                else:
+                    configs += [
+                        '/etc/xdg/{}'.format(config_filename),
+                        os.path.expanduser('~/.config/{}'.format(
+                            config_filename))]
+            # if wrapper specifies an absolute file
             else:
                 configs.append(config_filename)
             launcher = generic_launcher.get_concrete_launcher()
-        if "SNAP_DATA" in os.environ:
-            # configs[0] contains the filename that should be used
-            configs.insert(1, os.path.join(
-                os.path.expandvars('$SNAP_DATA'), configs[0]))
         launcher.read(configs)
         if launcher.problem_list:
             _logger.error(_("Unable to start launcher because of errors:"))
@@ -150,6 +158,8 @@ class CheckboxCommand(CanonicalCommand):
         ('startprovider', StartProvider),
         ('submit', Submit),
         ('list-bootstrapped', ListBootstrapped),
+        ('remote-service', RemoteService),
+        ('remote-control', RemoteControl),
     )
 
     def register_arguments(self, parser):

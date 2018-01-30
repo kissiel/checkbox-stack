@@ -43,6 +43,9 @@ from plainbox.impl.commands.inv_run import NormalUI
 from plainbox.impl.commands.inv_startprovider import (
     EmptyProviderSkeleton, IQN, ProviderSkeleton)
 from plainbox.impl.highlevel import Explorer
+from plainbox.impl.providers import get_providers
+from plainbox.impl.providers.embedded_providers import (
+    EmbeddedProvider1PlugInCollection)
 from plainbox.impl.result import MemoryJobResult
 from plainbox.impl.session.assistant import SessionAssistant, SA_RESTARTABLE
 from plainbox.impl.session.jobs import InhibitionCause
@@ -52,7 +55,6 @@ from plainbox.impl.transport import TransportError
 from plainbox.impl.transport import InvalidSecureIDError
 from plainbox.impl.transport import get_all_transports
 from plainbox.impl.transport import SECURE_ID_PATTERN
-from plainbox.public import get_providers
 
 from checkbox_ng.config import CheckBoxConfig
 from checkbox_ng.launcher.stages import MainLoopStage
@@ -98,19 +100,8 @@ class Submit(Command):
         if ctx.args.staging:
             url = ('https://certification.staging.canonical.com/'
                    'api/v1/submission/{}/'.format(ctx.args.secure_id))
-        if ctx.args.submission.endswith('xml'):
-            from checkbox_ng.certification import CertificationTransport
-            transport_cls = CertificationTransport
-            mode = 'r'
-            enc = 'utf-8'
-            url = ('https://certification.canonical.com/'
-                   'submissions/submit/')
-            if ctx.args.staging:
-                url = ('https://certification.staging.canonical.com/'
-                       'submissions/submit/')
-        else:
-            from checkbox_ng.certification import SubmissionServiceTransport
-            transport_cls = SubmissionServiceTransport
+        from checkbox_ng.certification import SubmissionServiceTransport
+        transport_cls = SubmissionServiceTransport
         transport = transport_cls(url, options_string)
         try:
             with open(ctx.args.submission, mode, encoding=enc) as subm_file:
@@ -207,13 +198,27 @@ class Launcher(Command, MainLoopStage):
                 self.get_sa_api_version(),
                 self.get_sa_api_flags(),
             )
+            # side-load providers local-providers
+            side_load_path = os.path.expandvars(os.path.join(
+                '/home', '$USER', 'providers'))
+            additional_providers = ()
+            if os.path.exists(side_load_path):
+                print(self._C.RED(_(
+                    "WARNING: using side-loded providers")))
+                os.environ['PROVIDERPATH'] = ''
+                embedded_providers = EmbeddedProvider1PlugInCollection(
+                        side_load_path)
+                additional_providers = embedded_providers.get_all_plugin_objects()
             self._configure_restart(ctx)
             self._prepare_transports()
             ctx.sa.use_alternate_configuration(self.launcher)
-            ctx.sa.select_providers(*self.launcher.providers)
+            ctx.sa.select_providers(
+                *self.launcher.providers, additional_providers=additional_providers)
             if not self._maybe_resume_session():
                 self._start_new_session()
                 self._pick_jobs_to_run()
+            if not self.ctx.sa.get_static_todo_list():
+                return 0
             self.base_dir = os.path.join(
                 os.getenv(
                     'XDG_DATA_HOME', os.path.expanduser("~/.local/share/")),
@@ -408,6 +413,9 @@ class Launcher(Command, MainLoopStage):
         job_list = [self.ctx.sa.get_job(job_id) for job_id in
                     self.ctx.sa.get_static_todo_list()]
         test_info_list = self._generate_job_infos(job_list)
+        if not job_list:
+            print(self.C.RED(_("There were no tests to select from!")))
+            return
         wanted_set = CategoryBrowser(
             _("Choose tests to run on your system:"), test_info_list).run()
         # NOTE: tree.selection is correct but ordered badly. To retain
@@ -546,8 +554,11 @@ class Launcher(Command, MainLoopStage):
             for inhibitor in job_state.readiness_inhibitor_list:
                 if inhibitor.cause == InhibitionCause.FAILED_DEP:
                     resources_to_rerun.append(inhibitor.related_job.id)
+        # some resource jobs may have been selected in the UI and also added
+        # automatically, let's only add the missing ones
+        wanted_jobs = [j for j in wanted_set if j not in resources_to_rerun]
         # reset outcome of jobs that are selected for re-running
-        for job_id in list(wanted_set) + resources_to_rerun:
+        for job_id in resources_to_rerun + wanted_jobs:
             self.ctx.sa.get_job_state(job_id).result = MemoryJobResult({})
             rerun_candidates.append(job_id)
         self._run_jobs(rerun_candidates)
@@ -558,7 +569,7 @@ class Launcher(Command, MainLoopStage):
         def rerun_predicate(job_state):
             return job_state.result.outcome in (
                 IJobResult.OUTCOME_FAIL, IJobResult.OUTCOME_CRASH,
-                IJobResult.OUTCOME_SKIP)
+                IJobResult.OUTCOME_SKIP, IJobResult.OUTCOME_NOT_SUPPORTED)
         rerun_candidates = []
         todo_list = self.ctx.sa.get_static_todo_list()
         job_states = {job_id: self.ctx.sa.get_job_state(job_id) for job_id
@@ -587,24 +598,24 @@ class Launcher(Command, MainLoopStage):
             self.launcher.reports['1_text_to_screen'] = {
                 'transport': 'stdout', 'exporter': 'text', 'forced': 'yes'}
         elif report == 'certification':
-            self.launcher.exporters['hexr'] = {
-                'unit': 'com.canonical.plainbox::hexr'}
+            self.launcher.exporters['tar'] = {
+                'unit': 'com.canonical.plainbox::tar'}
             self.launcher.transports['c3'] = {
-                'type': 'certification',
+                'type': 'submission-service',
                 'secure_id': self.launcher.transports.get('c3', {}).get(
                     'secure_id', None)}
             self.launcher.reports['upload to certification'] = {
-                'transport': 'c3', 'exporter': 'hexr'}
+                'transport': 'c3', 'exporter': 'tar'}
         elif report == 'certification-staging':
-            self.launcher.exporters['hexr'] = {
-                'unit': 'com.canonical.plainbox::hexr'}
+            self.launcher.exporters['tar'] = {
+                'unit': 'com.canonical.plainbox::tar'}
             self.launcher.transports['c3-staging'] = {
-                'type': 'certification',
+                'type': 'submission-service',
                 'secure_id': self.launcher.transports.get('c3', {}).get(
                     'secure_id', None),
                 'staging': 'yes'}
             self.launcher.reports['upload to certification-staging'] = {
-                'transport': 'c3-staging', 'exporter': 'hexr'}
+                'transport': 'c3-staging', 'exporter': 'tar'}
         elif report == 'submission_files':
             # LP:1585326 maintain isoformat but removing ':' chars that cause
             # issues when copying files.
@@ -612,7 +623,7 @@ class Launcher(Command, MainLoopStage):
             timestamp = datetime.datetime.utcnow().strftime(isoformat)
             if not os.path.exists(self.base_dir):
                 os.makedirs(self.base_dir)
-            for exporter, file_ext in [('hexr', '.xml'), ('html', '.html'),
+            for exporter, file_ext in [('html', '.html'),
                                        ('junit', '.junit.xml'),
                                        ('xlsx', '.xlsx'), ('tar', '.tar.xz')]:
                 path = os.path.join(self.base_dir, ''.join(
@@ -648,26 +659,10 @@ class Launcher(Command, MainLoopStage):
         cls = self._available_transports[tr_type]
         if tr_type == 'file':
             self.transports[transport] = cls(
-                self.launcher.transports[transport]['path'])
+                os.path.expanduser(self.launcher.transports[transport]['path']))
         elif tr_type == 'stream':
             self.transports[transport] = cls(
                 self.launcher.transports[transport]['stream'])
-        elif tr_type == 'certification':
-            if self.launcher.transports[transport].get('staging', False):
-                url = ('https://certification.staging.canonical.com/'
-                       'submissions/submit/')
-            else:
-                url = ('https://certification.canonical.com/'
-                       'submissions/submit/')
-            secure_id = self.launcher.transports[transport].get(
-                'secure_id', None)
-            if not secure_id and self.is_interactive:
-                secure_id = input(self.C.BLUE(_('Enter secure-id:')))
-            if secure_id:
-                options = "secure_id={}".format(secure_id)
-            else:
-                options = ""
-            self.transports[transport] = cls(url, options)
         elif tr_type == 'submission-service':
             secure_id = self.launcher.transports[transport].get(
                 'secure_id', None)
@@ -686,14 +681,15 @@ class Launcher(Command, MainLoopStage):
             self.transports[transport] = cls(url, options)
 
     def _export_results(self):
-        for report in self.launcher.stock_reports:
-            # skip stock c3 report if secure_id is not given from config files
-            # or launchers, and the UI is non-interactive (silent)
-            if (report in ['certification', 'certification-staging'] and
-                    'c3' not in self.launcher.transports and
-                    self.is_interactive == False):
-                continue
-            self._prepare_stock_report(report)
+        if 'none' not in self.launcher.stock_reports:
+            for report in self.launcher.stock_reports:
+                # skip stock c3 report if secure_id is not given from config files
+                # or launchers, and the UI is non-interactive (silent)
+                if (report in ['certification', 'certification-staging'] and
+                        'c3' not in self.launcher.transports and
+                        self.is_interactive == False):
+                    continue
+                self._prepare_stock_report(report)
         # reports are stored in an ordinary dict(), so sorting them ensures
         # the same order of submitting them between runs, and if they
         # share common prefix, they are next to each other
