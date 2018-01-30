@@ -99,12 +99,15 @@ number of the stock ones. In launchers version 1 there are 4 stock reports you
 may use:
 
     * ``text`` - print results as text on standard output
-    * ``submission_files`` - write ``html``, ``xlsx``, ``json`` and ``xml``
+    * ``submission_files`` - write ``html``, ``xlsx``, ``json`` and ``tar.xz``
       files to ``$XDG_DATA_HOME`` directory (or to ``~/.local/share/`` if
       ``$XDG_DATA_HOME`` is not defined.
     * ``certification`` - send results to certification site
     * ``certification-staging`` - send results to staging version of
       certification site
+
+If you don't want to have any stock report automatically generated use
+``none`` as the value.
 
 This field is a list; use commas or spaces to separate stock reports. The
 default value: ``text, certification, submission_files``.
@@ -128,6 +131,15 @@ Launcher using all defaults with overridden secure_id:
 
     [transport:c3]
     secure_id = 001122334455667788
+
+Launcher that disables all stock reports:
+
+::
+
+    [launcher]
+    app_id = com.foobar:system-testing
+    launcher_version = 1
+    stock_reports = none
 
 Providers section
 =================
@@ -203,7 +215,15 @@ Beginning of the user interface section
 
 Type of UI to use. This has to be set to ``interactive``, ``silent``,
 ``converged``, or ``converged-silent``.
-Default value: ``interactive``, which runs the Checkbox command line version.
+
+``interactive`` runs the standard Checkbox command line version that prompts
+user in non-automated tests.
+
+``silent`` skips the tests that would require human interaction. It's not
+'silent' in the traditional command-line tool sense.
+
+Default value: ``interactive``.
+
 Note: the ``converged`` and ``converged-silent`` UI types will launch the QML
 interface and requires checkbox-converged to be installed on your system.
 Note: using ``silent`` or ``converged-silent`` UI types requires forcing
@@ -217,7 +237,7 @@ test selection and test plan selection.
     their output printed to the screen.
 
 Setting this field to ``yes`` disables hiding of command output for jobs of
-type ``local``, ``resource`` and ``attachment``. Default value: ``no``.
+type ``resource`` and ``attachment``. Default value: ``no``.
 
 ``output``
 
@@ -473,7 +493,7 @@ report to standard output.
     [ui]
     type = silent
 
-    [transport:out]
+    [transport:outfile]
     type = stream
     stream = stdout
 
@@ -485,7 +505,7 @@ report to standard output.
     exporter = text
 
 2) Interactive testing of FooBar project. Report should be uploaded to the
-staging version of certification site and saved to /tmp/submission.xml
+staging version of certification site and saved to /tmp/submission.tar.xz
 
 ::
 
@@ -512,15 +532,12 @@ staging version of certification site and saved to /tmp/submission.xml
 
     [transport:local_file]
     type = file
-    path = /tmp/submission.xml
-
-    [exporter:xml]
-    unit = com.canonical.plainbox::hexr
+    path = /tmp/submission.tar.xz
 
     [report:c3-staging]
-    transport = outfile
-    exporter = xml
+    transport = certification
+    exporter = tar
 
     [report:file]
     transport = local_file
-    exporter = xml
+    exporter = tar
