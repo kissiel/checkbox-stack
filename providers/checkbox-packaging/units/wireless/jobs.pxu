@@ -1,6 +1,6 @@
 unit: template
 template-resource: device
-template-filter: device.category == 'WIRELESS'
+template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
 template-engine: jinja2
 template-unit: job
 id: wireless/wireless_scanning_{{ interface }}
@@ -21,7 +21,7 @@ requires:
 
 unit: template
 template-resource: device
-template-filter: device.category == 'WIRELESS'
+template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
 template-engine: jinja2
 template-unit: job
 id: wireless/wireless_connection_wpa_bg_nm_{{ interface }}
@@ -42,7 +42,7 @@ requires:
 
 unit: template
 template-resource: device
-template-filter: device.category == 'WIRELESS'
+template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
 template-engine: jinja2
 template-unit: job
 id: wireless/wireless_connection_open_bg_nm_{{ interface }}
@@ -63,7 +63,7 @@ requires:
 
 unit: template
 template-resource: device
-template-filter: device.category == 'WIRELESS'
+template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
 template-engine: jinja2
 template-unit: job
 id: wireless/wireless_connection_wpa_n_nm_{{ interface }}
@@ -78,14 +78,13 @@ category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
 flags: preserve-locale also-after-suspend also-after-suspend-manual
 requires:
- wireless_sta_protocol.{{ interface }}_n == 'supported'
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
 
 unit: template
 template-resource: device
-template-filter: device.category == 'WIRELESS'
+template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
 template-engine: jinja2
 template-unit: job
 id: wireless/wireless_connection_open_n_nm_{{ interface }}
@@ -100,14 +99,13 @@ category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
 flags: preserve-locale also-after-suspend also-after-suspend-manual
 requires:
- wireless_sta_protocol.{{ interface }}_n == 'supported'
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
 
 unit: template
 template-resource: device
-template-filter: device.category == 'WIRELESS'
+template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
 template-engine: jinja2
 template-unit: job
 id: wireless/wireless_connection_wpa_ac_nm_{{ interface }}
@@ -129,7 +127,7 @@ requires:
 
 unit: template
 template-resource: device
-template-filter: device.category == 'WIRELESS'
+template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
 template-engine: jinja2
 template-unit: job
 id: wireless/wireless_connection_open_ac_nm_{{ interface }}

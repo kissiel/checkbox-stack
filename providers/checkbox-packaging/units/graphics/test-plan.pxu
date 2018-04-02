@@ -1,41 +1,87 @@
 id: graphics-integrated-gpu-cert-full
 unit: test plan
 _name: Graphics tests (integrated GPU)
-_description: Graphics tests (integrated GPU)
+_description:
+ Graphics tests (integrated GPU)
 include:
-    miscellanea/chvt
-    graphics/xorg-version                      certification-status=blocker
-    graphics/xorg-failsafe                     certification-status=blocker
-    graphics/xorg-process                      certification-status=blocker
-    graphics/VESA_drivers_not_in_use           certification-status=blocker
-    graphics/1_maximum_resolution_.*           certification-status=blocker
-    graphics/1_glxgears_.*                     certification-status=blocker
-    graphics/1_driver_version_.*               certification-status=blocker
-    graphics/1_compiz_check_.*                 certification-status=blocker
-    graphics/1_rotation_.*                     certification-status=blocker
-    graphics/1_video_.*                        certification-status=blocker
-    graphics/1_minimum_resolution_.*
-    graphics/1_cycle_resolution_.*             certification-status=non-blocker
+bootstrap_include:
+ graphics_card
+nested_part:
+ com.canonical.certification::graphics-integrated-gpu-cert-manual
+ com.canonical.certification::graphics-integrated-gpu-cert-automated
+
+id: graphics-integrated-gpu-cert-manual
+unit: test plan
+_name: Graphics tests (integrated GPU) (Manual)
+_description:
+ Graphics tests (integrated GPU) (Manual)
+include:
+ miscellanea/chvt
+ graphics/1_maximum_resolution_.*           certification-status=blocker
+ graphics/1_glxgears_.*                     certification-status=blocker
+ graphics/1_rotation_.*                     certification-status=blocker
+ graphics/1_video_.*                        certification-status=blocker
+ graphics/1_cycle_resolution_.*             certification-status=non-blocker
 bootstrap_include:
     graphics_card
+
+id: graphics-integrated-gpu-cert-automated
+unit: test plan
+_name: Graphics tests (integrated GPU) (Automated)
+_description:
+ Graphics tests (integrated GPU) (Automated)
+include:
+ graphics/xorg-version                      certification-status=blocker
+ graphics/xorg-failsafe                     certification-status=blocker
+ graphics/xorg-process                      certification-status=blocker
+ graphics/VESA_drivers_not_in_use           certification-status=blocker
+ graphics/1_driver_version_.*               certification-status=blocker
+ graphics/1_compiz_check_.*                 certification-status=blocker
+ graphics/1_minimum_resolution_.*
+bootstrap_include:
+    graphics_card
+
 
 id: graphics-discrete-gpu-cert-full
 unit: test plan
 _name: Graphics tests (discrete GPU)
-_description: Graphics tests (discrete GPU)
+_description:
+ Graphics tests (discrete GPU)
 include:
-    graphics/2_switch_card_.*_xenial           certification-status=blocker
-    graphics/2_maximum_resolution_.*           certification-status=blocker
-    graphics/2_valid_opengl_renderer_.*        certification-status=blocker
-    graphics/2_glxgears_.*                     certification-status=blocker
-    graphics/2_driver_version_.*               certification-status=blocker
-    graphics/2_compiz_check_.*                 certification-status=blocker
-    graphics/2_rotation_.*                     certification-status=blocker
-    graphics/2_video_.*                        certification-status=blocker
-    graphics/2_minimum_resolution_.*
-    graphics/2_cycle_resolution_.*             certification-status=non-blocker
+bootstrap_include:
+ graphics_card
+nested_part:
+ com.canonical.certification::graphics-discrete-gpu-cert-manual
+ com.canonical.certification::graphics-discrete-gpu-cert-automated
+
+id: graphics-discrete-gpu-cert-manual
+unit: test plan
+_name: Graphics tests (discrete GPU) (Manual)
+_description:
+ Graphics tests (discrete GPU) (Manual)
+include:
+ graphics/2_switch_card_.*_xenial           certification-status=blocker
+ graphics/2_maximum_resolution_.*           certification-status=blocker
+ graphics/2_glxgears_.*                     certification-status=blocker
+ graphics/2_rotation_.*                     certification-status=blocker
+ graphics/2_video_.*                        certification-status=blocker
+ graphics/2_cycle_resolution_.*             certification-status=non-blocker
 bootstrap_include:
     graphics_card
+
+id: graphics-discrete-gpu-cert-automated
+unit: test plan
+_name: Graphics tests (discrete GPU) (Automated)
+_description:
+ Graphics tests (discrete GPU) (Automated)
+include:
+ graphics/2_valid_opengl_renderer_.*        certification-status=blocker
+ graphics/2_driver_version_.*               certification-status=blocker
+ graphics/2_compiz_check_.*                 certification-status=blocker
+ graphics/2_minimum_resolution_.*
+bootstrap_include:
+    graphics_card
+
 
 id: after-suspend-graphics-integrated-gpu-cert-full
 unit: test plan
@@ -58,6 +104,7 @@ include:
     suspend/1_video_after_suspend_.*_xenial                certification-status=blocker
     suspend/1_cycle_resolutions_after_suspend_.*_xenial    certification-status=non-blocker
     suspend/1_xrandr_screens_after_suspend.tar.gz_xenial
+    after-suspend-manual-monitor/1_dim_brightness_.*       certification-status=blocker
 
 id: after-suspend-graphics-discrete-gpu-cert-full
 unit: test plan
@@ -76,6 +123,7 @@ include:
     suspend/2_video_after_suspend_.*_xenial                certification-status=blocker
     suspend/2_cycle_resolutions_after_suspend_.*_xenial    certification-status=non-blocker
     suspend/2_xrandr_screens_after_suspend_.*.tar.gz_xenial
+    after-suspend-manual-monitor/2_dim_brightness_.*       certification-status=blocker
 
 id: graphics-integrated-gpu-cert-blockers
 unit: test plan
@@ -128,6 +176,7 @@ include:
     suspend/1_display_after_suspend_.*_xenial              certification-status=blocker
     suspend/1_glxgears_after_suspend_.*_xenial             certification-status=blocker
     suspend/1_video_after_suspend_.*_xenial                certification-status=blocker
+    after-suspend-manual-monitor/1_dim_brightness_.*       certification-status=blocker
 
 id: after-suspend-graphics-discrete-gpu-cert-blockers
 unit: test plan
@@ -142,3 +191,4 @@ include:
     suspend/2_display_after_suspend_.*_xenial              certification-status=blocker
     suspend/2_glxgears_after_suspend_.*_xenial             certification-status=blocker
     suspend/2_video_after_suspend_.*_xenial                certification-status=blocker
+    after-suspend-manual-monitor/2_dim_brightness_.*       certification-status=blocker
