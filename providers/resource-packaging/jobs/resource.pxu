@@ -97,6 +97,7 @@ _summary: Collect information about system memory (/proc/meminfo)
 id: module
 estimated_duration: 0.13
 plugin: resource
+user: root
 command: module_resource
 _description: Generates resources info on running kernel modules
 _summary: Collect information about kernel modules
@@ -271,10 +272,9 @@ id: wireless_sta_protocol
 plugin: resource
 _summary: Resource job to identify Wi-Fi STA supported protocols
 _description:
- Job listing STA supported protocols (802.11n, 802.11ac) per interfaces.
+ Job listing STA supported 802.11 protocols per interfaces.
 command:
- for i in `iw dev | grep -oP 'Interface\s+\K\w+'`; do iw phy phy$(iw dev $i info | grep -oP 'wiphy\s+\K\d+') info | grep -q 'VHT' && echo $i"_ac: supported"; done
- for i in `iw dev | grep -oP 'Interface\s+\K\w+'`; do iw phy phy$(iw dev $i info | grep -oP 'wiphy\s+\K\d+') info | grep -q 'HT Capa' && echo $i"_n: supported"; done
+ for i in `iw dev | grep -oP 'Interface\s+\K\w+'`; do iw phy phy$(iw dev $i info | grep -oP 'wiphy\s+\K\d+') info | grep -q 'VHT' && echo $i"_ac: supported" || echo $i"_ac: unsupported"; done
 estimated_duration: 0.5
 flags: preserve-locale
 
