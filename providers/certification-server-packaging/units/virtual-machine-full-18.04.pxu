@@ -1,5 +1,5 @@
-id: 14.04-virtual-machine-full
-_name: 14.04 Virtual Machine Full (For Hypervisors)
+id: 18.04-virtual-machine-full
+_name: 18.04 Virtual Machine Full (For Hypervisors)
 unit: test plan
 _description:
     This whitelist is intended to be used for testing Ubuntu Guests on 
@@ -31,7 +31,6 @@ mandatory_include:
     lsmod_attachment
     miscellanea/get_make_and_model
     miscellanea/get_maas_version               certification-status=blocker
-    miscellanea/efi_boot_mode                  certification-status=non-blocker
     info/disk_partitions
     info/network_devices
     kernel_cmdline_attachment
@@ -49,18 +48,20 @@ include:
     disk/stats_.*                              certification-status=blocker
     disk/read_performance_.*                   certification-status=blocker
     disk/smart_.*                              certification-status=non-blocker
-    disk/storage_device_.*                     certification-status=blocker
+    disk/disk_stress_ng_.*                     certification-status=blocker
+    disk/disk_cpu_load_.*                      certification-status=non-blocker
     ethernet/detect                            certification-status=non-blocker
     ethernet/info_automated                    certification-status=non-blocker
     ethernet/ethtool_info                      certification-status=non-blocker
     ethernet/ethertool_check_.*                certification-status=non-blocker
-    ethernet/multi_nic_.*                      certification-status=blocker
+    ethernet/multi_iperf3_nic_.*               certification-status=blocker
     memory/info                                certification-status=blocker
-    memory/check                               certification-status=blocker
+    memory/memory_stress_ng                    certification-status=blocker
     power-management/rtc                       certification-status=blocker
-    stress/cpu_stress_test                     certification-status=blocker
-    miscellanea/oops                        certification-status=non-blocker
-    miscellanea/oops_results.log            certification-status=non-blocker
+    stress/cpu_stress_ng_test                  certification-status=blocker
+    virtualization/verify_lxd                  certification-status=blocker
+    miscellanea/oops                           certification-status=non-blocker
+    miscellanea/oops_results.log               certification-status=non-blocker
 bootstrap_include:
     device
     fwts
