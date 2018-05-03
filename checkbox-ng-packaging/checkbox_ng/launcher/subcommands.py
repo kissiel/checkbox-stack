@@ -18,8 +18,10 @@
 """
 Definition of sub-command classes for checkbox-cli
 """
+from argparse import ArgumentTypeError
 from argparse import SUPPRESS
 from collections import defaultdict
+from tempfile import TemporaryDirectory
 import copy
 import datetime
 import fnmatch
@@ -30,6 +32,7 @@ import operator
 import os
 import re
 import sys
+import tarfile
 import time
 
 from guacamole import Command
@@ -57,7 +60,7 @@ from plainbox.impl.transport import get_all_transports
 from plainbox.impl.transport import SECURE_ID_PATTERN
 
 from checkbox_ng.config import CheckBoxConfig
-from checkbox_ng.launcher.stages import MainLoopStage
+from checkbox_ng.launcher.stages import MainLoopStage, ReportsStage
 from checkbox_ng.urwid_ui import CategoryBrowser
 from checkbox_ng.urwid_ui import ReRunBrowser
 from checkbox_ng.urwid_ui import test_plan_browser
@@ -89,22 +92,39 @@ class Submit(Command):
         parser.add_argument(
             "-s", "--staging", action="store_true",
             help=_("Use staging environment"))
+        parser.add_argument(
+            "-m", "--message",
+            help=_("Submission description"))
 
     def invoked(self, ctx):
         transport_cls = None
-        enc = None
         mode = 'rb'
         options_string = "secure_id={0}".format(ctx.args.secure_id)
         url = ('https://certification.canonical.com/'
                'api/v1/submission/{}/'.format(ctx.args.secure_id))
+        submission_file = ctx.args.submission
         if ctx.args.staging:
             url = ('https://certification.staging.canonical.com/'
                    'api/v1/submission/{}/'.format(ctx.args.secure_id))
         from checkbox_ng.certification import SubmissionServiceTransport
         transport_cls = SubmissionServiceTransport
         transport = transport_cls(url, options_string)
+        if ctx.args.message:
+            tmpdir = TemporaryDirectory()
+            with tarfile.open(ctx.args.submission) as tar:
+                tar.extractall(tmpdir.name)
+            with open(os.path.join(tmpdir.name, 'submission.json')) as f:
+                json_payload = json.load(f)
+            with open(os.path.join(tmpdir.name, 'submission.json'), 'w') as f:
+                json_payload['description'] = ctx.args.message
+                json.dump(json_payload, f, sort_keys=True, indent=4)
+            new_subm_file = os.path.join(
+                tmpdir.name, os.path.basename(ctx.args.submission))
+            with tarfile.open(new_subm_file, mode='w:xz') as tar:
+                tar.add(tmpdir.name, arcname='')
+            submission_file = new_subm_file
         try:
-            with open(ctx.args.submission, mode, encoding=enc) as subm_file:
+            with open(submission_file, mode) as subm_file:
                 result = transport.send(subm_file)
         except (TransportError, OSError) as exc:
             raise SystemExit(exc)
@@ -143,7 +163,7 @@ class StartProvider(Command):
             gettext_domain=re.sub("[.:]", "_", ctx.args.name))
 
 
-class Launcher(Command, MainLoopStage):
+class Launcher(Command, MainLoopStage, ReportsStage):
 
     name = 'launcher'
 
@@ -204,7 +224,7 @@ class Launcher(Command, MainLoopStage):
             additional_providers = ()
             if os.path.exists(side_load_path):
                 print(self._C.RED(_(
-                    "WARNING: using side-loded providers")))
+                    "WARNING: using side-loaded providers")))
                 os.environ['PROVIDERPATH'] = ''
                 embedded_providers = EmbeddedProvider1PlugInCollection(
                         side_load_path)
@@ -212,17 +232,21 @@ class Launcher(Command, MainLoopStage):
             self._configure_restart(ctx)
             self._prepare_transports()
             ctx.sa.use_alternate_configuration(self.launcher)
-            ctx.sa.select_providers(
-                *self.launcher.providers, additional_providers=additional_providers)
+            try:
+                ctx.sa.select_providers(
+                    *self.launcher.providers,
+                    additional_providers=additional_providers)
+            except ValueError:
+                from plainbox.impl.providers.v1 import all_providers
+                print(self._C.RED(_("No providers found")))
+                print("Paths searched:")
+                print("\n".join(all_providers.provider_search_paths))
+                return 1
             if not self._maybe_resume_session():
                 self._start_new_session()
                 self._pick_jobs_to_run()
             if not self.ctx.sa.get_static_todo_list():
                 return 0
-            self.base_dir = os.path.join(
-                os.getenv(
-                    'XDG_DATA_HOME', os.path.expanduser("~/.local/share/")),
-                "checkbox-ng")
             if 'submission_files' in self.launcher.stock_reports:
                 print("Reports will be saved to: {}".format(self.base_dir))
             # we initialize the nb of attempts for all the selected jobs...
@@ -285,7 +309,14 @@ class Launcher(Command, MainLoopStage):
         if strategy:
             # gluing the command with pluses b/c the middle part
             # (launcher path) is optional
-            respawn_cmd = sys.argv[0] # entry-point to checkbox
+            snap_name = os.getenv('SNAP_NAME')
+            if snap_name:
+                # NOTE: This implies that any snap wishing to include a
+                # Checkbox snap to be autostarted creates a snapcraft
+                # app called "checkbox-cli"
+                respawn_cmd = '/snap/bin/{}.checkbox-cli'.format(snap_name)
+            else:
+                respawn_cmd = sys.argv[0] # entry-point to checkbox
             respawn_cmd += " launcher "
             if ctx.args.launcher:
                 respawn_cmd += os.path.abspath(ctx.args.launcher) + ' '
@@ -370,7 +401,8 @@ class Launcher(Command, MainLoopStage):
                 raise SystemExit(_("No test plan selected."))
         self.ctx.sa.select_test_plan(tp_id)
         self.ctx.sa.update_app_blob(json.dumps(
-            {'testplan_id': tp_id, }).encode("UTF-8"))
+            {'testplan_id': tp_id,
+             'description': self.ctx.args.message, }).encode("UTF-8"))
         bs_jobs = self.ctx.sa.get_bootstrap_todo_list()
         self._run_bootstrap_jobs(bs_jobs)
         self.ctx.sa.finish_bootstrap()
@@ -579,171 +611,6 @@ class Launcher(Command, MainLoopStage):
                 rerun_candidates.append(self.ctx.sa.get_job(job_id))
         return rerun_candidates
 
-    def _prepare_stock_report(self, report):
-        # this is purposefully not using pythonic dict-keying for better
-        # readability
-        if not self.launcher.transports:
-            self.launcher.transports = dict()
-        if not self.launcher.exporters:
-            self.launcher.exporters = dict()
-        if not self.launcher.reports:
-            self.launcher.reports = dict()
-        if report == 'text':
-            self.launcher.exporters['text'] = {
-                'unit': 'com.canonical.plainbox::text'}
-            self.launcher.transports['stdout'] = {
-                'type': 'stream', 'stream': 'stdout'}
-            # '1_' prefix ensures ordering amongst other stock reports. This
-            # report name does not appear anywhere (because of forced: yes)
-            self.launcher.reports['1_text_to_screen'] = {
-                'transport': 'stdout', 'exporter': 'text', 'forced': 'yes'}
-        elif report == 'certification':
-            self.launcher.exporters['tar'] = {
-                'unit': 'com.canonical.plainbox::tar'}
-            self.launcher.transports['c3'] = {
-                'type': 'submission-service',
-                'secure_id': self.launcher.transports.get('c3', {}).get(
-                    'secure_id', None)}
-            self.launcher.reports['upload to certification'] = {
-                'transport': 'c3', 'exporter': 'tar'}
-        elif report == 'certification-staging':
-            self.launcher.exporters['tar'] = {
-                'unit': 'com.canonical.plainbox::tar'}
-            self.launcher.transports['c3-staging'] = {
-                'type': 'submission-service',
-                'secure_id': self.launcher.transports.get('c3', {}).get(
-                    'secure_id', None),
-                'staging': 'yes'}
-            self.launcher.reports['upload to certification-staging'] = {
-                'transport': 'c3-staging', 'exporter': 'tar'}
-        elif report == 'submission_files':
-            # LP:1585326 maintain isoformat but removing ':' chars that cause
-            # issues when copying files.
-            isoformat = "%Y-%m-%dT%H.%M.%S.%f"
-            timestamp = datetime.datetime.utcnow().strftime(isoformat)
-            if not os.path.exists(self.base_dir):
-                os.makedirs(self.base_dir)
-            for exporter, file_ext in [('html', '.html'),
-                                       ('junit', '.junit.xml'),
-                                       ('xlsx', '.xlsx'), ('tar', '.tar.xz')]:
-                path = os.path.join(self.base_dir, ''.join(
-                    ['submission_', timestamp, file_ext]))
-                self.launcher.transports['{}_file'.format(exporter)] = {
-                    'type': 'file',
-                    'path': path}
-                if exporter not in self.launcher.exporters:
-                    self.launcher.exporters[exporter] = {
-                        'unit': 'com.canonical.plainbox::{}'.format(
-                            exporter)}
-                self.launcher.reports['2_{}_file'.format(exporter)] = {
-                    'transport': '{}_file'.format(exporter),
-                    'exporter': '{}'.format(exporter),
-                    'forced': 'yes'
-                }
-
-    def _prepare_transports(self):
-        self._available_transports = get_all_transports()
-        self.transports = dict()
-
-    def _create_transport(self, transport):
-        if transport in self.transports:
-            return
-        # depending on the type of transport we need to pick variable that
-        # serves as the 'where' param for the transport. In case of
-        # certification site the URL is supplied here
-        tr_type = self.launcher.transports[transport]['type']
-        if tr_type not in self._available_transports:
-            _logger.error(_("Unrecognized type '%s' of transport '%s'"),
-                          tr_type, transport)
-            raise SystemExit(1)
-        cls = self._available_transports[tr_type]
-        if tr_type == 'file':
-            self.transports[transport] = cls(
-                os.path.expanduser(self.launcher.transports[transport]['path']))
-        elif tr_type == 'stream':
-            self.transports[transport] = cls(
-                self.launcher.transports[transport]['stream'])
-        elif tr_type == 'submission-service':
-            secure_id = self.launcher.transports[transport].get(
-                'secure_id', None)
-            if not secure_id and self.is_interactive:
-                secure_id = input(self.C.BLUE(_('Enter secure-id:')))
-            if secure_id:
-                options = "secure_id={}".format(secure_id)
-            else:
-                options = ""
-            if self.launcher.transports[transport].get('staging', False):
-                url = ('https://certification.staging.canonical.com/'
-                       'api/v1/submission/{}/'.format(secure_id))
-            else:
-                url = ('https://certification.canonical.com/'
-                       'api/v1/submission/{}/'.format(secure_id))
-            self.transports[transport] = cls(url, options)
-
-    def _export_results(self):
-        if 'none' not in self.launcher.stock_reports:
-            for report in self.launcher.stock_reports:
-                # skip stock c3 report if secure_id is not given from config files
-                # or launchers, and the UI is non-interactive (silent)
-                if (report in ['certification', 'certification-staging'] and
-                        'c3' not in self.launcher.transports and
-                        self.is_interactive == False):
-                    continue
-                self._prepare_stock_report(report)
-        # reports are stored in an ordinary dict(), so sorting them ensures
-        # the same order of submitting them between runs, and if they
-        # share common prefix, they are next to each other
-        for name, params in sorted(self.launcher.reports.items()):
-            if self.is_interactive and not params.get('forced', False):
-                message = _("Do you want to submit '{}' report?").format(name)
-                cmd = self._pick_action_cmd([
-                    Action('y', _("yes"), 'y'),
-                    Action('n', _("no"), 'n')
-                ], message)
-            else:
-                cmd = 'y'
-            if cmd == 'n':
-                continue
-            exporter_id = self.launcher.exporters[params['exporter']]['unit']
-            done_sending = False
-            while not done_sending:
-                try:
-                    self._create_transport(params['transport'])
-                    transport = self.transports[params['transport']]
-                    result = self.ctx.sa.export_to_transport(
-                        exporter_id, transport)
-                    if result and 'url' in result:
-                        print(result['url'])
-                    elif result and 'status_url' in result:
-                        print(result['status_url'])
-                except TransportError as exc:
-                    _logger.warning(
-                        _("Problem occured when submitting %s report: %s"),
-                        name, exc)
-                    if self._retry_dialog():
-                        # let's remove current transport, so in next
-                        # iteration it will be "rebuilt", so if some parts
-                        # were user-provided, checkbox will ask for them
-                        # again
-                        self.transports.pop(params['transport'])
-                        continue
-                except InvalidSecureIDError:
-                    _logger.warning(_("Invalid secure_id"))
-                    if self._retry_dialog():
-                        self.launcher.transports['c3'].pop('secure_id')
-                        continue
-                done_sending = True
-
-    def _retry_dialog(self):
-        if self.is_interactive:
-            message = _("Do you want to retry?")
-            cmd = self._pick_action_cmd([
-                Action('y', _("yes"), 'y'),
-                Action('n', _("no"), 'n')
-            ], message)
-            if cmd == 'y':
-                return True
-        return False
 
     def _get_ui_for_job(self, job):
         class CheckboxUI(NormalUI):
@@ -777,6 +644,9 @@ class Launcher(Command, MainLoopStage):
         parser.add_argument(
             '--title', action='store', metavar='SESSION_NAME',
             help=_('title of the session to use'))
+        parser.add_argument(
+            "-m", "--message",
+            help=_("submission description"))
         parser.add_argument(
             '--dont-suppress-output', action='store_true', default=False,
             help=_('Absolutely always show command output'))
@@ -930,7 +800,6 @@ class Run(Command, MainLoopStage):
         self.exporter = self.ctx.args.output_format
         self.exporter_opts = self.ctx.args.output_options
 
-
     def _print_results(self):
         all_transports = get_all_transports()
         transport = get_all_transports()[self.transport](
@@ -945,7 +814,14 @@ class Run(Command, MainLoopStage):
 
     def _configure_restart(self):
         strategy = detect_restart_strategy()
-        respawn_cmd = sys.argv[0] # entry-point to checkbox
+        snap_name = os.getenv('SNAP_NAME')
+        if snap_name:
+            # NOTE: This implies that any snap wishing to include a
+            # Checkbox snap to be autostarted creates a snapcraft
+            # app called "checkbox-cli"
+            respawn_cmd = '/snap/bin/{}.checkbox-cli'.format(snap_name)
+        else:
+            respawn_cmd = sys.argv[0] # entry-point to checkbox
         respawn_cmd += ' --resume {}' # interpolate with session_id
         self.sa.configure_application_restart(
             lambda session_id: [ respawn_cmd.format(session_id)])

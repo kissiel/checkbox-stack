@@ -120,6 +120,13 @@ class LauncherDefinition1(LauncherDefinition):
         default=['text', 'certification', 'submission_files'],
         help_text=_('List of stock reports to use'))
 
+    local_submission = config.Variable(
+        section='launcher',
+        kind=bool,
+        default=False,
+        help_text=_("Send/generate submission report locally when using "
+                    "checkbox remote"))
+
     providers = config.Variable(
         section='providers',
         name='use',
@@ -153,6 +160,13 @@ class LauncherDefinition1(LauncherDefinition):
         kind=bool,
         default=False,
         help_text=_("Don't allow the user to alter test selection."))
+
+    test_exclude = config.Variable(
+        section='test selection',
+        name='exclude',
+        default=[],
+        kind=list,
+        help_text=_("Exclude test matching the patterns from running"))
 
     ui_type = config.Variable(
         section='ui',

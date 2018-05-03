@@ -1,6 +1,6 @@
 # This file is part of Checkbox.
 #
-# Copyright 2017 Canonical Ltd.
+# Copyright 2018 Canonical Ltd.
 # Written by:
 #   Maciej Kisielewski <maciej.kisielewski@canonical.com>
 #
@@ -18,14 +18,17 @@
 import json
 import gettext
 import logging
+import os
 import queue
 import time
 import sys
 from collections import namedtuple
 from threading import Thread, Lock
+from subprocess import DEVNULL, CalledProcessError, check_call
 
 from plainbox.impl.ctrl import RootViaSudoWithPassExecutionController
 from plainbox.impl.ctrl import UserJobExecutionController
+from plainbox.impl.launcher import DefaultLauncherDefinition
 from plainbox.impl.session.assistant import SessionAssistant
 from plainbox.impl.session.assistant import SA_RESTARTABLE
 from plainbox.impl.secure.sudo_broker import SudoBroker, EphemeralKey
@@ -112,11 +115,19 @@ class SessionAssistant2():
 
     def __init__(self, cmd_callback):
         _logger.debug("__init__()")
-        self._state = Idle
-        self._sa = SessionAssistant('service', api_flags={SA_RESTARTABLE})
-        self._sa.configure_application_restart(cmd_callback)
+        self._cmd_callback = cmd_callback
         self._sudo_broker = SudoBroker()
         self._sudo_password = None
+        self._session_change_lock = Lock()
+        self._operator_lock = Lock()
+        self.buffered_ui = BufferedUI()
+        self._reset_sa()
+        self._passwordless_sudo = is_passwordless_sudo()
+
+    def _reset_sa(self):
+        self._state = Idle
+        self._sa = SessionAssistant('service', api_flags={SA_RESTARTABLE})
+        self._sa.configure_application_restart(self._cmd_callback)
         self._sa.use_alternate_execution_controllers([
             (
                 RootViaSudoWithPassExecutionController,
@@ -125,27 +136,23 @@ class SessionAssistant2():
             ),
             (UserJobExecutionController, [], {}),
         ])
-        self._sa.select_providers('*')
-        self._session_change_lock = Lock()
-        self._operator_lock = Lock()
         self._be = None
         self._session_id = ""
         self._jobs_count = 0
         self._job_index = 0
         self._currently_running_job = None  # XXX: yuck!
-        self.buffered_ui = BufferedUI()
         self._last_response = None
 
     @property
     def session_change_lock(self):
         return self._session_change_lock
 
-    def allowed_when(state):
+    def allowed_when(*states):
         def wrap(f):
             def fun(self, *args):
-                if self._state != state:
+                if self._state not in states:
                     raise AssertionError(
-                        "expected %s, is %s" % (self._state, state))
+                        "expected %s, is %s" % (states, self._state))
                 return f(self, *args)
             return fun
         return wrap
@@ -153,6 +160,11 @@ class SessionAssistant2():
     @allowed_when(Idle)
     def start_session(self, configuration):
         _logger.debug("start_session: %r", configuration)
+        self._launcher = DefaultLauncherDefinition()
+        if configuration['launcher']:
+            self._launcher.read_string(configuration['launcher'])
+        self._sa.use_alternate_configuration(self._launcher)
+        self._sa.select_providers(*self._launcher.providers)
         self._sa.start_new_session('checkbox-service')
         self._session_id = self._sa.get_session_id()
         tps = self._sa.get_test_plans()
@@ -163,15 +175,34 @@ class SessionAssistant2():
         return self._available_testplans
 
     @allowed_when(Started)
-    def bootstrap(self, test_plan_id):
-        _logger.debug("bootstrap: %r", test_plan_id)
+    def prepare_bootstrapping(self, test_plan_id):
+        """
+        Go through the list of bootstrapping jobs, and return True
+        if sudo password will be needed for any bootstrapping job.
+        """
+        _logger.debug("prepare_bootstrapping: %r", test_plan_id)
         self._sa.update_app_blob(json.dumps(
             {'testplan_id': test_plan_id, }).encode("UTF-8"))
         self._sa.select_test_plan(test_plan_id)
-        self._sa.bootstrap()
+        for job_id in self._sa.get_bootstrap_todo_list():
+            job = self._sa.get_job(job_id)
+            if job.user is not None:
+                # job requires sudo controller
+                return True
+        return False
+
+    @allowed_when(Started)
+    def get_bootstrapping_todo_list(self):
+        return self._sa.get_bootstrap_todo_list()
+
+    def finish_bootstrap(self):
+        self._sa.finish_bootstrap()
         self._jobs_count = len(self._sa.get_static_todo_list())
         self._state = Bootstrapped
         return self._sa.get_static_todo_list()
+
+
+
 
     @allowed_when(Bootstrapped)
     def run_job(self, job_id):
@@ -188,16 +219,28 @@ class SessionAssistant2():
                 'manual', 'user-interact-verify', 'user-interact']:
             self._current_interaction = Interaction('purpose', job.tr_purpose())
             yield self._current_interaction
-        if job.user and not self._sudo_password:
+        if job.user and not self._passwordless_sudo and not self._sudo_password:
             self._ephemeral_key = EphemeralKey()
             self._current_interaction = Interaction(
                 'sudo_input', self._ephemeral_key.public_key)
-            yield self._current_interaction
+            pass_is_correct = False
+            while not pass_is_correct:
+                yield self._current_interaction
+                pass_is_correct = validate_pass(
+                    self._sudo_broker.decrypt_password(self._sudo_password))
             assert(self._sudo_password is not None)
         self._state = Running
         self._be = BackgroundExecutor(self, job_id, self._sa.run_job)
 
-    @allowed_when(Running)
+    @allowed_when(Started, Bootstrapping)
+    def run_bootstrapping_job(self, job_id):
+        self._currently_running_job = job_id
+        self._state = Bootstrapping
+        self._be = BackgroundExecutor(self, job_id, self._sa.run_job)
+
+
+
+    @allowed_when(Running, Bootstrapping)
     def monitor_job(self):
         """
         Check the state of the currently running job.
@@ -213,7 +256,7 @@ class SessionAssistant2():
         if self._be.is_alive():
             return ('running', self.buffered_ui.get_output())
         else:
-            return ('done', self._be.outcome())
+            return ('done', self.buffered_ui.get_output())
         return 'running' if self._be.is_alive() else 'done'
 
     def whats_up(self):
@@ -247,7 +290,12 @@ class SessionAssistant2():
 
     def save_password(self, cyphertext):
         """Store encrypted password"""
-        self._sudo_password = cyphertext
+        if validate_pass(self._sudo_broker.decrypt_password(cyphertext)):
+            self._sudo_password = cyphertext
+            return True
+        return False
+
+
 
     def get_decrypted_password(self):
         """Return decrypted password"""
@@ -259,10 +307,11 @@ class SessionAssistant2():
         self._sa.use_job_result(
             self._currently_running_job, self._be.wait().get_result())
         self._session_change_lock.release()
-        if not self._sa.get_dynamic_todo_list():
-            self._state = Idle
-        else:
-            self._state = Bootstrapped
+        if self._state != Bootstrapping:
+            if not self._sa.get_dynamic_todo_list():
+                self._state = Idle
+            else:
+                self._state = Bootstrapped
 
     def get_jobs_repr(self, job_ids):
         """
@@ -297,6 +346,7 @@ class SessionAssistant2():
                 "description": (job.tr_description() or
                                 _('No description provided for this job')),
                 "outcome": self._sa.get_job_state(job.id).result.outcome,
+                "user": job.user,
             }
             test_info_list = test_info_list + ((test_info, ))
         return test_info_list
@@ -322,4 +372,41 @@ class SessionAssistant2():
 
     def finalize_session(self):
         self._sa.finalize_session()
-        self._state = Idle
+        self._reset_sa()
+
+    @property
+    def manager(self):
+        return self._sa._manager
+
+    @property
+    def passwordless_sudo(self):
+        return self._passwordless_sudo
+
+
+def is_passwordless_sudo():
+    """
+    Check if system can run sudo without pass.
+    """
+    # running sudo with -A will try using ASKPASS envvar that should specify
+    # the program to use when asking for password
+    # If the system is configured to not ask for password, this will silently
+    # succeed. If the pass is required, it'll return 1 and not ask for pass,
+    # as the askpass program is not provided
+    try:
+        check_call(['sudo', '-A', 'true'], stdout=DEVNULL, stderr=DEVNULL)
+    except CalledProcessError:
+        return False
+    return True
+
+
+def validate_pass(password):
+    cmd = ['sudo', '--prompt=', '--reset-timestamp', '--stdin',
+           '--user', 'root', 'true']
+    r, w = os.pipe()
+    os.write(w, (password + "\n").encode('utf-8'))
+    os.close(w)
+    try:
+        check_call(cmd, stdin=r, stdout=DEVNULL, stderr=DEVNULL)
+        return True
+    except CalledProcessError:
+        return False

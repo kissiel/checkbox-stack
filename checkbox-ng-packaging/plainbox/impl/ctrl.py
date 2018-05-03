@@ -850,9 +850,8 @@ class QmlJobExecutionController(CheckBoxExecutionController):
             List of command arguments
 
         """
-        cmd = ['qmlscene', '-I', self.QML_MODULES_PATH, '--job', job.qml_file,
-               '--fd-out', shell_out_fd, '--fd-in', shell_in_fd,
-               self.QML_SHELL_PATH]
+        cmd = ['qmlscene', '-I', self.QML_MODULES_PATH, job.qml_file,
+               shell_out_fd, shell_in_fd, self.QML_SHELL_PATH]
         return cmd
 
     def get_checkbox_score(self, job):
@@ -1345,8 +1344,8 @@ class RootViaSudoExecutionController(
         # username by replacing with %2E
         # https://github.com/snapcore/snapd/blob/master/osutil/user.go#L84
         # Hence doing the same here:
-        user_mod = os.getenv('USER').replace('.', '%2E')
-        if (os.getenv("SNAP")):
+        if (os.getenv("SNAP") and os.getenv('USER')):
+            user_mod = os.getenv('USER').replace('.', '%2E')
             in_sudoers_d = os.path.exists(
                 '/etc/sudoers.d/create-user-{}'.format(user_mod))
         self.user_can_sudo = in_sudo_group or in_admin_group or in_sudoers_d

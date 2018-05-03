@@ -202,6 +202,42 @@ Beginning of the test selection section
 If set to ``yes``, test selection screen will be skipped and all test specified
 in the test plan will be selected. Default value: ``no``
 
+``exclude``
+
+List of regex patterns that job ids will be matched against. The matched jobs
+will be excluded from running in both stages of the session: bootstrapping and
+normal stage. Note that if you specify a pattern that matches a resource job
+that is used to instantiate template units those units won't get generated. The
+patterns should be separated with whitespace. Examples:
+
+Exclude all jobs containing 'bluetooth' in their id:
+
+::
+
+    [test selection]
+    exclude = .*bluetooth.*
+
+
+Exclude all jobs containing ``bluetooth`` in their id, or having ids starting
+with ``com.canonical.certification::dock/wireless``:
+
+::
+
+    [test selection]
+    exclude = .*bluetooth.* com.canonical.certification::dock/wireless.*
+
+Note: Exclude field set in launcher can be overriden in a config, following
+Checkbox values resolution order. see :doc:`configs</configs>` for more info.
+
+Note: To clear the exclude list use...
+
+::
+
+    exclude =
+
+...in your 'last' config.
+
+
 User Interface section
 ======================
 
@@ -395,38 +431,38 @@ Type of a transport to use. Allowed values are: ``stream``, ``file``, and
 Depending on the type of transport there might be additional fields.
 
 
-+-------------------+---------------+----------------+----------------------+
-| transport type    |  variables    | meaning        | example              |
-+===================+===============+================+======================+
-| ``stream``        | ``stream``    | which stream to| ``[transport:out]``  |
-|                   |               | use ``stdout`` |                      |
-|                   |               | or ``stderr``  | ``type = stream``    |
-|                   |               |                |                      |
-|                   |               |                | ``stream = stdout``  |
-+-------------------+---------------+----------------+----------------------+
-| ``file``          | ``path``      | where to save  | ``[transport:f1]``   |
-|                   |               | the file       |                      |
-|                   |               |                | ``type = file``      |
-|                   |               |                |                      |
-|                   |               |                | ``path = ~/report``  |
-+-------------------+---------------+----------------+----------------------+
-| ``certification`` | ``secure-id`` | secure-id to   | ``[transport:c3]``   |
-|                   |               | use when       |                      |
-|                   |               | uploading to   | ``secure_id = 01``\  |
-|                   |               | certification  | ``23456789ABCD``     |
-|                   |               | sites          |                      |
-|                   |               |                | ``staging = yes``    |
-|                   |               |                |                      |
-|                   +---------------+----------------+                      |
-|                   | ``staging``   | determines if  |                      |
-|                   |               | staging site   |                      |
-|                   |               | should be used |                      |
-|                   |               | Default:       |                      |
-|                   |               | ``no``         |                      |
-|                   |               |                |                      |
-|                   |               |                |                      |
-|                   |               |                |                      |
-+-------------------+---------------+----------------+----------------------+
++------------------------+---------------+----------------+----------------------+
+| transport type         |  variables    | meaning        | example              |
++========================+===============+================+======================+
+| ``stream``             | ``stream``    | which stream to| ``[transport:out]``  |
+|                        |               | use ``stdout`` |                      |
+|                        |               | or ``stderr``  | ``type = stream``    |
+|                        |               |                |                      |
+|                        |               |                | ``stream = stdout``  |
++------------------------+---------------+----------------+----------------------+
+| ``file``               | ``path``      | where to save  | ``[transport:f1]``   |
+|                        |               | the file       |                      |
+|                        |               |                | ``type = file``      |
+|                        |               |                |                      |
+|                        |               |                | ``path = ~/report``  |
++------------------------+---------------+----------------+----------------------+
+| ``submission-service`` | ``secure-id`` | secure-id to   | ``[transport:c3]``   |
+|                        |               | use when       |                      |
+|                        |               | uploading to   | ``secure_id = 01``\  |
+|                        |               | certification  | ``23456789ABCD``     |
+|                        |               | sites          |                      |
+|                        |               |                | ``staging = yes``    |
+|                        |               |                |                      |
+|                        +---------------+----------------+                      |
+|                        | ``staging``   | determines if  |                      |
+|                        |               | staging site   |                      |
+|                        |               | should be used |                      |
+|                        |               | Default:       |                      |
+|                        |               | ``no``         |                      |
+|                        |               |                |                      |
+|                        |               |                |                      |
+|                        |               |                |                      |
++------------------------+---------------+----------------+----------------------+
 
 
 Report
@@ -541,3 +577,71 @@ staging version of certification site and saved to /tmp/submission.tar.xz
     [report:file]
     transport = local_file
     exporter = tar
+
+3) A typical launcher to run a desktop SRU test plan automatically.
+The launcher will automatically retry the failed test jobs. Besides,
+this launcher include another launcher ``launcher.conf`` as its
+customized environment configuration.
+
+The launcher
+
+::
+
+    #!/usr/bin/env checkbox-cli
+    [launcher]
+    launcher_version = 1
+
+    [config]
+    config_filename = $HOME/launcher.conf
+
+    [test plan]
+    unit = com.canonical.certification::sru
+    forced = yes
+
+    [test selection]
+    forced = yes
+
+    [ui]
+    type = silent
+    auto_retry = yes
+    max_attempts = 3
+    delay_before_retry = 15
+
+
+The launcher configuration ``laucher.conf``
+
+::
+
+    #!/usr/bin/env checkbox-cli
+    [launcher]
+    launcher_version = 1
+    stock_reports = text, submission_files, certification
+
+    [transport:c3]
+    secure_id = <your secure ID>
+
+    [transport:local_file]
+    type = file
+    path = /home/ubuntu/c3-local-submission.tar.xz
+
+    [exporter:example_tar]
+    unit = com.canonical.plainbox::tar
+
+    [report:file]
+    transport = local_file
+    exporter = tar
+    forced = yes
+
+    [environment]
+    ROUTERS = multiple
+    WPA_BG_SSID = foo-bar-bg-wpa
+    WPA_BG_PSK = foo-bar
+    WPA_N_SSID = foo-bar-n-wpa
+    WPA_N_PSK = foobar
+    WPA_AC_SSID = foo-bar-ac-wpa
+    WPA_AC_PSK = foobar
+    OPEN_BG_SSID = foo-bar-bg-open
+    OPEN_N_SSID = foo-bar-n-open
+    OPEN_AC_SSID = foo-bar-ac-open
+    BTDEVADDR = ff:oo:oo:bb:aa:rr
+    TRANSFER_SERVER = cdimage.ubuntu.com

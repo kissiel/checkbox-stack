@@ -33,50 +33,60 @@
 */
 import QtQuick 2.5
 import QtQuick.Window 2.2
-import io.thp.pyotherside 1.4
+import io.thp.pyotherside 1.2
 
 Window {
     id: mainView
     width: 800
     height: 600
 
-    // information and functionality passed to qml job component
-    property var testingShell: {
-        "name": "Standalone testing shell",
-        "python": py
-    }
-
     Python {
         id: py
+        Component.onCompleted: {
+            addImportPath(Qt.resolvedUrl('.'));
+            py.importModule('pipe_handler', function() {
+                py.readAndClose(Qt.application.arguments[5], function(testingShellData) {
+                    var new_data = JSON.parse(testingShellData);
+                    for (var attrname in new_data) { testingShell[attrname] = new_data[attrname]; }
+                    testingShell.getTest = function() {
+                        return testingShell['job_repr'];
+                    }
+                    loader.setSource(Qt.application.arguments[3],
+                                     {'testingShell': testingShell});
+                });
+            });
+        }
+
+        onError: console.error("python error: " + traceback)
+        onReceived: console.log("pyotherside.send: " + data)
+
+        function writeAndClose(str, fd, continuation) {
+            py.call('pipe_handler.write_and_close', [str, fd], continuation);
+        }
+        function readAndClose(fd, continuation) {
+            py.call('pipe_handler.read_and_close', [fd], continuation);
+        }
+    }
+
+    // information and functionality passed to qml job component
+    property var testingShell: {
+        "name": "Plainbox qml shell",
+        "python": py
     }
 
     Loader {
         id: loader
         anchors.fill: parent
-        onLoaded: loader.item.testDone.connect(testDone)
         onStatusChanged: {
             if (loader.status === Loader.Error) {
                 testDone({'outcome': 'crash'});
-                grimReaper.start();
             }
         }
-    }
-
-    Timer {
-        /* because loader is constructed synchronously when the app is started,
-         * Qt.quit() would fire a signal that engine hasn't yet connected to.
-         * By using this timer we deffer calling of Qt.quit() */
-        id: grimReaper
-        interval: 10
-        onTriggered: Qt.quit()
+        onLoaded: loader.item.testDone.connect(testDone)
     }
 
     function testDone(res) {
-        console.error("__test_result_object:"+JSON.stringify(res));
-        Qt.quit();
-    }
-
-    Component.onCompleted: {
-        loader.setSource(Qt.application.arguments[4], {'testingShell': testingShell});
+        var json_str = JSON.stringify(res) || ""
+        py.writeAndClose(json_str, Qt.application.arguments[4], Qt.quit);
     }
 }
