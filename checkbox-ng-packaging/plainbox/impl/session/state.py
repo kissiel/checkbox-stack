@@ -75,7 +75,7 @@ class SessionMetaData:
     FLAG_TESTPLANLESS = "testplanless"
 
     def __init__(self, title=None, flags=None, running_job_name=None,
-                 app_blob=None, app_id=None):
+                 app_blob=b'', app_id=None):
         """Initialize a new session state meta-data object."""
         if flags is None:
             flags = []
@@ -1293,6 +1293,26 @@ class SessionState:
         stats = collections.defaultdict(int)
         for job_id, job_state in self.job_state_map.items():
             if not job_state.result.outcome:
+                continue
+            stats[job_state.result.outcome] += 1
+        return stats
+
+    def get_test_outcome_stats(self):
+        """
+        Process the JobState map to get stats about the job outcomes
+        excluding attachment and resource jobs.
+
+        :returns:
+            a mapping of "outcome": "total" key/value pairs
+
+        .. note::
+            Only the outcomes seen during this session are reported, not all
+            possible values (such as crash, not implemented, ...).
+        """
+        stats = collections.defaultdict(int)
+        for job_id, job_state in self.job_state_map.items():
+            if (not job_state.result.outcome or
+                job_state.job.plugin in ("resource", "attachment")):
                 continue
             stats[job_state.result.outcome] += 1
         return stats

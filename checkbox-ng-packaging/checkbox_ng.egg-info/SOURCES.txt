@@ -31,14 +31,16 @@ docs/bugs.rst
 docs/conf.py
 docs/configs.rst
 docs/custom-app.rst
+docs/glossary.rst
 docs/index.rst
-docs/intro.rst
 docs/launcher-tutorial.rst
 docs/nested-test-plan.rst
 docs/snappy.rst
 docs/stack.rst
 docs/testing-snappy.rst
 docs/tutorials.rst
+docs/understanding.rst
+docs/using.rst
 docs/units/category.rst
 docs/units/exporter.rst
 docs/units/index.rst
@@ -60,6 +62,8 @@ plainbox/test_provider_manager.py
 plainbox/tests.py
 plainbox/data/plainbox-qml-modules/Plainbox/QmlJob.qml
 plainbox/data/plainbox-qml-modules/Plainbox/qmldir
+plainbox/data/qml-shell/pipe_handler.py
+plainbox/data/qml-shell/plainbox_qml_shell.qml
 plainbox/impl/__init__.py
 plainbox/impl/_argparse.py
 plainbox/impl/_shlex.py

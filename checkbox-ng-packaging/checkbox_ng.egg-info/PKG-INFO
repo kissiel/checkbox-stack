@@ -1,6 +1,6 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: checkbox-ng
-Version: 1.0.0
+Version: 1.1.0rc1
 Summary: Checkbox - Command Line Test Runner
 Home-page: https://launchpad.net/checkbox-ng/
 Author: Zygmunt Krynicki
@@ -47,3 +47,4 @@ Classifier: Topic :: Software Development :: Quality Assurance
 Classifier: Topic :: Software Development :: Testing
 Classifier: Topic :: System :: Benchmark
 Classifier: Topic :: Utilities
+Provides-Extra: XLSX
