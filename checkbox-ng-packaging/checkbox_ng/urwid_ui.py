@@ -182,6 +182,7 @@ class FlagUnitWidget(urwid.TreeWidget):
 
 class JobTreeWidget(FlagUnitWidget):
     """Widget for individual files."""
+
     def __init__(self, node):
         super().__init__(node)
         add_widget(node.get_key(), self)
@@ -196,6 +197,7 @@ class JobTreeWidget(FlagUnitWidget):
 
 class CategoryWidget(FlagUnitWidget):
     """Widget for a category."""
+
     def __init__(self, node):
         super().__init__(node)
         self.expanded = False
@@ -305,7 +307,7 @@ class CategoryBrowser:
         ('dirmark', 'light gray', 'black', 'bold'),
         ('start', 'dark green,bold', 'black'),
         ('rerun', 'yellow,bold', 'black'),
-        ]
+    ]
 
     footer_text = [('Press ('), ('start', 'T'), (') to start Testing')]
 
@@ -391,7 +393,7 @@ class CategoryBrowser:
 
         def add_section(title, body):
             contents.extend([urwid.Text(title), urwid.Text(body),
-                            urwid.Divider()])
+                             urwid.Divider()])
         add_section(_('Job Identifier:'), job["id"])
         add_section(_('Summary:'), job["name"])
         add_section(_('User input:'), job["automated"])
@@ -522,7 +524,7 @@ def test_plan_browser(title, test_plan_list, selection=None):
         ('buttn', 'light gray', 'black', 'bold'),
         ('foot', 'light gray', 'black'),
         ('start', 'dark green,bold', 'black'),
-        ]
+    ]
     footer_text = [('Press '), ('start', '<Enter>'), (' to continue')]
     radio_button_group = []
     blank = urwid.Divider()
@@ -535,7 +537,7 @@ def test_plan_browser(title, test_plan_list, selection=None):
                 for txt in test_plan_list]),
             left=4, right=3, min_width=13),
         blank,
-        ]
+    ]
     if selection:
         radio_button_group[selection].set_state(True)
     header = urwid.AttrWrap(urwid.Padding(urwid.Text(title), left=1), 'header')
@@ -555,6 +557,66 @@ def test_plan_browser(title, test_plan_list, selection=None):
     try:
         return next(
             radio_button_group.index(i) for i in radio_button_group if i.state)
+    except StopIteration:
+        return None
+
+
+def interrupt_dialog(host):
+    palette = [
+        ('body', 'light gray', 'black', 'standout'),
+        ('header', 'black', 'light gray', 'bold'),
+        ('buttnf', 'black', 'light gray'),
+        ('buttn', 'light gray', 'black', 'bold'),
+        ('foot', 'light gray', 'black'),
+        ('start', 'dark green,bold', 'black'),
+    ]
+    choices = [
+        _("Cancel the interruption and resume the session (ESC)"),
+        _("Disconnect the master (Same as CTRL+C)"),
+        _("Stop the checkbox slave @{}".format(host)),
+        _("Abandon the session on the slave @{}".format(host)),
+    ]
+    footer_text = [
+        ('Press '), ('start', '<Enter>'), (' or '),
+        ('start', '<ESC>'), (' to continue')]
+    radio_button_group = []
+    blank = urwid.Divider()
+    listbox_content = [
+        blank,
+        urwid.Padding(urwid.Text(
+            _('What do you want to interrupt?')), left=20),
+        blank,
+        urwid.Padding(urwid.Pile(
+            [urwid.AttrWrap(urwid.RadioButton(
+                radio_button_group,
+                txt, state=False), 'buttn', 'buttnf')
+                for txt in choices]),
+            left=15, right=15, min_width=15),
+        blank,
+    ]
+    radio_button_group[0].set_state(True)  # select cancel by default
+    title = _("Interruption!")
+    header = urwid.AttrWrap(urwid.Padding(urwid.Text(title), left=1), 'header')
+    footer = urwid.AttrWrap(
+        urwid.Padding(urwid.Text(footer_text), left=1), 'foot')
+    listbox = urwid.ListBox(urwid.SimpleListWalker(listbox_content))
+    frame = urwid.Frame(urwid.AttrWrap(urwid.LineBox(listbox), 'body'),
+                        header=header, footer=footer)
+    if frame._command_map["enter"]:
+        del frame._command_map["enter"]
+
+    def unhandled(key):
+        if key == "enter":
+            raise urwid.ExitMainLoop()
+        if key == "esc":
+            radio_button_group[0].set_state(True)
+            raise urwid.ExitMainLoop()
+
+    urwid.MainLoop(frame, palette, unhandled_input=unhandled).run()
+    try:
+        index = next(
+            radio_button_group.index(i) for i in radio_button_group if i.state)
+        return ['cancel', 'kill-controller', 'kill-service', 'abandon'][index]
     except StopIteration:
         return None
 

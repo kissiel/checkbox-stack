@@ -40,9 +40,10 @@ from plainbox.impl.launcher import DefaultLauncherDefinition
 from plainbox.impl.launcher import LauncherDefinition
 
 from checkbox_ng.launcher.subcommands import (
-    CheckConfig, Launcher, List, Run, StartProvider, Submit, ListBootstrapped
+    Launcher, List, Run, StartProvider, Submit, ListBootstrapped
 )
-from checkbox_ng.launcher.remote import RemoteService, RemoteControl
+from checkbox_ng.launcher.check_config import CheckConfig
+from checkbox_ng.launcher.remote import RemoteSlave, RemoteMaster
 
 
 _ = gettext.gettext
@@ -61,6 +62,7 @@ class DisplayIngredient(Ingredient):
 
 class WarmupCommandsIngredient(Ingredient):
     """Ingredient that runs given commands at startup."""
+
     def late_init(self, context):
         # https://bugs.launchpad.net/checkbox-ng/+bug/1423949
         # MAAS-deployed server images need "tput reset" to keep ugliness
@@ -70,6 +72,7 @@ class WarmupCommandsIngredient(Ingredient):
 
 class LauncherIngredient(Ingredient):
     """Ingredient that adds Checkbox Launcher support to guacamole."""
+
     def late_init(self, context):
         if context.args.command1.get_cmd_name() != 'launcher':
             context.cmd_toplevel.launcher = DefaultLauncherDefinition()
@@ -158,8 +161,8 @@ class CheckboxCommand(CanonicalCommand):
         ('startprovider', StartProvider),
         ('submit', Submit),
         ('list-bootstrapped', ListBootstrapped),
-        ('remote-service', RemoteService),
-        ('remote-control', RemoteControl),
+        ('slave', RemoteSlave),
+        ('master', RemoteMaster),
     )
 
     def register_arguments(self, parser):
@@ -167,6 +170,10 @@ class CheckboxCommand(CanonicalCommand):
             'print more logging from checkbox'))
         parser.add_argument('--debug', action='store_true', help=_(
             'print debug messages from checkbox'))
+        parser.add_argument('--clear-cache', action='store_true', help=_(
+            'remove cached results from the system'))
+        parser.add_argument('--version', action='store_true', help=_(
+            "show program's version information and exit"))
 
     def invoked(self, ctx):
         if ctx.args.verbose:
