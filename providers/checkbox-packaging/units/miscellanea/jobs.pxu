@@ -81,7 +81,7 @@ id: miscellanea/fwupdate
 estimated_duration: 1.0
 depends: miscellanea/efi_boot_mode
 requires:
-  cpuinfo.platform in ("i386", "x86_64", "aarch64", "armhf")
+  cpuinfo.platform in ("i386", "x86_64", "aarch64", "armv7l")
   package.name == 'fwupdate' or executable.name == 'fwupdate'
 _description:
  Determine if EFI firmware supports update from OS.
@@ -148,6 +148,22 @@ command: boot_mode_test secureboot
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 0.5
+unit: template
+template-resource: model_assertion
+template-unit: job
+requires:
+ executable.name == 'dumpimage'
+ executable.name == 'mokutil'
+id: miscellanea/secure_boot_mode_{gadget}
+_summary: Test that {gadget} Ubuntu Core system booted with Secure Boot active
+_description:
+ Test to verify that the system booted with Secure Boot active.
+command:
+ boot_mode_test_snappy.py {gadget} {kernel}
+
+plugin: shell
+category_id: com.canonical.plainbox::miscellanea
+estimated_duration: 0.5
 user: root
 id: miscellanea/efi_pxeboot
 requires:
@@ -158,6 +174,16 @@ _description:
  Test to verify that the system booted from the network.
  Works only on EFI-based systems.
 command: efi-pxeboot
+
+plugin: shell
+category_id: com.canonical.plainbox::miscellanea
+estimated_duration: 0.5
+id: miscellanea/check_prerelease
+_summary: Test that system is not a pre-release version
+_description:
+ Test to verify that the system uses production, rather
+ than pre-release, versions of the kernel and the OS.
+command: check-prerelease
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
@@ -196,7 +222,7 @@ requires:
   dmi_present.state == 'supported'
 estimated_duration: 0.5
 user: root
-command: dmitest --test_versions server
+command: dmitest server
 _description:
  Sanity check of DMI system identification data (for servers)
 _summary:
