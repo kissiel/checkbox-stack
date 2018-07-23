@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""
+If you're debugging this program, set PM_TEST_DRY_RUN in your environment.
+It will make the script not run actual S3, S4, reboot and poweroff commands.
+"""
+import gi
+import json
 import logging
 import logging.handlers
 import os
@@ -13,7 +19,7 @@ from calendar import timegm
 from configparser import ConfigParser
 from datetime import datetime, timedelta
 from time import localtime, time
-
+gi.require_version("Gtk", "3.0")
 from gi.repository import GObject, Gtk
 
 
@@ -41,8 +47,13 @@ def main():
     logging.debug('Arguments: {0!r}'.format(args))
     logging.debug('Extra Arguments: {0!r}'.format(extra_args))
 
+    dry_run = os.environ.get('PM_TEST_DRY_RUN', False)
+    if dry_run:
+        logging.info("Running in dry-run mode")
+
     try:
-        operation = PowerManagementOperation(args, extra_args, user=username)
+        operation = PowerManagementOperation(
+            args, extra_args, user=username, dry_run=dry_run)
         operation.setup()
         operation.run()
     except (TestCancelled, TestFailed) as exception:
@@ -64,10 +75,11 @@ def main():
 class PowerManagementOperation():
     SLEEP_TIME = 5
 
-    def __init__(self, args, extra_args, user=None):
+    def __init__(self, args, extra_args, user=None, dry_run=False):
         self.args = args
         self.extra_args = extra_args
         self.user = user
+        self.dry_run = dry_run
 
     def setup(self):
         """
@@ -128,11 +140,17 @@ class PowerManagementOperation():
         logging.info('Executing new {0!r} operation...'
                      .format(self.args.pm_operation))
         logging.debug('Executing: {0!r}...'.format(command_str))
-        # The PM operation is performed asynchronously so let's just wait
-        # indefinitely until it happens and someone comes along to kill us.
-        # This addresses LP: #1413134
-        subprocess.check_call(command_str, shell=True)
-        signal.pause()
+        if self.dry_run:
+            print("\n\nRUNNING IN DRY-RUN MODE")
+            print("Normally the program would run: {}".format(command_str))
+            print("Waiting for Enter instead")
+            input()
+        else:
+            # The PM operation is performed asynchronously so let's just wait
+            # indefinitely until it happens and someone comes along to kill us.
+            # This addresses LP: #1413134
+            subprocess.check_call(command_str, shell=True)
+            signal.pause()
 
     def run_suspend_cycles(self, cycles_count, fwts):
         """Run suspend and resume cycles."""
@@ -155,15 +173,21 @@ class PowerManagementOperation():
         command_str = command_tpl.format(script_path, cycles_count)
         logging.info('Running suspend/resume cycles')
         logging.debug('Executing: {0!r}...'.format(command_str))
-        try:
-            # We call sleep_test or fwts_test script and log its output as it
-            # contains average times we need to compute global average times
-            # later.
-            logging.info(subprocess.check_output(
-                command_str, universal_newlines=True, shell=True))
-        except subprocess.CalledProcessError as e:
-            logging.error('Error while running {0}:'.format(e.cmd))
-            logging.error(e.output)
+        if self.dry_run:
+            print("\n\nRUNNING IN DRY-RUN MODE")
+            print("Normally the program would run: {}".format(command_str))
+            print("Waiting for Enter instead")
+            input()
+        else:
+            try:
+                # We call sleep_test or fwts_test script and log its output as
+                # it contains average times we need to compute global average
+                # times later.
+                logging.info(subprocess.check_output(
+                    command_str, universal_newlines=True, shell=True))
+            except subprocess.CalledProcessError as e:
+                logging.error('Error while running {0}:'.format(e.cmd))
+                logging.error(e.output)
 
     def summary(self):
         """
@@ -199,6 +223,29 @@ class PowerManagementOperation():
 
         message = ('{0} test complete'
                    .format(self.args.pm_operation.capitalize()))
+        total_suspends_expected = (
+            self.args.suspends_before_reboot * self.args.total)
+        problems = ''
+        fwts_log_path = os.path.join(self.args.log_dir, 'fwts.log')
+        try:
+            with open(fwts_log_path, 'rt') as f:
+                magic_line = 'Completed S3 cycle(s) \n'
+                count = f.readlines().count(magic_line)
+                if count != total_suspends_expected:
+                    problems = (
+                        "Found {} occurrences of '{}'. Expected {}".format(
+                            count, magic_line.strip(),
+                            total_suspends_expected))
+        except FileNotFoundError:
+            problems = "Error opening {}".format(fwts_log_path)
+        if problems:
+            result = {
+                'outcome': 'fail' if problems else 'pass',
+                'comment': problems,
+            }
+            with open(os.path.join(self.args.log_dir, '__result'), 'wt') as f:
+                json.dump(result, f)
+
         if self.args.silent:
             logging.info(message)
         else:
@@ -206,6 +253,8 @@ class PowerManagementOperation():
             MessageDialog(title, message).run()
         if self.args.checkbox_respawn_cmd:
             subprocess.run(
+                r'unset LD_LIBRARY_PATH;'
+                r'unset PYTHONPATH; unset PYTHONHOME;'
                 r'DISPLAY=:0 x-terminal-emulator -e "sudo -u '
                 r'{} bash -c \"source {}; exec bash\""'.format(
                     self.user, self.args.checkbox_respawn_cmd), shell=True)
@@ -572,11 +621,11 @@ autologin-user-timeout=0
                     shutil.copystat(self.config_filename, backup_filename)
                     break
 
-            with open(self.config_filename, 'w') as f:
-                if self.config_filename == '/etc/lightdm/lightdm.conf':
-                    f.write(self.template.format(username=self.user))
-                elif self.config_filename == '/etc/gdm3/custom.conf':
-                    self.parser.write(f)
+        with open(self.config_filename, 'w') as f:
+            if self.config_filename == '/etc/lightdm/lightdm.conf':
+                f.write(self.template.format(username=self.user))
+            elif self.config_filename == '/etc/gdm3/custom.conf':
+                self.parser.write(f)
 
     def disable(self):
         """

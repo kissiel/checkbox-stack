@@ -3,6 +3,7 @@ template-resource: graphics_card
 template-filter: graphics_card.prime_gpu_offload == 'Off'
 id: monitor/{index}_vga_{product_slug}
 requires: display.vga == 'supported' or display.dp == 'supported'
+flags: also-after-suspend-manual
 plugin: manual
 category_id: com.canonical.plainbox::monitor
 _purpose:
@@ -18,6 +19,7 @@ template-resource: graphics_card
 template-filter: graphics_card.prime_gpu_offload == 'Off'
 id: monitor/{index}_dvi_{product_slug}
 requires: display.dvi == 'supported'
+flags: also-after-suspend-manual
 plugin: manual
 category_id: com.canonical.plainbox::monitor
 _purpose:
@@ -33,6 +35,7 @@ template-resource: graphics_card
 template-filter: graphics_card.prime_gpu_offload == 'Off'
 id: monitor/{index}_displayport_{product_slug}
 requires: display.dp == 'supported'
+flags: also-after-suspend-manual
 plugin: manual
 category_id: com.canonical.plainbox::monitor
 _purpose:
@@ -48,6 +51,7 @@ template-resource: graphics_card
 template-filter: graphics_card.prime_gpu_offload == 'Off'
 id: monitor/{index}_hdmi_{product_slug}
 requires: display.hdmi == 'supported'
+flags: also-after-suspend-manual
 plugin: manual
 category_id: com.canonical.plainbox::monitor
 _purpose:
@@ -93,6 +97,7 @@ template-resource: graphics_card
 template-filter: graphics_card.prime_gpu_offload == 'Off'
 id: monitor/{index}_multi-head_{product_slug}
 requires: dmi.product in ['Desktop','Low Profile Desktop','Tower','Mini Tower', 'Space-saving']
+flags: also-after-suspend-manual
 plugin: manual
 category_id: com.canonical.plainbox::monitor
 _purpose:
@@ -109,6 +114,7 @@ _verification:
 unit: template
 template-resource: graphics_card
 template-filter: graphics_card.prime_gpu_offload == 'Off'
+flags: also-after-suspend-manual
 id: monitor/{index}_powersaving_{product_slug}
 plugin: user-interact-verify
 category_id: com.canonical.plainbox::monitor
@@ -146,6 +152,7 @@ template-filter: graphics_card.prime_gpu_offload == 'Off'
 id: monitor/{index}_thunderbolt_{product_slug}
 imports: from com.canonical.plainbox import manifest
 requires: manifest.has_thunderbolt == 'True'
+flags: also-after-suspend-manual
 estimated_duration: 15.0
 plugin: manual
 category_id: com.canonical.plainbox::monitor
@@ -167,6 +174,7 @@ template-filter: graphics_card.prime_gpu_offload == 'Off'
 id: monitor/{index}_thunderbolt3_{product_slug}
 imports: from com.canonical.plainbox import manifest
 requires: manifest.has_thunderbolt3 == 'True'
+flags: also-after-suspend-manual
 estimated_duration: 15.0
 plugin: manual
 category_id: com.canonical.plainbox::monitor
@@ -188,6 +196,7 @@ id: monitor/{index}_type-c_displayport_{product_slug}
 template-filter: graphics_card.prime_gpu_offload == 'Off'
 imports: from com.canonical.plainbox import manifest
 requires: manifest.has_usb_type_c == 'True'
+flags: also-after-suspend-manual
 estimated_duration: 15.0
 plugin: manual
 category_id: com.canonical.plainbox::monitor
@@ -202,3 +211,41 @@ _steps:
 _verification:
     Was the desktop displayed correctly with {vendor} {product} on the screen
     connected using a "USB Type-C to DisplayPort" adapter in every mode?
+
+id: monitor/type-c-to-hdmi
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_usb_type_c == 'True'
+flags: also-after-suspend-manual
+estimated_duration: 15.0
+plugin: manual
+category_id: com.canonical.plainbox::monitor
+_summary: Display connected via HDMI using an USB Type-C port
+_purpose:
+    This test will check the connection of a screen using a "USB Type-C to HDMI" adapter
+_steps:
+    1. Connect a display (if not already connected) to the USB Type-C port on
+       your system using a "USB Type-C to HDMI" adapter
+    2. Switch display modes between in your Display Settings, check if it can be
+       set to mirrored, extended, displayed on external or onboard only
+_verification:
+    Was the desktop displayed correctly with on the screen connected using a
+    "USB Type-C to HDMI" adapter in every mode?
+
+id: monitor/type-c-to-vga
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_usb_type_c == 'True'
+flags: also-after-suspend-manual
+estimated_duration: 15.0
+plugin: manual
+category_id: com.canonical.plainbox::monitor
+_summary: Display connected via VGA using an USB Type-C port
+_purpose:
+    This test will check the connection of a screen using a "USB Type-C to VGA" adapter
+_steps:
+    1. Connect a display (if not already connected) to the USB Type-C port on
+       your system using a "USB Type-C to VGA" adapter
+    2. Switch display modes between in your Display Settings, check if it can be
+       set to mirrored, extended, displayed on external or onboard only
+_verification:
+    Was the desktop displayed correctly with on the screen connected using a
+    "USB Type-C to VGA" adapter in every mode?
