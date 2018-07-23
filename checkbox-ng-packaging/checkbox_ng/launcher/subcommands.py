@@ -1,6 +1,6 @@
 # This file is part of Checkbox.
 #
-# Copyright 2016 Canonical Ltd.
+# Copyright 2016-2018 Canonical Ltd.
 # Written by:
 #   Maciej Kisielewski <maciej.kisielewski@canonical.com>
 #
@@ -21,6 +21,7 @@ Definition of sub-command classes for checkbox-cli
 from argparse import ArgumentTypeError
 from argparse import SUPPRESS
 from collections import defaultdict
+from string import Formatter
 from tempfile import TemporaryDirectory
 import copy
 import datetime
@@ -31,6 +32,7 @@ import logging
 import operator
 import os
 import re
+import socket
 import sys
 import tarfile
 import time
@@ -40,11 +42,6 @@ from guacamole import Command
 from plainbox.abc import IJobResult
 from plainbox.i18n import ngettext
 from plainbox.impl.color import Colorizer
-from plainbox.impl.commands.inv_check_config import CheckConfigInvocation
-from plainbox.impl.commands.inv_run import Action
-from plainbox.impl.commands.inv_run import NormalUI
-from plainbox.impl.commands.inv_startprovider import (
-    EmptyProviderSkeleton, IQN, ProviderSkeleton)
 from plainbox.impl.highlevel import Explorer
 from plainbox.impl.providers import get_providers
 from plainbox.impl.providers.embedded_providers import (
@@ -59,8 +56,11 @@ from plainbox.impl.transport import InvalidSecureIDError
 from plainbox.impl.transport import get_all_transports
 from plainbox.impl.transport import SECURE_ID_PATTERN
 
-from checkbox_ng.config import CheckBoxConfig
 from checkbox_ng.launcher.stages import MainLoopStage, ReportsStage
+from checkbox_ng.launcher.startprovider import (
+    EmptyProviderSkeleton, IQN, ProviderSkeleton)
+from checkbox_ng.launcher.run import Action
+from checkbox_ng.launcher.run import NormalUI
 from checkbox_ng.urwid_ui import CategoryBrowser
 from checkbox_ng.urwid_ui import ReRunBrowser
 from checkbox_ng.urwid_ui import test_plan_browser
@@ -69,10 +69,15 @@ _ = gettext.gettext
 
 _logger = logging.getLogger("checkbox-ng.launcher.subcommands")
 
-
-class CheckConfig(Command):
-    def invoked(self, ctx):
-        return CheckConfigInvocation(lambda: CheckBoxConfig.get()).run()
+# Ugly hack to avoid a segfault when running from a classic snap where libc6
+# is newer than the 16.04 version.
+# The requests module is not calling the right glibc getaddrinfo() when
+# sending results to C3.
+# Doing such a call early ensures the right socket module is still loaded.
+try:
+    _res = socket.getaddrinfo('foo.bar.baz', 443)  # 443 for HTTPS
+except:
+    pass
 
 
 class Submit(Command):
@@ -184,6 +189,11 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         return self.launcher.api_flags
 
     def invoked(self, ctx):
+        if ctx.args.version:
+            from checkbox_ng.version import get_version_info
+            for component, version in get_version_info().items():
+                print("{}: {}".format(component, version))
+            return
         if ctx.args.verify:
             # validation is always run, so if there were any errors the program
             # exited by now, so validation passed
@@ -227,21 +237,17 @@ class Launcher(Command, MainLoopStage, ReportsStage):
                     "WARNING: using side-loaded providers")))
                 os.environ['PROVIDERPATH'] = ''
                 embedded_providers = EmbeddedProvider1PlugInCollection(
-                        side_load_path)
+                    side_load_path)
                 additional_providers = embedded_providers.get_all_plugin_objects()
             self._configure_restart(ctx)
             self._prepare_transports()
             ctx.sa.use_alternate_configuration(self.launcher)
-            try:
-                ctx.sa.select_providers(
-                    *self.launcher.providers,
-                    additional_providers=additional_providers)
-            except ValueError:
-                from plainbox.impl.providers.v1 import all_providers
-                print(self._C.RED(_("No providers found")))
-                print("Paths searched:")
-                print("\n".join(all_providers.provider_search_paths))
-                return 1
+            try_selecting_providers(
+                ctx.sa,
+                *self.launcher.providers,
+                additional_providers=additional_providers)
+            if ctx.args.clear_cache:
+                ctx.sa.clear_cache()
             if not self._maybe_resume_session():
                 self._start_new_session()
                 self._pick_jobs_to_run()
@@ -277,7 +283,7 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         We can then interact with the user when we encounter OUTCOME_UNDECIDED.
         """
         return (self.launcher.ui_type == 'interactive' and
-            sys.stdin.isatty() and sys.stdout.isatty())
+                sys.stdin.isatty() and sys.stdout.isatty())
 
     def _configure_restart(self, ctx):
         if SA_RESTARTABLE not in self.get_sa_api_flags():
@@ -316,13 +322,13 @@ class Launcher(Command, MainLoopStage, ReportsStage):
                 # app called "checkbox-cli"
                 respawn_cmd = '/snap/bin/{}.checkbox-cli'.format(snap_name)
             else:
-                respawn_cmd = sys.argv[0] # entry-point to checkbox
+                respawn_cmd = sys.argv[0]  # entry-point to checkbox
             respawn_cmd += " launcher "
             if ctx.args.launcher:
                 respawn_cmd += os.path.abspath(ctx.args.launcher) + ' '
-            respawn_cmd += '--resume {}' # interpolate with session_id
+            respawn_cmd += '--resume {}'  # interpolate with session_id
             ctx.sa.configure_application_restart(
-                lambda session_id: [ respawn_cmd.format(session_id)])
+                lambda session_id: [respawn_cmd.format(session_id)])
 
     def _maybe_resume_session(self):
         resume_candidates = list(self.ctx.sa.get_resumable_sessions())
@@ -472,10 +478,10 @@ class Launcher(Command, MainLoopStage, ReportsStage):
                 "category_id": cat_id,
                 "category_name": self.ctx.sa.get_category(cat_id).tr_name(),
                 "automated": (_('this job is fully automated') if job.automated
-                    else _('this job requires some manual interaction')),
+                              else _('this job requires some manual interaction')),
                 "duration": duration_txt,
                 "description": (job.tr_description() or
-                    _('No description provided for this job')),
+                                _('No description provided for this job')),
                 "outcome": self.ctx.sa.get_job_state(job.id).result.outcome,
             }
             test_info_list = test_info_list + ((test_info, ))
@@ -486,11 +492,28 @@ class Launcher(Command, MainLoopStage, ReportsStage):
             return
         if self.ctx.args.session_id:
             # session_id is present only if auto-resume is used
-            print(_("Auto resuming session. Marking previous job as passed"))
-            result = MemoryJobResult({
+            result_dict = {
                 'outcome': IJobResult.OUTCOME_PASS,
-                'comments': _("Passed after resuming execution")
-            })
+                'comments': _("Automatically passed after resuming execution"),
+            }
+            result_path = os.path.join(
+                self.ctx.sa.get_session_dir(), 'CHECKBOX_DATA', '__result')
+            if os.path.exists(result_path):
+                try:
+                    with open(result_path, 'rt') as f:
+                        result_dict = json.load(f)
+                        # the only really important field in the result is
+                        # 'outcome' so let's make sure it doesn't contain
+                        # anything stupid
+                        if result_dict.get('outcome') not in [
+                                'pass', 'fail', 'skip']:
+                            result_dict['outcome'] = IJobResult.OUTCOME_PASS
+                except json.JSONDecodeError as e:
+                    pass
+            print(_("Automatically resuming session. "
+                    "Outcome of the previous job: {}".format(
+                        result_dict['outcome'])))
+            result = MemoryJobResult(result_dict)
             self.ctx.sa.use_job_result(last_job, result)
             return
 
@@ -556,7 +579,7 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         """Get all the tests that might be selected for an automatic retry."""
         def retry_predicate(job_state):
             return job_state.result.outcome in (IJobResult.OUTCOME_FAIL,) \
-                   and job_state.effective_auto_retry != 'no'
+                and job_state.effective_auto_retry != 'no'
         retry_candidates = []
         todo_list = self.ctx.sa.get_static_todo_list()
         job_states = {job_id: self.ctx.sa.get_job_state(job_id) for job_id
@@ -611,7 +634,6 @@ class Launcher(Command, MainLoopStage, ReportsStage):
                 rerun_candidates.append(self.ctx.sa.get_job(job_id))
         return rerun_candidates
 
-
     def _get_ui_for_job(self, job):
         class CheckboxUI(NormalUI):
             def considering_job(self, job, job_state):
@@ -657,7 +679,10 @@ class Launcher(Command, MainLoopStage, ReportsStage):
             'print more logging from checkbox'))
         parser.add_argument('--debug', action='store_true', help=_(
             'print debug messages from checkbox'))
-
+        parser.add_argument('--clear-cache', action='store_true', help=_(
+            'remove cached results from the system'))
+        parser.add_argument('--version', action='store_true', help=_(
+            "show program's version information and exit"))
 
 
 class CheckboxUI(NormalUI):
@@ -689,13 +714,13 @@ class Run(Command, MainLoopStage):
                    ' (pass ? for a list of choices)'))
         parser.add_argument(
             '-o', '--output-file', default='-',
-            metavar=_('FILE'),# type=FileType("wb"),
+            metavar=_('FILE'),  # type=FileType("wb"),
             help=_('save test results to the specified FILE'
                    ' (or to stdout if FILE is -)'))
         parser.add_argument(
             '-t', '--transport',
             metavar=_('TRANSPORT'),
-                choices=[_('?')] + list(get_all_transports().keys()),
+            choices=[_('?')] + list(get_all_transports().keys()),
             help=_('use TRANSPORT to send results somewhere'
                    ' (pass ? for a list of choices)'))
         parser.add_argument(
@@ -736,14 +761,18 @@ class Run(Command, MainLoopStage):
             ["restartable"],
         )
         self._configure_restart()
-        self.sa.select_providers('*')
+        try_selecting_providers(self.sa, '*')
         self.sa.start_new_session('checkbox-run')
         tps = self.sa.get_test_plans()
         self._configure_report()
         selection = ctx.args.PATTERN
         if len(selection) == 1 and selection[0] in tps:
+            self.ctx.sa.update_app_blob(json.dumps(
+                {'testplan_id': selection[0]}).encode("UTF-8"))
             self.just_run_test_plan(selection[0])
         else:
+            self.ctx.sa.update_app_blob(json.dumps(
+                {}).encode("UTF-8"))
             self.sa.hand_pick_jobs(selection)
             print(self.C.header(_("Running Selected Jobs")))
             self._run_jobs(self.sa.get_dynamic_todo_list())
@@ -792,7 +821,7 @@ class Run(Command, MainLoopStage):
         else:
             if self.ctx.args.transport not in get_all_transports():
                 _logger.error("The selected transport %r is not available",
-                             self.ctx.args.transport)
+                              self.ctx.args.transport)
                 raise SystemExit(1)
             self.transport = self.ctx.args.transport
             self.transport_where = self.ctx.args.transport_where
@@ -821,10 +850,10 @@ class Run(Command, MainLoopStage):
             # app called "checkbox-cli"
             respawn_cmd = '/snap/bin/{}.checkbox-cli'.format(snap_name)
         else:
-            respawn_cmd = sys.argv[0] # entry-point to checkbox
-        respawn_cmd += ' --resume {}' # interpolate with session_id
+            respawn_cmd = sys.argv[0]  # entry-point to checkbox
+        respawn_cmd += ' --resume {}'  # interpolate with session_id
         self.sa.configure_application_restart(
-            lambda session_id: [ respawn_cmd.format(session_id)])
+            lambda session_id: [respawn_cmd.format(session_id)])
 
 
 class List(Command):
@@ -840,29 +869,32 @@ class List(Command):
         parser.add_argument(
             '-f', '--format', type=str,
             help=_(("output format, as passed to print function. "
-                "Use '?' to list possible values")))
+                    "Use '?' to list possible values")))
 
     def invoked(self, ctx):
         if ctx.args.GROUP == 'all-jobs':
             if ctx.args.attrs:
                 print_objs('job', True)
-                filter_fun = lambda u: u.attrs['template_unit'] == 'job'
+
+                def filter_fun(u): return u.attrs['template_unit'] == 'job'
                 print_objs('template', True, filter_fun)
             jobs = get_all_jobs()
             if ctx.args.format == '?':
                 all_keys = set()
                 for job in jobs:
                     all_keys.update(job.keys())
-                print(list(all_keys))
+                print(_('Available fields are:'))
+                print(', '.join(sorted(list(all_keys))))
                 return
             if not ctx.args.format:
                 # setting default in parser.add_argument would apply to all
                 # the list invocations. We want default to be present only for
                 # the 'all-jobs' group.
-                ctx.args.format = 'id: {id}\n{tr_summary}\n'
+                ctx.args.format = 'id: {full_id}\n{_summary}\n'
             for job in jobs:
                 unescaped = ctx.args.format.replace(
                     '\\n', '\n').replace('\\t', '\t')
+
                 class DefaultKeyedDict(defaultdict):
                     def __missing__(self, key):
                         return _('<missing {}>').format(key)
@@ -873,7 +905,8 @@ class List(Command):
                     job['unit_type'] = 'template_job'
                 else:
                     job['unit_type'] = 'job'
-                print(unescaped.format(**DefaultKeyedDict(None, job)), end='')
+                print(Formatter().vformat(
+                    unescaped, (), DefaultKeyedDict(None, job)), end='')
             return
         elif ctx.args.format:
             print(_("--format applies only to 'all-jobs' group.  Ignoring..."))
@@ -894,40 +927,86 @@ class ListBootstrapped(Command):
         parser.add_argument(
             '--partial', default=False, action="store_true",
             help=_("print only partial id"))
+        parser.add_argument(
+            '-f', '--format', type=str,
+            help=_(("output format, as passed to print function. "
+                    "Use '?' to list possible values")))
 
     def invoked(self, ctx):
         self.ctx = ctx
-        self.sa.select_providers('*')
+        try_selecting_providers(self.sa, '*')
         self.sa.start_new_session('checkbox-listing-ephemeral')
         tps = self.sa.get_test_plans()
         if ctx.args.TEST_PLAN not in tps:
             raise SystemExit('Test plan not found')
         self.sa.select_test_plan(ctx.args.TEST_PLAN)
         self.sa.bootstrap()
-        for job_id in self.sa.get_static_todo_list():
-            if ctx.args.partial:
-                print(self.sa.get_job(job_id).partial_id)
-            else:
-                print(job_id)
+        jobs = []
+        for job in self.sa.get_static_todo_list():
+            job_unit = self.sa.get_job(job)
+            attrs = job_unit._raw_data.copy()
+            attrs['full_id'] = job_unit.id
+            attrs['id'] = job_unit.partial_id
+            jobs.append(attrs)
+        if ctx.args.format == '?':
+            all_keys = set()
+            for job in jobs:
+                all_keys.update(job.keys())
+            print(_('Available fields are:'))
+            print(', '.join(sorted(list(all_keys))))
+            return
+        if ctx.args.format:
+            for job in jobs:
+                unescaped = ctx.args.format.replace(
+                    '\\n', '\n').replace('\\t', '\t')
+
+                class DefaultKeyedDict(defaultdict):
+                    def __missing__(self, key):
+                        return _('<missing {}>').format(key)
+                print(Formatter().vformat(
+                    unescaped, (), DefaultKeyedDict(None, job)), end='')
+        else:
+            for job_id in jobs:
+                if ctx.args.partial:
+                    print(self.sa.get_job(job_id).partial_id)
+                else:
+                    print(job_id)
+
+
+def try_selecting_providers(sa, *args, **kwargs):
+    """
+    Try selecting proivders via SessionAssistant.
+
+    If no providers were loaded gracefully exit the program.
+    """
+    try:
+        sa.select_providers(*args, **kwargs)
+    except ValueError:
+        from plainbox.impl.providers.v1 import all_providers
+        message = '\n'.join([_("No providers found! Paths searched:"), ]
+                            + all_providers.provider_search_paths)
+        raise SystemExit(message)
 
 
 def get_all_jobs():
     root = Explorer(get_providers()).get_object_tree()
+
     def get_jobs(obj):
         jobs = []
-        if obj.group == 'job':
-            jobs.append(obj.attrs)
-        elif obj.group == 'template' and obj.attrs['template_unit'] == 'job':
-            jobs.append(obj.attrs)
+        if obj.group == 'job' or (
+                obj.group == 'template' and obj.attrs['template_unit'] == 'job'):
+            attrs = dict(obj._impl._raw_data.copy())
+            attrs['full_id'] = obj.name
+            jobs.append(attrs)
         for child in obj.children:
             jobs += get_jobs(child)
         return jobs
-    return sorted(get_jobs(root),key=operator.itemgetter('id'))
+    return sorted(get_jobs(root), key=operator.itemgetter('full_id'))
 
 
 def print_objs(group, show_attrs=False, filter_fun=None):
     obj = Explorer(get_providers()).get_object_tree()
-    indent = ""
+
     def _show(obj, indent):
         if group is None or obj.group == group:
             # object must satisfy filter_fun (if supplied) to be printed

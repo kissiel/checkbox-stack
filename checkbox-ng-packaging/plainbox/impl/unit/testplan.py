@@ -319,13 +319,13 @@ class TestPlanUnit(UnitWithId):
     @instance_method_lru_cache(maxsize=None)
     def get_bootstrap_job_ids(self):
         """Compute and return a set of job ids from bootstrap_include field."""
-        job_ids = set()
+        job_ids = []
         if self.bootstrap_include is not None:
 
             class V(Visitor):
 
                 def visit_Text_node(visitor, node: Text):
-                    job_ids.add(self.qualify_id(node.text))
+                    job_ids.append(self.qualify_id(node.text))
 
                 def visit_Error_node(visitor, node: Error):
                     logger.warning(_(
@@ -333,7 +333,7 @@ class TestPlanUnit(UnitWithId):
 
             V().visit(WordList.parse(self.bootstrap_include))
         for tp_unit in self.get_nested_part():
-            job_ids |= tp_unit.get_bootstrap_job_ids()
+            job_ids.extend(tp_unit.get_bootstrap_job_ids())
         return job_ids
 
     @instance_method_lru_cache(maxsize=None)
@@ -645,9 +645,8 @@ class TestPlanUnit(UnitWithId):
                             lambda referrer, referee: referee.unit == 'job',
                             message=_("the referenced unit is not a job")),
                         ReferenceConstraint(
-                            lambda referrer, referee: (
-                                referee.plugin == 'resource'),
-                            message=_("only resource jobs are allowed "
+                            lambda referrer, referee: referee.automated,
+                            message=_("only automated jobs are allowed "
                                       "in bootstrapping_include"))])
             ],
             fields.exclude: [

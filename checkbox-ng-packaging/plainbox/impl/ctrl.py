@@ -655,8 +655,7 @@ class CheckBoxExecutionController(IExecutionController):
         """
         # Get a proper environment
         env = dict(os.environ)
-        # Neuter locale unless 'preserve-locale' flag is set
-        if 'preserve-locale' not in job.get_flag_set():
+        if 'reset-locale' in job.get_flag_set():
             # Use non-internationalized environment
             env['LANG'] = 'C.UTF-8'
             if 'LANGUAGE' in env:
@@ -1046,9 +1045,7 @@ class CheckBoxDifferentialExecutionController(CheckBoxExecutionController):
             if key not in base_env or base_env[key] != value
             or key in job.get_environ_settings()
         }
-        # Neutral locale in the differential environment unless the
-        # 'preserve-locale' flag is set.
-        if 'preserve-locale' not in job.get_flag_set():
+        if 'reset-locale' in job.get_flag_set():
             delta_env['LANG'] = 'C.UTF-8'
             delta_env['LANGUAGE'] = ''
             delta_env['LC_ALL'] = 'C.UTF-8'
@@ -1345,6 +1342,9 @@ class RootViaSudoExecutionController(
         # https://github.com/snapcore/snapd/blob/master/osutil/user.go#L84
         # Hence doing the same here:
         if (os.getenv("SNAP") and os.getenv('USER')):
+            if not os.access('/etc/sudoers.d', os.R_OK):
+                logger.warning(
+                    _("Can't access /etc/sudoers.d - unexpected permissions"))
             user_mod = os.getenv('USER').replace('.', '%2E')
             in_sudoers_d = os.path.exists(
                 '/etc/sudoers.d/create-user-{}'.format(user_mod))
