@@ -1,3 +1,4 @@
+#!/bin/bash
 #;**********************************************************************;
 #
 # Copyright (c) 2016, Intel Corporation
@@ -29,32 +30,24 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
 # THE POSSIBILITY OF SUCH DAMAGE.
 #;**********************************************************************;
-#!/bin/bash
-handle_ek=0x8101000b
-handle_ak=0x8101000c
-ek_alg=0x001
-ak_alg=0x0001
-digestAlg=0x000B 
-signAlg=0x0014
-output_ek_pub=/home/$USER/ek_pub.out
-output_ak_pub=/home/$USER/ak_pub.out
-output_ak_pub_name=/home/$USER/ak_name_pub.out
 
-rm $output_ek_pub $output_ak_pub $output_ak_pub_name -rf 
+onerror() {
+    echo "$BASH_COMMAND on line ${BASH_LINENO[0]} failed: $?"
+    exit 1
+}
+trap onerror ERR
 
-tpm2_getpubek  -H $handle_ek -g $ek_alg -f $output_ek_pub
-if [ $? != 0 ] || [ ! -e $output_ek_pub ];then
-echo "getpubek fail, please check the environment or parameters!"
-exit 1
-fi
+cleanup() {
+    rm -f ek.pub
 
-tpm2_getpubak  -E $handle_ek  -k $handle_ak -g $ak_alg -D $digestAlg -s $signAlg -f $output_ak_pub  -n $output_ak_pub_name
+    # Evict persistent handles, we want them to always succeed and never trip
+    # the onerror trap.
+	tpm2_evictcontrol -Q -A o -H 0x81010005 2>/dev/null || true
+}
+trap cleanup EXIT
 
-if [ $? != 0 ] || [ ! -e $output_ak_pub ];then
-echo "getpubak fail, please check the environment or parameters!"
-exit 1
-fi
- 
-echo "getpubak successfully!"
+cleanup
 
+tpm2_getpubek -H 0x81010005 -g rsa -f ek.pub
 
+exit 0

@@ -1,3 +1,4 @@
+#!/bin/bash
 #;**********************************************************************;
 #
 # Copyright (c) 2016, Intel Corporation
@@ -29,32 +30,27 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
 # THE POSSIBILITY OF SUCH DAMAGE.
 #;**********************************************************************;
-#!/bin/bash
-handle_ek=0x8101000b
-handle_ak=0x8101000c
-ek_alg=0x001
-ak_alg=0x0001
-digestAlg=0x000B 
-signAlg=0x0014
-output_ek_pub=/home/$USER/ek_pub.out
-output_ak_pub=/home/$USER/ak_pub.out
-output_ak_pub_name=/home/$USER/ak_name_pub.out
+###this script use for test the implementation tpm2_dictionarylockout 
 
-rm $output_ek_pub $output_ak_pub $output_ak_pub_name -rf 
+onerror() {
+    echo "$BASH_COMMAND on line ${BASH_LINENO[0]} failed: $?"
+    exit 1
+}
+trap onerror ERR
 
-tpm2_getpubek  -H $handle_ek -g $ek_alg -f $output_ek_pub
-if [ $? != 0 ] || [ ! -e $output_ek_pub ];then
-echo "getpubek fail, please check the environment or parameters!"
-exit 1
+tpm2_dictionarylockout -s -n 5 -t 6 -l 7
+
+if [ "$(tpm2_getcap -c properties-variable | grep TPM_PT_MAX_AUTH_FAIL | sed -e 's/TPM_PT_MAX_AUTH_FAIL: \+//')" != "0x00000005" ]; then
+ echo "Failure: setting up the number of allowed tries in the lockout parameters"
+ exit 1
 fi
 
-tpm2_getpubak  -E $handle_ek  -k $handle_ak -g $ak_alg -D $digestAlg -s $signAlg -f $output_ak_pub  -n $output_ak_pub_name
-
-if [ $? != 0 ] || [ ! -e $output_ak_pub ];then
-echo "getpubak fail, please check the environment or parameters!"
-exit 1
+if [ "$(tpm2_getcap -c properties-variable | grep TPM_PT_LOCKOUT_INTERVAL | sed -e 's/TPM_PT_LOCKOUT_INTERVAL: \+//')" != "0x00000006" ]; then
+ echo "Failure: setting up the lockout period in the lockout parameters"
 fi
- 
-echo "getpubak successfully!"
 
+if [ "$(tpm2_getcap -c properties-variable | grep TPM_PT_LOCKOUT_RECOVERY | sed -e 's/TPM_PT_LOCKOUT_RECOVERY: \+//')" != "0x00000007" ]; then
+ echo "Failure: setting up the lockout recovery period in the lockout parameters"
+fi
 
+exit 0

@@ -1,3 +1,4 @@
+#!/bin/bash
 #;**********************************************************************;
 #
 # Copyright (c) 2016, Intel Corporation
@@ -29,32 +30,45 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
 # THE POSSIBILITY OF SUCH DAMAGE.
 #;**********************************************************************;
-#!/bin/bash
-handle_ek=0x8101000b
-handle_ak=0x8101000c
-ek_alg=0x001
-ak_alg=0x0001
-digestAlg=0x000B 
-signAlg=0x0014
-output_ek_pub=/home/$USER/ek_pub.out
-output_ak_pub=/home/$USER/ak_pub.out
-output_ak_pub_name=/home/$USER/ak_name_pub.out
 
-rm $output_ek_pub $output_ak_pub $output_ak_pub_name -rf 
+source test_helpers.sh
 
-tpm2_getpubek  -H $handle_ek -g $ek_alg -f $output_ek_pub
-if [ $? != 0 ] || [ ! -e $output_ek_pub ];then
-echo "getpubek fail, please check the environment or parameters!"
-exit 1
+onerror() {
+    echo "$BASH_COMMAND on line ${BASH_LINENO[0]} failed: $?"
+    exit 1
+}
+
+cleanup() {
+  rm -f primary.ctx decrypt.ctx key.pub key.priv key.name decrypt.out \
+        encrypt.out secret.dat &>/dev/null
+}
+trap cleanup EXIT
+
+cleanup
+
+# Check for encryptdecrypt command code 0x164
+tpm2_getcap -c commands | grep -q 0x164
+if [ $? != 0 ];then
+    echo "WARN: Command EncryptDecrypt is not supported by your device, skipping..."
+    exit 0
 fi
 
-tpm2_getpubak  -E $handle_ek  -k $handle_ak -g $ak_alg -D $digestAlg -s $signAlg -f $output_ak_pub  -n $output_ak_pub_name
+# Now set the trap handler for ERR since we're past the command code check
+trap onerror ERR
 
-if [ $? != 0 ] || [ ! -e $output_ak_pub ];then
-echo "getpubak fail, please check the environment or parameters!"
-exit 1
-fi
- 
-echo "getpubak successfully!"
+echo "12345678" > secret.dat
 
+tpm2_takeownership -Q -c
+
+tpm2_createprimary -Q -H e -g sha1 -G rsa -C primary.ctx
+
+tpm2_create -Q -g sha256 -G symcipher -u key.pub -r key.priv -c primary.ctx
+
+tpm2_load -Q -c primary.ctx -u key.pub -r key.priv -n key.name -C decrypt.ctx
+
+tpm2_encryptdecrypt -Q -c decrypt.ctx  -I secret.dat -o encrypt.out
+
+tpm2_encryptdecrypt -Q -c  decrypt.ctx -D -I encrypt.out -o decrypt.out
+
+exit 0
 
