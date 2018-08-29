@@ -292,6 +292,7 @@ plainbox/vendor/rpyc/__init__.py
 plainbox/vendor/rpyc/version.py
 plainbox/vendor/rpyc/core/__init__.py
 plainbox/vendor/rpyc/core/async.py
+plainbox/vendor/rpyc/core/async_.py
 plainbox/vendor/rpyc/core/brine.py
 plainbox/vendor/rpyc/core/channel.py
 plainbox/vendor/rpyc/core/consts.py
