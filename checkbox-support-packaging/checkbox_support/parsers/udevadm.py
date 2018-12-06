@@ -75,6 +75,13 @@ INPUT_RE = re.compile(
     r"p(?P<product_id>[%(hex)s]{4})"
     r"e(?P<version>[%(hex)s]{4})"
     % {"hex": string.hexdigits})
+HID_RE = re.compile(
+    r"^hid:"
+    r"b(?P<bus_type>[%(hex)s]{4})"
+    r"g(?P<group>[%(hex)s]{4})"
+    r"v(?P<vendor_id>[%(hex)s]{8})"
+    r"p(?P<product_id>[%(hex)s]{8})"
+    % {"hex": string.hexdigits})
 INPUT_SYSFS_ID = re.compile(
     r"/input/input\d+$")
 OPENFIRMWARE_RE = re.compile(
@@ -110,7 +117,7 @@ def find_pkname_is_root_mountpoint(devname, lsblk=None):
             ):
                 return True
             if (
-                line.endswith('MOUNTPOINT="/writable"') and
+                re.search('MOUNTPOINT=.*/(writable|hostfs)', line) and
                 line.startswith('KNAME="{}'.format(devname))
             ):
                 return True
@@ -186,7 +193,11 @@ class UdevadmDevice(object):
             self._list_partitions and
             self._environment.get("DEVTYPE") == "partition" and self._stack
         ):
-            if any(d.bus == 'usb' for d in self._stack):
+            if CARD_READER_RE.search(self._environment.get("ID_MODEL", "")):
+                return 'mediacard'
+            elif any(d.bus == 'mmc' for d in self._stack):
+                return 'mediacard'
+            elif any(d.bus == 'usb' for d in self._stack):
                 for d in self._stack:
                     # Report the current usb hub version
                     if d._environment.get("ID_MODEL_ID") == '0003':
@@ -306,8 +317,6 @@ class UdevadmDevice(object):
                and subclass_id == Pci.CLASS_INPUT_SCANNER:
                 return "SCANNER"
             if class_id == Pci.BASE_CLASS_MULTIMEDIA:
-                if subclass_id == Pci.CLASS_MULTIMEDIA_VIDEO:
-                    return "CAPTURE"
                 if subclass_id == Pci.CLASS_MULTIMEDIA_AUDIO \
                    or subclass_id == Pci.CLASS_MULTIMEDIA_AUDIO_DEVICE:
                     return "AUDIO"
@@ -334,8 +343,6 @@ class UdevadmDevice(object):
                     return "FLOPPY"
                 if interface_subclass == Usb.CLASS_STORAGE_SCSI:
                     return "USB"
-            if interface_class == Usb.BASE_CLASS_VIDEO:
-                return "CAPTURE"
             if interface_class == Usb.BASE_CLASS_WIRELESS:
                 if interface_protocol == Usb.PROTOCOL_BLUETOOTH:
                     return "BLUETOOTH"
@@ -379,8 +386,6 @@ class UdevadmDevice(object):
                     # as a KVM hardware device ("keyboard, video and mouse")
                     if test_bit(Input.BTN_MOUSE, bitmask, self._bits):
                         return "KVM"
-                    else:
-                        return "CAPTURE"
         if 'ID_INPUT_MOUSE' in self._environment:
             return "MOUSE"
 
@@ -427,7 +432,7 @@ class UdevadmDevice(object):
                 if any(FLASH_RE.search(k) for k in self._environment.keys()):
                     return "CARDREADER"
             if any(d.bus == 'usb' for d in self._stack):
-                if (self.product is not None and
+                if (self.product is not None and self.bus != "hidraw" and
                         CARD_READER_RE.search(self.product)):
                     return "CARDREADER"
                 if (self.vendor is not None and
@@ -483,6 +488,9 @@ class UdevadmDevice(object):
                 if self.driver == 'dasd-eckd':
                     # IBM s390x DASD device types
                     return "DISK"
+                if self.driver == 'nd_pmem':
+                    # NVDIMM devices
+                    return "DISK"
             if devtype == "scsi_device":
                 match = SCSI_RE.match(self._environment.get("MODALIAS", ""))
                 type = int(match.group("type"), 16) if match else -1
@@ -527,12 +535,27 @@ class UdevadmDevice(object):
         if self.bus == "tty":
             return "OTHER"
 
+        if "SUBSYSTEM" in self._environment:
+            if self._environment["SUBSYSTEM"] == "hidraw":
+                return "HIDRAW"
+            if self._environment["SUBSYSTEM"] == "video4linux":
+                return "CAPTURE"
+
+        if (
+           'RFKILL_TYPE' in self._environment and
+           'RFKILL_NAME' in self._environment
+        ):
+           if self._environment["RFKILL_TYPE"] == 'bluetooth':
+               if self._environment["RFKILL_NAME"].startswith('hci'):
+                   return 'BLUETOOTH'
+
         # Any devices that have a product name and proper vendor and product
         # IDs, but had no other category, are lumped together in OTHER.
         # A few devices may have no self.product but carry PRODUCT data in
         # their environment.
         if ((self.product or self._environment.get("PRODUCT")) and
-                None not in (self.vendor_id, self.product_id)):
+                None not in (self.vendor_id, self.product_id) and
+                self.driver != 'uvcvideo'):
             return "OTHER"
 
         # Limbo of devices I couldn't otherwise categorize. In practice
@@ -615,6 +638,10 @@ class UdevadmDevice(object):
             # Ignore interrupt controllers
             if product_id > 0x0100:
                 return product_id
+        # hid
+        match = HID_RE.match(self._environment.get("MODALIAS", ""))
+        if match:
+            return int(match.group("product_id"), 16)
         # input
         match = INPUT_RE.match(self._environment.get("MODALIAS", ""))
         if match:
@@ -631,7 +658,16 @@ class UdevadmDevice(object):
             if [i for i in ("canbus", "CANBus_HID", "USB_CAN_FD")
                     if i in self._environment["DEVLINKS"]]:
                 if "ID_MODEL_ID" in self._environment:
-                    return decode_id(self._environment["ID_MODEL_ID"])
+                    return int(self._environment["ID_MODEL_ID"], 16)
+        if "SUBSYSTEM" in self._environment:
+            # hidraw
+            if self._environment["SUBSYSTEM"] == "hidraw" and self._stack:
+                parent = self._stack[-1]
+                return parent.product_id
+            # video4linux
+            if self._environment["SUBSYSTEM"] == "video4linux":
+                if "ID_MODEL_ID" in self._environment:
+                    return int(self._environment["ID_MODEL_ID"], 16)
         return None
 
     @product_id.setter
@@ -648,6 +684,10 @@ class UdevadmDevice(object):
             return int(match.group("vendor_id"), 16)
         # usb
         match = USB_RE.match(self._environment.get("MODALIAS", ""))
+        if match:
+            return int(match.group("vendor_id"), 16)
+        # hid
+        match = HID_RE.match(self._environment.get("MODALIAS", ""))
         if match:
             return int(match.group("vendor_id"), 16)
         # input
@@ -672,7 +712,16 @@ class UdevadmDevice(object):
             if [i for i in ("canbus", "CANBus_HID", "USB_CAN_FD")
                     if i in self._environment["DEVLINKS"]]:
                 if "ID_VENDOR_ID" in self._environment:
-                    return decode_id(self._environment["ID_VENDOR_ID"])
+                    return int(self._environment["ID_VENDOR_ID"], 16)
+        if "SUBSYSTEM" in self._environment:
+            # hidraw
+            if self._environment["SUBSYSTEM"] == "hidraw" and self._stack:
+                parent = self._stack[-1]
+                return parent.vendor_id
+            # video4linux
+            if self._environment["SUBSYSTEM"] == "video4linux":
+                if "ID_VENDOR_ID" in self._environment:
+                    return int(self._environment["ID_VENDOR_ID"], 16)
         return None
 
     @vendor_id.setter
@@ -783,6 +832,17 @@ class UdevadmDevice(object):
         if "ID_MODEL_FROM_DATABASE" in self._environment:
             return self._environment["ID_MODEL_FROM_DATABASE"]
 
+        if "SUBSYSTEM" in self._environment:
+            # hidraw
+            if self._environment["SUBSYSTEM"] == "hidraw" and self._stack:
+                parent = self._stack[-1]
+                if "HID_NAME" in parent._environment:
+                    return parent._environment["HID_NAME"]
+            # video4linux
+            if self._environment["SUBSYSTEM"] == "video4linux":
+                if "ID_V4L_PRODUCT" in self._environment:
+                    return self._environment["ID_V4L_PRODUCT"]
+
         # bluetooth (if USB base class is vendor specific)
         if self.bus == 'bluetooth':
             vendor_specific = False
@@ -877,6 +937,15 @@ class UdevadmDevice(object):
         elif '/dev/md' in self._environment.get('DEVNAME', ''):
              if "MD_LEVEL" in self._environment:
                 return self._environment.get("MD_LEVEL")
+        if "SUBSYSTEM" in self._environment:
+            # hidraw
+            if self._environment["SUBSYSTEM"] == "hidraw" and self._stack:
+                parent = self._stack[-1]
+                return parent.vendor
+            # video4linux
+            if self._environment["SUBSYSTEM"] == "video4linux":
+                if "ID_VENDOR_ENC" in self._environment:
+                    return decode_id(self._environment["ID_VENDOR_ENC"])
 
         # bluetooth (if USB base class is vendor specific)
         if self.bus == 'bluetooth':
@@ -921,6 +990,8 @@ class UdevadmDevice(object):
                 return self._environment["INTERFACE"]
             else:
                 return 'UNKNOWN'
+        if "RFKILL_NAME" in self._environment:
+            return self._environment["RFKILL_NAME"]
         return None
 
     @property
@@ -1011,6 +1082,10 @@ class UdevadmParser(object):
             return False
         # Do not ignore MTD disks
         if device.category == "DISK" and device.bus == "mtd":
+            device.product = device.name
+            return False
+        # Do not ignore NVDIMM devices
+        if device.category == "DISK" and device.driver == "nd_pmem":
             device.product = device.name
             return False
         # Do not ignore Bluetooth devices w/o product & vendor ID.
@@ -1137,22 +1212,6 @@ class UdevadmParser(object):
                         usb_interface_path in d._raw_path
                     ]:
                         self.devices[device._raw_path] = device
-                elif device.category == 'CAPTURE':
-                    input_id = INPUT_SYSFS_ID.sub('', device._raw_path)
-                    if [
-                        d for d in self.devices.values()
-                        if d.category == 'CAPTURE' and input_id in d._raw_path
-                    ]:
-                        self.devices[input_id].product = device.product
-                    else:
-                        usb_interface_path = USB_SYSFS_CONFIG_RE.sub(
-                            '', device._raw_path)
-                        if not [
-                            d for d in self.devices.values()
-                            if d.category == 'CAPTURE' and
-                            usb_interface_path in d._raw_path
-                        ]:
-                            self.devices[device._raw_path] = device
                 else:
                     self.devices[device._raw_path] = device
             stack.append(device)
@@ -1174,8 +1233,19 @@ class UdevadmParser(object):
                     [v.replace('/dev/', '') for k, v in d._environment.items()
                      if MD_DEVICE_RE.match(k)])
 
+        HID_devices_path_list = []
+        for d in self.devices.values():
+            if d._environment.get("SUBSYSTEM") == 'input':
+                if d._stack:
+                    parent = d._stack[-1]
+                    HID_devices_path_list.append(parent._raw_path)
+
         for device in list(self.devices.values()):
-            if device.category in ("INFINIBAND", "NETWORK", "SOCKETCAN",
+            if device.category == 'HIDRAW' and device._stack:
+                for parent in (device._stack[-1], device._stack[-2]):
+                    if parent._raw_path in HID_devices_path_list:
+                        self.devices.pop(device._raw_path, None)
+            elif device.category in ("INFINIBAND", "NETWORK", "SOCKETCAN",
                                    "WIRELESS", "WWAN", "OTHER"):
                 dev_interface = [
                     d for d in self.devices.values()
@@ -1194,16 +1264,28 @@ class UdevadmParser(object):
                     dev_interface.subproduct_id = device.subproduct_id
                     dev_interface.subvendor_id = device.subvendor_id
                     self.devices.pop(device._raw_path, None)
-            # If dev/mapper list devices then they take precedence over the
-            # other block devices
-            if dev_mapper_devices and device.category == 'DISK':
-                if device not in dev_mapper_devices:
-                    self.devices.pop(device._raw_path, None)
-            # Remove DISK devices participating in RAID arrays created by
-            # mdstat
-            if md_devices and device.category == 'DISK':
-                if device.name in md_devices:
-                    self.devices.pop(device._raw_path, None)
+            elif device.category == 'BLUETOOTH':
+                dev_interface = [
+                    d for d in self.devices.values()
+                    if d.category == 'BLUETOOTH' and
+                    device._raw_path != d._raw_path and
+                    device._raw_path + '/' in d._raw_path
+                ]
+                if dev_interface:
+                    dev_interface = dev_interface.pop()
+                    device.interface = dev_interface.interface
+                    self.devices.pop(dev_interface._raw_path, None)
+            elif device.category == 'DISK':
+                # If dev/mapper list devices then they take precedence over the
+                # other block devices
+                if dev_mapper_devices:
+                    if device not in dev_mapper_devices:
+                        self.devices.pop(device._raw_path, None)
+                # Remove DISK devices participating in RAID arrays created by
+                # mdstat
+                if md_devices:
+                    if device.name in md_devices:
+                        self.devices.pop(device._raw_path, None)
 
         [result.addDevice(device) for device in self.devices.values()]
 
