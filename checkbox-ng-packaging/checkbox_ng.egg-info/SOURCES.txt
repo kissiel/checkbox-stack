@@ -19,6 +19,8 @@ checkbox_ng.egg-info/top_level.txt
 checkbox_ng/launcher/__init__.py
 checkbox_ng/launcher/check_config.py
 checkbox_ng/launcher/checkbox_cli.py
+checkbox_ng/launcher/merge_reports.py
+checkbox_ng/launcher/merge_submissions.py
 checkbox_ng/launcher/remote.py
 checkbox_ng/launcher/run.py
 checkbox_ng/launcher/stages.py
@@ -172,6 +174,7 @@ plainbox/impl/providers/exporters/data/jquery-mobile.min.js
 plainbox/impl/providers/exporters/data/jquery.min.js
 plainbox/impl/providers/exporters/data/jquery.mobile.min.css
 plainbox/impl/providers/exporters/data/junit.xml
+plainbox/impl/providers/exporters/data/multi-page.html
 plainbox/impl/providers/exporters/po/POTFILES.in
 plainbox/impl/providers/exporters/po/pl.po
 plainbox/impl/providers/exporters/po/plainbox-provider-exporters.pot

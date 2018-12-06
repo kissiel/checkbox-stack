@@ -736,6 +736,12 @@ class Run(Command, MainLoopStage):
             metavar=_('OPTIONS'),
             help=_('comma-separated list of key-value options (k=v) to '
                    'be passed to the transport'))
+        parser.add_argument(
+            '--title', action='store', metavar='SESSION_NAME',
+            help=_('title of the session to use'))
+        parser.add_argument(
+            "-m", "--message",
+            help=_("submission description"))
 
     @property
     def C(self):
@@ -756,40 +762,45 @@ class Run(Command, MainLoopStage):
                 self.ctx.args.non_interactive)
 
     def invoked(self, ctx):
-        self._C = Colorizer()
-        self.ctx = ctx
-        ctx.sa = SessionAssistant(
-            "com.canonical:checkbox-cli",
-            self.get_cmd_version(),
-            "0.99",
-            ["restartable"],
-        )
-        self._configure_restart()
-        try_selecting_providers(self.sa, '*')
-        self.sa.start_new_session('checkbox-run')
-        tps = self.sa.get_test_plans()
-        self._configure_report()
-        selection = ctx.args.PATTERN
-        if len(selection) == 1 and selection[0] in tps:
-            self.ctx.sa.update_app_blob(json.dumps(
-                {'testplan_id': selection[0]}).encode("UTF-8"))
-            self.just_run_test_plan(selection[0])
-        else:
-            self.ctx.sa.update_app_blob(json.dumps(
-                {}).encode("UTF-8"))
-            self.sa.hand_pick_jobs(selection)
-            print(self.C.header(_("Running Selected Jobs")))
-            self._run_jobs(self.sa.get_dynamic_todo_list())
-            # there might have been new jobs instantiated
-            while True:
-                self.sa.hand_pick_jobs(ctx.args.PATTERN)
-                todos = self.sa.get_dynamic_todo_list()
-                if not todos:
-                    break
+        try:
+            self._C = Colorizer()
+            self.ctx = ctx
+            ctx.sa = SessionAssistant(
+                "com.canonical:checkbox-cli",
+                self.get_cmd_version(),
+                "0.99",
+                ["restartable"],
+            )
+            self._configure_restart()
+            try_selecting_providers(self.sa, '*')
+            self.sa.start_new_session(self.ctx.args.title or 'checkbox-run')
+            tps = self.sa.get_test_plans()
+            self._configure_report()
+            selection = ctx.args.PATTERN
+            submission_message = self.ctx.args.message
+            if len(selection) == 1 and selection[0] in tps:
+                self.ctx.sa.update_app_blob(json.dumps(
+                    {'testplan_id': selection[0],
+                     'description': submission_message}).encode("UTF-8"))
+                self.just_run_test_plan(selection[0])
+            else:
+                self.ctx.sa.update_app_blob(json.dumps(
+                    {'description': submission_message}).encode("UTF-8"))
+                self.sa.hand_pick_jobs(selection)
+                print(self.C.header(_("Running Selected Jobs")))
                 self._run_jobs(self.sa.get_dynamic_todo_list())
-        self.sa.finalize_session()
-        self._print_results()
-        return 0 if self.sa.get_summary()['fail'] == 0 else 1
+                # there might have been new jobs instantiated
+                while True:
+                    self.sa.hand_pick_jobs(ctx.args.PATTERN)
+                    todos = self.sa.get_dynamic_todo_list()
+                    if not todos:
+                        break
+                    self._run_jobs(self.sa.get_dynamic_todo_list())
+            self.sa.finalize_session()
+            self._print_results()
+            return 0 if self.sa.get_summary()['fail'] == 0 else 1
+        except KeyboardInterrupt:
+            return 1
 
     def just_run_test_plan(self, tp_id):
         self.sa.select_test_plan(tp_id)
@@ -929,10 +940,7 @@ class ListBootstrapped(Command):
             'TEST_PLAN',
             help=_("test-plan id to bootstrap"))
         parser.add_argument(
-            '--partial', default=False, action="store_true",
-            help=_("print only partial id"))
-        parser.add_argument(
-            '-f', '--format', type=str,
+            '-f', '--format', type=str, default="{full_id}\n",
             help=_(("output format, as passed to print function. "
                     "Use '?' to list possible values")))
 
@@ -971,10 +979,7 @@ class ListBootstrapped(Command):
                     unescaped, (), DefaultKeyedDict(None, job)), end='')
         else:
             for job_id in jobs:
-                if ctx.args.partial:
-                    print(self.sa.get_job(job_id).partial_id)
-                else:
-                    print(job_id)
+                print(job_id)
 
 
 class TestPlanExport(Command):

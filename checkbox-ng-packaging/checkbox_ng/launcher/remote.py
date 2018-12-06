@@ -28,6 +28,7 @@ the session.
 """
 import gettext
 import os
+import select
 import socket
 import time
 import signal
@@ -79,6 +80,9 @@ class SimpleUI(NormalUI, MainLoopStage):
 
     def green_text(text, end='\n'):
         print(SimpleUI.C.GREEN(text), end)
+
+    def horiz_line():
+        print(SimpleUI.C.WHITE('-' * 80))
 
     @property
     def is_interactive(self):
@@ -160,7 +164,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
             with open(expanded_path, 'rt') as f:
                 self._launcher_text = f.read()
             self.launcher.read_string(self._launcher_text)
-        timeout = 30
+        timeout = 600
         deadline = time.time() + timeout
         port = 18871
         print(_("Connecting to {}:{}. Timeout: {}s").format(
@@ -213,11 +217,10 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
                     'idle': self.new_session,
                     'running': self.wait_and_continue,
                     'finalizing': self.finish_session,
-                    'testsselected': self.continue_session,
+                    'testsselected': self.run_jobs,
                     'bootstrapped': partial(
                         self.select_jobs, all_jobs=payload),
-                    'started': partial(
-                        self.interactively_choose_tp, tps=payload),
+                    'started': self.restart,
                     'interacting': partial(
                         self.resume_interacting, interaction=payload),
                 }[state]()
@@ -292,7 +295,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
     def select_jobs(self, all_jobs):
         if self.launcher.test_selection_forced:
             self.sa.save_todo_list(all_jobs)
-            self.run_jobs(all_jobs)
+            self.run_jobs()
         else:
             reprs = self.sa.get_jobs_repr(all_jobs)
             wanted_set = CategoryBrowser(
@@ -301,7 +304,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
             # original list
             todo_list = [job for job in all_jobs if job in wanted_set]
             self.sa.save_todo_list(todo_list)
-            self.run_jobs(todo_list)
+            self.run_jobs()
         return False
 
     def register_arguments(self, parser):
@@ -341,28 +344,29 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
     def wait_and_continue(self):
         # TODO: nicer UI
         progress = self.sa.whats_up()[1]
-        print("rejoined session. Running job ({}/{}): {}".format(
-            progress[0], progress[1], progress[2]))
+        print("Rejoined session.")
+        print("In progress: {} ({}/{})".format(
+            progress[2], progress[0], progress[1]))
         self.wait_for_job()
-        self.continue_session()
+        self.run_jobs()
 
-    def continue_session(self):
-        todo = self.sa.get_session_progress()["todo"]
-        self.run_jobs(todo)
+    def run_jobs(self):
+        jobs = self.sa.get_session_progress()
+        total_num = len(jobs['done']) + len(jobs['todo'])
 
-    def run_jobs(self, jobs):
-        jobs_repr = self.sa.get_jobs_repr(jobs)
+        jobs_repr = self.sa.get_jobs_repr(jobs['todo'], len(jobs['done']))
         if any([x['user'] is not None for x in jobs_repr]):
             self.password_query()
 
         for job in jobs_repr:
             SimpleUI.header(
                 _('Running job {} / {}').format(
-                    job['num'], job['total_num'],
+                    job['num'], total_num,
                     fill='-'))
             SimpleUI.header(job['name'])
             print(_("ID: {0}").format(job['id']))
             print(_("Category: {0}").format(job['category_name']))
+            SimpleUI.horiz_line()
             next_job = False
             for interaction in self.sa.run_job(job['id']):
                 if interaction.kind == 'sudo_input':
@@ -383,7 +387,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
                     cmd = SimpleUI(None)._interaction_callback(
                         job, interaction.extra)
                     self.sa.remember_users_response(cmd)
-                    self.sa.finish_job(interaction.extra.get_result())
+                    self.finish_job(interaction.extra.get_result())
                     next_job = True
                 elif interaction.kind == 'comment':
                     new_comment = input(SimpleUI.C.BLUE(
@@ -396,7 +400,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
 
     def resume_interacting(self, interaction):
         self.sa.remember_users_response('rollback')
-        self.continue_session()
+        self.run_jobs()
 
     def wait_for_job(self):
         while True:
@@ -405,12 +409,29 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
                 SimpleUI.green_text(payload, end='')
             if state == 'running':
                 time.sleep(0.5)
+                while True:
+                    res = select.select([sys.stdin], [], [], 0)
+                    if not res[0]:
+                        break
+                    # XXX: this assumes that sys.stdin is chunked in lines
+                    self.sa.transmit_input(res[0][0].readline())
+
             else:
-                self.sa.finish_job()
+                self.finish_job()
                 break
+
+    def finish_job(self, result=None):
+        job_result = self.sa.finish_job(result)
+        if not self._is_bootstrapping:
+            SimpleUI.horiz_line()
+            print(_("Outcome") + ": " + SimpleUI.C.result(job_result))
 
     def abandon(self):
         self.sa.finalize_session()
+
+    def restart(self):
+        self.abandon()
+        self.new_session()
 
     def local_export(self, exporter_id, transport, options=()):
         exporter = self._sa.manager.create_exporter(exporter_id, options)

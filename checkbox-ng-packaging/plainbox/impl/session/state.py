@@ -1349,6 +1349,8 @@ class SessionState:
             })
         tmp_result_map = {}
         for job_state in self.job_state_map.values():
+            if job_state.job.plugin in ("resource", "attachment"):
+                continue
             category = job_state.effective_category_id
             if category not in wanted_category_ids:
                 continue
@@ -1477,8 +1479,11 @@ class SessionState:
         for job in self._run_list:
             job_state = self._job_state_map[job.id]
             # Remove the undesired inhibitor as we want to run this job
-            job_state.readiness_inhibitor_list.remove(
-                UndesiredJobReadinessInhibitor)
+            try:
+                job_state.readiness_inhibitor_list.remove(
+                   UndesiredJobReadinessInhibitor)
+            except ValueError:
+                pass
             # Ask the job controller about inhibitors affecting this job
             for inhibitor in job.controller.get_inhibitor_list(self, job):
                 job_state.readiness_inhibitor_list.append(inhibitor)
