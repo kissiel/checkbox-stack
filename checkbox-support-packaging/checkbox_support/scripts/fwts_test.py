@@ -2,10 +2,8 @@
 
 import sys
 import re
-from time import time
 from argparse import ArgumentParser, RawTextHelpFormatter, REMAINDER
-from subprocess import Popen, PIPE
-from syslog import syslog, LOG_INFO
+from subprocess import Popen, PIPE, DEVNULL
 from shutil import which
 import os
 
@@ -46,58 +44,87 @@ HWE_TESTS = ['version',
              'apicedge',
              'klog',
              'oops']
+# THe following tests are re-introduced to the server suite at the request of
+# the hyperscale team
+# These are called when running the --uefitests shortcut
+UEFI_TESTS = ['esrt',
+              'uefirtauthvar',
+              'uefibootpath',
+              'securebootcert',
+              'uefirtmisc',
+              'uefirtvariable',
+              'uefirttime',
+              'csm']
+# These are called when running the --sbbr shortcut
+SBBR_TESTS = ['dmicheck',
+              'xsdt',
+              'spcr',
+              'rsdp_sbbr',
+              'method',
+              'madt',
+              'gtdt',
+              'fadt_sbbr',
+              'dbg2',
+              'acpi_sbbr',
+              'acpitables']
+# These are called when running the --acpitests shortcut
+ACPI_TESTS = ['acpiinfo', 'xenv', 'xsdt', 'wsmt', 'wpbt', 'wmi', 'wdat',
+              'waet', 'uefi', 'tpm2', 'tcpa', 'stao', 'srat', 'spmi', 'spcr',
+              'slit', 'slic', 'sdev', 'sdei', 'sbst', 'rsdt', 'rsdp', 'rasf',
+              'pptt', 'pmtt', 'pdtt', 'pcct', 'pcc', 'nfit', 'method', 'msdm',
+              'msct', 'mpst', 'mchi', 'mcfg', 'madt', 'lpit', 'iort', 'hmat',
+              'hpet', 'hest', 'gtdt', 'fpdt', 'fadt', 'facs', 'erst', 'einj',
+              'ecdt', 'drtm', 'dppt', 'dmar', 'acpi_wpc', 'acpi_time', 'acpi_als',
+              'acpi_lid', 'acpi_slpb', 'acpi_pwrb', 'acpi_ec', 'smart_battery',
+              'acpi_battery', 'acpi_ac', 'dbg2', 'dbgp', 'cstates', 'csrt',
+              'cpep', 'checksum', 'boot', 'bgrt', 'bert', 'aspt', 'asf',
+              'apicinstance', 'acpitables']
+# There are some overlaps there, this creates one master list removing
+# duplicates
+SERVER_TESTS = list(dict.fromkeys(ACPI_TESTS + SBBR_TESTS + UEFI_TESTS))
 # By default, we launch all the tests
 TESTS = sorted(list(set(QA_TESTS + HWE_TESTS)))
+SLEEP_TIME_RE = re.compile('(Suspend|Resume):\s+([\d\.]+)\s+seconds.')
 
 
-def get_sleep_times(start_marker, end_marker, sleep_time, resume_time):
-    logfile = '/var/log/syslog'
-    log_fh = open(logfile, 'r', encoding='UTF-8')
-    line = ''
-    run = 'FAIL'
-    sleep_start_time = 0.0
-    sleep_end_time = 0.0
-    resume_start_time = 0.0
-    resume_end_time = 0.0
-
-    while start_marker not in line:
-        try:
-            line = log_fh.readline()
-        except UnicodeDecodeError:
-            continue
-        if start_marker in line:
-            loglist = log_fh.readlines()
-
-    for idx in range(0, len(loglist)):
-        if 'PM: Syncing filesystems' in loglist[idx]:
-            sleep_start_time = re.split('[\[\]]', loglist[idx])[1].strip()
-        if 'ACPI: Low-level resume complete' in loglist[idx]:
-            sleep_end_time = re.split('[\[\]]', loglist[idx - 1])[1].strip()
-            resume_start_time = re.split('[\[\]]', loglist[idx])[1].strip()
-            idx += 1
-        if 'Restarting tasks' in loglist[idx]:
-            resume_end_time = re.split('[\[\]]', loglist[idx])[1].strip()
-        if end_marker in loglist[idx]:
-            run = 'PASS'
-            break
-
-    sleep_elapsed = float(sleep_end_time) - float(sleep_start_time)
-    resume_elapsed = float(resume_end_time) - float(resume_start_time)
-    return (run, sleep_elapsed, resume_elapsed)
+def get_sleep_times(log, start_marker):
+    suspend_time = ''
+    resume_time = ''
+    with open(log, 'r', encoding='UTF-8', errors='ignore') as f:
+        line = ''
+        while start_marker not in line:
+            line = f.readline()
+            if start_marker in line:
+                loglist = f.readlines()
+        for i, l in enumerate(loglist):
+            if 'Suspend/Resume Timings:' in l:
+                suspend_line = loglist[i+1]
+                resume_line = loglist[i+2]
+                match = SLEEP_TIME_RE.search(suspend_line)
+                if match:
+                    suspend_time = float(match.group(2))
+                match = SLEEP_TIME_RE.search(resume_line)
+                if match:
+                    resume_time = float(match.group(2))
+    return (suspend_time, resume_time)
 
 
 def average_times(runs):
     sleep_total = 0.0
     resume_total = 0.0
     run_count = 0
-    for run in runs.keys():
-        run_count += 1
-        sleep_total += runs[run][1]
-        resume_total += runs[run][2]
-    sleep_avg = sleep_total / run_count
-    resume_avg = resume_total / run_count
-    print('Average time to sleep: %0.5f' % sleep_avg)
-    print('Average time to resume: %0.5f' % resume_avg)
+    try:
+        for run in runs.keys():
+            run_count += 1
+            sleep_total += runs[run][0]
+            resume_total += runs[run][1]
+        sleep_avg = sleep_total / run_count
+        resume_avg = resume_total / run_count
+        print('Average time to sleep: %0.5f' % sleep_avg)
+        print('Average time to resume: %0.5f' % resume_avg)
+    except TypeError:
+        print('Average time to sleep: N/A')
+        print('Average time to resume: N/A')
 
 
 def fix_sleep_args(args):
@@ -122,7 +149,6 @@ def detect_progress_indicator():
         return ["dialog", "--gauge", "Progress", "20", "70"]
     # Return empty list if no progress indicator is to be used
     return []
-
 
 def main():
     description_text = 'Tests the system BIOS using the Firmware Test Suite'
@@ -163,25 +189,10 @@ def main():
                               'test as FAILED_CRITICAL. You will still be '
                               'notified of all FWTS test failures. '
                               '[Default level: %(default)s]'))
-    sleep_args = parser.add_argument_group('Sleep Options',
-                                           ('The following arguments are to '
-                                            'only be used with the '
-                                            '--sleep test option'))
-    sleep_args.add_argument('--sleep-time',
-                            dest='sleep_time',
-                            action='store',
-                            help=('The max time in seconds that a system '
-                                  'should take\nto completely enter sleep. '
-                                  'Anything more than this\ntime will cause '
-                                  'that test iteration to fail.\n'
-                                  '[Default: 10s]'))
-    sleep_args.add_argument('--resume-time',
-                            dest='resume_time',
-                            action='store',
-                            help=('Same as --sleep-time, except this applies '
-                                  'to the\ntime it takes a system to fully '
-                                  'wake from sleep.\n[Default: 3s]'))
-
+    parser.add_argument('-q', '--quiet',
+                        action='store_true',
+                        help='Suppress script output except for failures '
+                             'matching the fail-level set by -f')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-t', '--test',
                        action='append',
@@ -205,6 +216,9 @@ def main():
     group.add_argument('--qa',
                        action='store_true',
                        help='Run QA concerned tests in fwts')
+    group.add_argument('--server',
+                       action='store_true',
+                       help='Run Server Certification concerned tests in fwts')
     group.add_argument('--fwts-help',
                        dest='fwts_help',
                        action='store_true',
@@ -218,6 +232,9 @@ def main():
     group.add_argument('--list-qa',
                        action='store_true',
                        help='List all QA concerned tests in fwts')
+    group.add_argument('--list-server',
+                       action='store_true',
+                       help='List all Server Certification concerned tests in fwts')
     args = parser.parse_args()
 
     tests = []
@@ -228,6 +245,8 @@ def main():
     low_fails = []
     passed = []
     aborted = []
+    skipped = []
+    warnings = []
 
     # Set correct fail level
     if args.fail_level is not 'none':
@@ -242,10 +261,6 @@ def main():
                        'FAILED_ABORTED': -1}
         fail_priority = fail_levels[args.fail_level]
 
-    # Enforce only using sleep opts with --sleep
-    if args.sleep_time or args.resume_time and not args.sleep:
-        parser.error('--sleep-time and --resume-time only apply to the '
-                     '--sleep testing option.')
     if args.fwts_help:
         Popen('fwts -h', shell=True).communicate()[0]
         return 0
@@ -258,12 +273,17 @@ def main():
     elif args.list_qa:
         print('\n'.join(QA_TESTS))
         return 0
+    elif args.list_server:
+        print('Server Certification Tests:')
+        print('  * ', '\n  * '.join(SERVER_TESTS))
     elif args.test:
         tests.extend(args.test)
     elif args.hwe:
         tests.extend(HWE_TESTS)
     elif args.qa:
         tests.extend(QA_TESTS)
+    elif args.server:
+        tests.extend(SERVER_TESTS)
     elif args.sleep:
         args.sleep = fix_sleep_args(args.sleep)
         iterations = 1
@@ -278,23 +298,6 @@ def main():
         if s4 in args.sleep:
             iterations = int(args.sleep.pop(args.sleep.index(s4) + 1))
             args.sleep.remove(s4)
-        # if we've passed our custom sleep arguments for resume or sleep
-        # time, we need to intercept those as well.
-        resume_time_arg = '--resume-time'
-        sleep_time_arg = '--sleep-time'
-        if resume_time_arg in args.sleep:
-            args.resume_time = int(args.sleep.pop(
-                                   args.sleep.index(resume_time_arg) + 1))
-            args.sleep.remove(resume_time_arg)
-        if sleep_time_arg in args.sleep:
-            args.sleep_time = int(args.sleep.pop(
-                                  args.sleep.index(sleep_time_arg) + 1))
-            args.sleep.remove(sleep_time_arg)
-        # if we still haven't set a sleep or resume time, use defauts.
-        if not args.sleep_time:
-            args.sleep_time = 10
-        if not args.resume_time:
-            args.resume_time = 3
         tests.extend(args.sleep)
     else:
         tests.extend(TESTS)
@@ -306,31 +309,27 @@ def main():
         progress_indicator = None
         if detect_progress_indicator():
             progress_indicator = Popen(detect_progress_indicator(),
-                                       stdin=PIPE)
-        for iteration in range(0, iterations):
-            timestamp = int(time())
-            start_marker = 'CHECKBOX SLEEP TEST START %s' % timestamp
-            end_marker = 'CHECKBOX SLEEP TEST STOP %s' % timestamp
-            syslog(LOG_INFO, '---' + start_marker + '---' + str(time()))
+                                       stdin=PIPE, stderr=DEVNULL)
+        for iteration in range(1, iterations+1):
+            marker = '{:=^80}\n'.format(' Iteration {} '.format(iteration))
+            with open(args.log + '.log', 'a') as f:
+                f.write(marker)
             command = ('fwts -q --stdout-summary -r %s %s'
                        % (args.log, ' '.join(tests)))
             results['sleep'] = (Popen(command, stdout=PIPE, shell=True)
                                 .communicate()[0].strip()).decode()
-            syslog(LOG_INFO, '---' + end_marker + '---' + str(time()))
             if 's4' not in args.sleep:
-                sleep_times = get_sleep_times(start_marker,
-                                              end_marker,
-                                              args.sleep_time,
-                                              args.resume_time)
-                iteration_results[iteration] = sleep_times
-                progress_tuple = (iteration,
-                                  iteration_results[iteration][0],
-                                  iteration_results[iteration][1],
-                                  iteration_results[iteration][2])
-                progress_string = (' - Cycle %s: Status: %s  '
-                                   'Sleep Elapsed: %0.5f    '
-                                   'Resume Elapsed: '
-                                   ' %0.5f' % progress_tuple)
+                suspend_time, resume_time = get_sleep_times(args.log + '.log',
+                                                            marker)
+                iteration_results[iteration] = (suspend_time, resume_time)
+                if not suspend_time or not resume_time:
+                    progress_string = (
+                        'Cycle %s/%s - Suspend: N/A s - Resume: N/A s'
+                        % (iteration, iterations))
+                else:
+                    progress_string = (
+                        'Cycle %s/%s - Suspend: %0.2f s - Resume: %0.2f s'
+                        % (iteration, iterations, suspend_time, resume_time))
                 progress_pct = "{}".format(int(100 * iteration / iterations))
                 if "zenity" in detect_progress_indicator():
                     progress_indicator.stdin.write("# {}\n".format(
@@ -354,15 +353,11 @@ def main():
                     if progress_indicator.poll() is None:
                         progress_indicator.stdin.flush()
                 else:
-                    print(progress_string)
+                    print(progress_string, flush=True)
         if detect_progress_indicator():
             progress_indicator.terminate()
-
         if 's4' not in args.sleep:
             average_times(iteration_results)
-            for run in iteration_results.keys():
-                if 'FAIL' in iteration_results[run]:
-                    results['sleep'] = 'FAILED_CRITICAL'
     else:
         for test in tests:
             # ACPI tests can now be run with --acpitests (fwts >= 15.07.00)
@@ -379,58 +374,82 @@ def main():
     for test in results.keys():
         if 'FAILED_CRITICAL' in results[test]:
             critical_fails.append(test)
-        if 'FAILED_HIGH' in results[test]:
+        elif 'FAILED_HIGH' in results[test]:
             high_fails.append(test)
-        if 'FAILED_MEDIUM' in results[test]:
+        elif 'FAILED_MEDIUM' in results[test]:
             medium_fails.append(test)
-        if 'FAILED_LOW' in results[test]:
+        elif 'FAILED_LOW' in results[test]:
             low_fails.append(test)
-        if 'PASSED' in results[test]:
+        elif 'PASSED' in results[test]:
             passed.append(test)
-        if 'ABORTED' in results[test]:
+        elif 'ABORTED' in results[test]:
             aborted.append(test)
+        elif 'WARNING' in results[test]:
+            warnings.append(test)
+        elif 'SKIPPED' in results[test]:
+            skipped.append(test)
         else:
-            continue
-
+            return 1
     if critical_fails:
         print("Critical Failures: %d" % len(critical_fails))
-        print("WARNING: The following test cases were reported as critical\n"
-              "level failures by fwts. Please review the log at\n"
-              "%s for more information." % args.log)
-        for test in critical_fails:
-            print(" - " + test)
+        if not args.quiet:
+            print("WARNING: The following test cases were reported as critical\n"
+                  "level failures by fwts. Please review the log at\n"
+                  "%s for more information." % args.log)
+            for test in critical_fails:
+                print(" - " + test)
     if high_fails:
         print("High Failures: %d" % len(high_fails))
-        print("WARNING: The following test cases were reported as high\n"
-              "level failures by fwts. Please review the log at\n"
-              "%s for more information." % args.log)
-        for test in high_fails:
-            print(" - " + test)
+        if not args.quiet:
+            print("WARNING: The following test cases were reported as high\n"
+                  "level failures by fwts. Please review the log at\n"
+                  "%s for more information." % args.log)
+            for test in high_fails:
+                print(" - " + test)
     if medium_fails:
         print("Medium Failures: %d" % len(medium_fails))
-        print("WARNING: The following test cases were reported as medium\n"
-              "level failures by fwts. Please review the log at\n"
-              "%s for more information." % args.log)
-        for test in medium_fails:
-            print(" - " + test)
+        if not args.quiet:
+            print("WARNING: The following test cases were reported as medium\n"
+                  "level failures by fwts. Please review the log at\n"             
+                  "%s for more information." % args.log)
+            for test in medium_fails:
+                print(" - " + test)
     if low_fails:
         print("Low Failures: %d" % len(low_fails))
-        print("WARNING: The following test cases were reported as low\n"
-              "level failures by fwts. Please review the log at\n"
-              "%s for more information." % args.log)
-        for test in low_fails:
-            print(" - " + test)
+        if not args.quiet:
+            print("WARNING: The following test cases were reported as low\n"
+                  "level failures by fwts. Please review the log at\n"
+                  "%s for more information." % args.log)
+            for test in low_fails:
+                print(" - " + test)
     if passed:
         print("Passed: %d" % len(passed))
-        for test in passed:
-            print(" - " + test)
+        if not args.quiet:
+            for test in passed:
+                print(" - " + test)
+    if skipped:
+        print("Skipped Tests: %d" % len(skipped))
+        if not args.quiet:
+            print("WARNING: The following test cases were skipped by fwts\n"
+                  "Please review the log at %s for more information."
+                  % args.log)
+            for test in skipped:
+                print(" - " + test)
+    if warnings:
+        print("WARNINGS: %d" % len(warnings))
+        if not args.quiet:
+            print("Please review the log at %s for more information."
+                  % args.log)
+            for test in warnings:
+                print(" - " + test)
     if aborted:
         print("Aborted Tests: %d" % len(aborted))
-        print("WARNING: The following test cases were aborted by fwts\n"
-              "Please review the log at %s for more information."
-              % args.log)
-        for test in aborted:
-            print(" - " + test)
+        if not args.quiet:
+            print("WARNING: The following test cases were aborted by fwts\n"
+                  "Please review the log at %s for more information."
+                  % args.log)
+            for test in aborted:
+                print(" - " + test)
 
     if args.fail_level is not 'none':
         if fail_priority == fail_levels['FAILED_CRITICAL']:
@@ -450,6 +469,7 @@ def main():
                 return 1
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

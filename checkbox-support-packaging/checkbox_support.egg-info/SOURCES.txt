@@ -6,7 +6,6 @@ setup.py
 checkbox_support/__init__.py
 checkbox_support/bt_helper.py
 checkbox_support/interactive_cmd.py
-checkbox_support/log_watcher.py
 checkbox_support/udev.py
 checkbox_support.egg-info/PKG-INFO
 checkbox_support.egg-info/SOURCES.txt
@@ -97,6 +96,7 @@ checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON_3048.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON_7737_NVIDIA.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_LATITUDEE4310.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_LATITUDEE6430.txt
+checkbox_support/parsers/tests/udevadm_data/DELL_MICROCHIP_USB_TO_SPI.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_OPTIPLEX9020AIO.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_POWEREDGE_R820_NVME.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_VOSTRO3460_FINGERPRINT.txt
@@ -115,6 +115,7 @@ checkbox_support/parsers/tests/udevadm_data/IBM_PSERIES_POWER7.txt
 checkbox_support/parsers/tests/udevadm_data/IBM_PSERIES_POWER8.txt
 checkbox_support/parsers/tests/udevadm_data/IBM_s390x_DASD.txt
 checkbox_support/parsers/tests/udevadm_data/INTEL_NUC_SNAPPY.txt
+checkbox_support/parsers/tests/udevadm_data/INTEL_OPTANE_DC.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_E431.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_E445.txt
 checkbox_support/parsers/tests/udevadm_data/LENOVO_T420.txt
@@ -132,12 +133,13 @@ checkbox_support/parsers/tests/udevadm_data/VM_WITH_FLOPPY.txt
 checkbox_support/parsers/tests/udevadm_data/XEON.txt
 checkbox_support/scripts/__init__.py
 checkbox_support/scripts/audio_settings.py
+checkbox_support/scripts/eddystone_scanner.py
 checkbox_support/scripts/fwts_test.py
 checkbox_support/scripts/gputest_benchmark.py
-checkbox_support/scripts/network.py
 checkbox_support/scripts/nmea_test.py
 checkbox_support/scripts/run_watcher.py
 checkbox_support/scripts/snap_configuration.py
+checkbox_support/scripts/snap_connect.py
 checkbox_support/scripts/usb_read_write.py
 checkbox_support/scripts/tests/__init__.py
 checkbox_support/scripts/tests/test_audio_settings.py
@@ -146,3 +148,7 @@ checkbox_support/snap_utils/__init__.py
 checkbox_support/snap_utils/config.py
 checkbox_support/tests/__init__.py
 checkbox_support/tests/test_human_readable_bytes.py
+checkbox_support/vendor/__init__.py
+checkbox_support/vendor/aioblescan/__init__.py
+checkbox_support/vendor/aioblescan/aioblescan.py
+checkbox_support/vendor/aioblescan/eddystone.py
