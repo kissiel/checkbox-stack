@@ -44,6 +44,8 @@ from checkbox_ng.launcher.subcommands import (
     TestPlanExport
 )
 from checkbox_ng.launcher.check_config import CheckConfig
+from checkbox_ng.launcher.merge_reports import MergeReports
+from checkbox_ng.launcher.merge_submissions import MergeSubmissions
 from checkbox_ng.launcher.remote import RemoteSlave, RemoteMaster
 
 
@@ -162,6 +164,8 @@ class CheckboxCommand(CanonicalCommand):
         ('startprovider', StartProvider),
         ('submit', Submit),
         ('list-bootstrapped', ListBootstrapped),
+        ('merge-reports', MergeReports),
+        ('merge-submissions', MergeSubmissions),
         ('tp-export', TestPlanExport),
         ('slave', RemoteSlave),
         ('master', RemoteMaster),

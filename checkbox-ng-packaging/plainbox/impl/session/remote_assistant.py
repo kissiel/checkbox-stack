@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
+import fnmatch
 import json
 import gettext
 import logging
@@ -28,6 +29,7 @@ from subprocess import DEVNULL, CalledProcessError, check_call
 
 from plainbox.impl.ctrl import RootViaSudoWithPassExecutionController
 from plainbox.impl.ctrl import UserJobExecutionController
+from plainbox.impl.ctrl import DaemonicExecutionController
 from plainbox.impl.launcher import DefaultLauncherDefinition
 from plainbox.impl.session.assistant import SessionAssistant
 from plainbox.impl.session.assistant import SA_RESTARTABLE
@@ -51,6 +53,7 @@ class Interaction(namedtuple('Interaction', ['kind', 'message', 'extra'])):
     def __new__(cls, kind, message="", extra=None):
         return super(Interaction, cls).__new__(cls, kind, message, extra)
 
+
 Idle = 'idle'
 Started = 'started'
 Bootstrapping = 'bootstrapping'
@@ -71,7 +74,7 @@ class BufferedUI(SilentUI):
         self.clear_buffers()
 
     def got_program_output(self, stream_name, line):
-        self._queue.put(line.decode(sys.stdout.encoding))
+        self._queue.put(line.decode(sys.stdout.encoding, 'replace'))
         self._whole_queue.put(line)
 
     def whole_output(self):
@@ -123,7 +126,7 @@ class BackgroundExecutor(Thread):
 class RemoteSessionAssistant():
     """Remote execution enabling wrapper for the SessionAssistant"""
 
-    REMOTE_API_VERSION = 2
+    REMOTE_API_VERSION = 4
 
     def __init__(self, cmd_callback):
         _logger.debug("__init__()")
@@ -133,22 +136,17 @@ class RemoteSessionAssistant():
         self._session_change_lock = Lock()
         self._operator_lock = Lock()
         self.buffered_ui = BufferedUI()
+        self._input_piping = os.pipe()
         self._reset_sa()
         self._passwordless_sudo = is_passwordless_sudo()
         self.terminate_cb = None
+        self._pipe_from_master = open(self._input_piping[1], 'w')
 
     def _reset_sa(self):
         self._state = Idle
         self._sa = SessionAssistant('service', api_flags={SA_RESTARTABLE})
         self._sa.configure_application_restart(self._cmd_callback)
-        self._sa.use_alternate_execution_controllers([
-            (
-                RootViaSudoWithPassExecutionController,
-                (),
-                {'password_provider_cls': self.get_decrypted_password}
-            ),
-            (UserJobExecutionController, [], {}),
-        ])
+        self._choose_exec_ctrls()
         self._be = None
         self._session_id = ""
         self._jobs_count = 0
@@ -156,6 +154,31 @@ class RemoteSessionAssistant():
         self._currently_running_job = None  # XXX: yuck!
         self._current_comments = ""
         self._last_response = None
+        self._normal_user = ''
+
+    def _choose_exec_ctrls(self):
+        normal_user_provider = lambda: self._normal_user
+        if os.getuid() == 0:
+            stdin = open(self._input_piping[0])
+            self._sa.use_alternate_execution_controllers([
+                (
+                    DaemonicExecutionController,
+                    (),
+                    {
+                        'normal_user_provider': normal_user_provider,
+                        'stdin': stdin,
+                    }
+                ),
+            ])
+        else:
+            self._sa.use_alternate_execution_controllers([
+                (
+                    RootViaSudoWithPassExecutionController,
+                    (),
+                    {'password_provider_cls': self.get_decrypted_password}
+                ),
+                (UserJobExecutionController, [], {}),
+            ])
 
     @property
     def session_change_lock(self):
@@ -199,7 +222,13 @@ class RemoteSessionAssistant():
         self._sa.start_new_session('checkbox-service')
         self._session_id = self._sa.get_session_id()
         tps = self._sa.get_test_plans()
-        response = zip(tps, [self._sa.get_test_plan(tp).name for tp in tps])
+        filtered_tps = set()
+        for filter in self._launcher.test_plan_filters:
+            filtered_tps.update(fnmatch.filter(tps, filter))
+        self._normal_user = self._launcher.normal_user
+        filtered_tps = list(filtered_tps)
+        response = zip(filtered_tps, [self._sa.get_test_plan(
+            tp).name for tp in filtered_tps])
         self._state = Started
         self._available_testplans = sorted(
             response, key=lambda x: x[1])  # sorted by name
@@ -228,12 +257,12 @@ class RemoteSessionAssistant():
 
     def finish_bootstrap(self):
         self._sa.finish_bootstrap()
-        self._jobs_count = len(self._sa.get_static_todo_list())
         self._state = Bootstrapped
         return self._sa.get_static_todo_list()
 
     def save_todo_list(self, chosen_jobs):
         self._sa.use_alternate_selection(chosen_jobs)
+        self._jobs_count = len(self._sa.get_dynamic_todo_list())
         self._state = TestsSelected
 
     @allowed_when(TestsSelected)
@@ -312,7 +341,7 @@ class RemoteSessionAssistant():
         self._state = Bootstrapping
         self._be = BackgroundExecutor(self, job_id, self._sa.run_job)
 
-    @allowed_when(Running, Bootstrapping, Interacting)
+    @allowed_when(Running, Bootstrapping, Interacting, TestsSelected)
     def monitor_job(self):
         """
         Check the state of the currently running job.
@@ -329,7 +358,6 @@ class RemoteSessionAssistant():
             return ('running', self.buffered_ui.get_output())
         else:
             return ('done', self.buffered_ui.get_output())
-        return 'running' if self._be.is_alive() else 'done'
 
     def get_remote_api_version(self):
         return self.REMOTE_API_VERSION
@@ -363,7 +391,7 @@ class RemoteSessionAssistant():
 
         _logger.debug("get_session_progress()")
         return {
-            "done": [],
+            "done": self._sa.get_dynamic_done_list(),
             "todo": self._sa.get_dynamic_todo_list(),
         }
 
@@ -402,19 +430,22 @@ class RemoteSessionAssistant():
                 self._state = Idle
             else:
                 self._state = TestsSelected
+        return result
 
-    def get_jobs_repr(self, job_ids):
+    def get_jobs_repr(self, job_ids, offset=0):
         """
         Translate jobs into a {'field': 'val'} representations.
 
         :param job_ids:
             list of job ids to get and translate
+        :param offset:
+            apply an offset to the job number if for instance the job list
+            is being requested part way through a session
         :returns:
             list of dicts representing jobs
         """
         test_info_list = tuple()
-        total_jobs = len(job_ids)
-        for job_no, job_id in enumerate(job_ids, start=1):
+        for job_no, job_id in enumerate(job_ids, start=offset + 1):
             job = self._sa.get_job(job_id)
             cat_id = self._sa.get_job_state(job.id).effective_category_id
             duration_txt = _('No estimated duration provided for this job')
@@ -440,7 +471,6 @@ class RemoteSessionAssistant():
                 "user": job.user,
                 "command": job.command,
                 "num": job_no,
-                "total_num": total_jobs,
             }
             test_info_list = test_info_list + ((test_info, ))
         return test_info_list
@@ -467,6 +497,10 @@ class RemoteSessionAssistant():
     def finalize_session(self):
         self._sa.finalize_session()
         self._reset_sa()
+
+    def transmit_input(self, text):
+        self._pipe_from_master.write(text)
+        self._pipe_from_master.flush()
 
     @property
     def manager(self):

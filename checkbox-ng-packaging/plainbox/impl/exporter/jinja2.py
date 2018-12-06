@@ -26,6 +26,8 @@
 """
 
 import json
+import re
+from collections import OrderedDict
 from datetime import datetime
 
 from jinja2 import Environment
@@ -60,6 +62,17 @@ def do_strip_ns(_environment, unit_id, ns=CERTIFICATION_NS):
 def do_is_name(text):
     """A filter for checking if something is equal to "name"."""
     return text == 'name'
+
+
+def json_load_ordered_dict(text):
+    """Render json dict in Jinja templates but keep keys ordering."""
+    return json.loads(
+        text, object_pairs_hook=OrderedDict)
+
+
+def highlight_keys(text):
+    """A filter for rendering keys as bold html text."""
+    return re.sub('(\w+:\s)', r'<b>\1</b>', text)
 
 
 class Jinja2SessionStateExporter(ISessionStateExporter):
@@ -97,7 +110,7 @@ class Jinja2SessionStateExporter(ISessionStateExporter):
             paths.extend(self.data["extra_paths"])
         self.option_list = exporter_unit.option_list
         loader = FileSystemLoader(paths)
-        env = Environment(loader=loader)
+        env = Environment(loader=loader, extensions=['jinja2.ext.autoescape'])
         self.customize_environment(env)
 
         def include_file(name):
@@ -123,6 +136,8 @@ class Jinja2SessionStateExporter(ISessionStateExporter):
         env.autoescape = True
         env.filters['jsonify'] = json.dumps
         env.filters['strip_ns'] = do_strip_ns
+        env.filters['json_load_ordered_dict'] = json_load_ordered_dict
+        env.filters['highlight_keys'] = highlight_keys
         env.tests['is_name'] = do_is_name
 
     def dump(self, data, stream):
@@ -167,6 +182,30 @@ class Jinja2SessionStateExporter(ISessionStateExporter):
         data.update(self.data)
         self.dump(data, stream)
         self.validate(stream)
+
+    def dump_from_session_manager_list(self, session_manager_list, stream):
+        """
+        Extract data from session_manager_list and dump them into the stream.
+
+        :param session_manager_list:
+            SessionManager instances that manages session to be exported by
+            this exporter
+        :param stream:
+            Byte stream to write to.
+
+        """
+        data = {
+            'OUTCOME_METADATA_MAP': OUTCOME_METADATA_MAP,
+            'client_name': self._client_name,
+            'client_version': self._client_version,
+            'manager_list': session_manager_list,
+            'app_blob': {},
+            'options': self.option_list,
+            'system_id': self._system_id,
+            'timestamp': self._timestamp,
+        }
+        data.update(self.data)
+        self.dump(data, stream)
 
     def get_session_data_subset(self, session_manager):
         """Compute a subset of session data."""
