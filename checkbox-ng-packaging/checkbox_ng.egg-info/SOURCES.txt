@@ -43,6 +43,7 @@ docs/index.rst
 docs/launcher-tutorial.rst
 docs/nested-test-plan.rst
 docs/remote.rst
+docs/side-loading.rst
 docs/snappy.rst
 docs/stack.rst
 docs/testing-snappy.rst
