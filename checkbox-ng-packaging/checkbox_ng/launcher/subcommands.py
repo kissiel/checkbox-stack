@@ -1,6 +1,6 @@
 # This file is part of Checkbox.
 #
-# Copyright 2016-2018 Canonical Ltd.
+# Copyright 2016-2019 Canonical Ltd.
 # Written by:
 #   Maciej Kisielewski <maciej.kisielewski@canonical.com>
 #
@@ -68,16 +68,6 @@ from checkbox_ng.urwid_ui import test_plan_browser
 _ = gettext.gettext
 
 _logger = logging.getLogger("checkbox-ng.launcher.subcommands")
-
-# Ugly hack to avoid a segfault when running from a classic snap where libc6
-# is newer than the 16.04 version.
-# The requests module is not calling the right glibc getaddrinfo() when
-# sending results to C3.
-# Doing such a call early ensures the right socket module is still loaded.
-try:
-    _res = socket.getaddrinfo('foo.bar.baz', 443)  # 443 for HTTPS
-except:
-    pass
 
 
 class Submit(Command):
@@ -264,7 +254,7 @@ class Launcher(Command, MainLoopStage, ReportsStage):
                         break
             elif self.launcher.auto_retry:
                 while True:
-                    if not self._maybe_auto_retry_jobs():
+                    if not self._maybe_auto_rerun_jobs():
                         break
             self._export_results()
             ctx.sa.finalize_session()
@@ -403,13 +393,9 @@ class Launcher(Command, MainLoopStage, ReportsStage):
             if tp_id is None:
                 raise SystemExit(_("No test plan selected."))
         self.ctx.sa.select_test_plan(tp_id)
-        msg = None
-        if self.launcher.transports.get('c3'):
-            msg = self.launcher.transports['c3'].get('description', '')
-        submission_message = self.ctx.args.message or msg
         self.ctx.sa.update_app_blob(json.dumps(
             {'testplan_id': tp_id,
-             'description': submission_message, }).encode("UTF-8"))
+             'description': self.ctx.args.message, }).encode("UTF-8"))
         bs_jobs = self.ctx.sa.get_bootstrap_todo_list()
         self._run_bootstrap_jobs(bs_jobs)
         self.ctx.sa.finish_bootstrap()
@@ -463,30 +449,6 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         job_id_list = [job_id for job_id in self.ctx.sa.get_static_todo_list()
                        if job_id in wanted_set]
         self.ctx.sa.use_alternate_selection(job_id_list)
-
-    def _generate_job_infos(self, job_list):
-        test_info_list = tuple()
-        for job in job_list:
-            cat_id = self.ctx.sa.get_job_state(job.id).effective_category_id
-            duration_txt = _('No estimated duration provided for this job')
-            if job.estimated_duration is not None:
-                duration_txt = '{} {}'.format(job.estimated_duration, _(
-                    'seconds'))
-            test_info = {
-                "id": job.id,
-                "partial_id": job.partial_id,
-                "name": job.tr_summary(),
-                "category_id": cat_id,
-                "category_name": self.ctx.sa.get_category(cat_id).tr_name(),
-                "automated": (_('this job is fully automated') if job.automated
-                              else _('this job requires some manual interaction')),
-                "duration": duration_txt,
-                "description": (job.tr_description() or
-                                _('No description provided for this job')),
-                "outcome": self.ctx.sa.get_job_state(job.id).result.outcome,
-            }
-            test_info_list = test_info_list + ((test_info, ))
-        return test_info_list
 
     def _handle_last_job_after_resume(self, last_job):
         if last_job is None:
@@ -546,53 +508,23 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         if result:
             self.ctx.sa.use_job_result(last_job, result)
 
-    def _maybe_auto_retry_jobs(self):
-        # create a list of jobs that qualify for rerunning
-        retry_candidates = self._get_auto_retry_candidates()
+    def _maybe_auto_rerun_jobs(self):
+        rerun_candidates = self.ctx.sa.get_rerun_candidates('auto')
         # bail-out early if no job qualifies for rerunning
-        if not retry_candidates:
+        if not rerun_candidates:
             return False
         # we wait before retrying
         delay = self.launcher.delay_before_retry
         _logger.info(_("Waiting {} seconds before retrying failed"
                        " jobs...".format(delay)))
         time.sleep(delay)
-        candidates = []
-        # include resource jobs that jobs to retry depend on
-        resources_to_rerun = []
-        for job in retry_candidates:
-            job_state = self.ctx.sa.get_job_state(job.id)
-            for inhibitor in job_state.readiness_inhibitor_list:
-                if inhibitor.cause == InhibitionCause.FAILED_DEP:
-                    resources_to_rerun.append(inhibitor.related_job)
-        # reset outcome of jobs that are selected for re-running
-        for job in retry_candidates + resources_to_rerun:
-            self.ctx.sa.get_job_state(job.id).result = MemoryJobResult({})
-            candidates.append(job.id)
-            _logger.info("{}: {} attempts".format(
-                job.id,
-                self.ctx.sa.get_job_state(job.id).attempts
-            ))
+        candidates = self.ctx.sa.prepare_rerun_candidates(rerun_candidates)
         self._run_jobs(candidates)
         return True
 
-    def _get_auto_retry_candidates(self):
-        """Get all the tests that might be selected for an automatic retry."""
-        def retry_predicate(job_state):
-            return job_state.result.outcome in (IJobResult.OUTCOME_FAIL,) \
-                and job_state.effective_auto_retry != 'no'
-        retry_candidates = []
-        todo_list = self.ctx.sa.get_static_todo_list()
-        job_states = {job_id: self.ctx.sa.get_job_state(job_id) for job_id
-                      in todo_list}
-        for job_id, job_state in job_states.items():
-            if retry_predicate(job_state) and job_state.attempts > 0:
-                retry_candidates.append(self.ctx.sa.get_job(job_id))
-        return retry_candidates
-
     def _maybe_rerun_jobs(self):
         # create a list of jobs that qualify for rerunning
-        rerun_candidates = self._get_rerun_candidates()
+        rerun_candidates = self.ctx.sa.get_rerun_candidates('manual')
         # bail-out early if no job qualifies for rerunning
         if not rerun_candidates:
             return False
@@ -602,38 +534,13 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         if not wanted_set:
             # nothing selected - nothing to run
             return False
-        rerun_candidates = []
+        rerun_candidates = [
+            self.ctx.sa.get_job(job_id) for job_id in wanted_set]
+        rerun_candidates = self.ctx.sa.prepare_rerun_candidates(
+            rerun_candidates)
         # include resource jobs that selected jobs depend on
-        resources_to_rerun = []
-        for job_id in wanted_set:
-            job_state = self.ctx.sa.get_job_state(job_id)
-            for inhibitor in job_state.readiness_inhibitor_list:
-                if inhibitor.cause == InhibitionCause.FAILED_DEP:
-                    resources_to_rerun.append(inhibitor.related_job.id)
-        # some resource jobs may have been selected in the UI and also added
-        # automatically, let's only add the missing ones
-        wanted_jobs = [j for j in wanted_set if j not in resources_to_rerun]
-        # reset outcome of jobs that are selected for re-running
-        for job_id in resources_to_rerun + wanted_jobs:
-            self.ctx.sa.get_job_state(job_id).result = MemoryJobResult({})
-            rerun_candidates.append(job_id)
         self._run_jobs(rerun_candidates)
         return True
-
-    def _get_rerun_candidates(self):
-        """Get all the tests that might be selected for rerunning."""
-        def rerun_predicate(job_state):
-            return job_state.result.outcome in (
-                IJobResult.OUTCOME_FAIL, IJobResult.OUTCOME_CRASH,
-                IJobResult.OUTCOME_SKIP, IJobResult.OUTCOME_NOT_SUPPORTED)
-        rerun_candidates = []
-        todo_list = self.ctx.sa.get_static_todo_list()
-        job_states = {job_id: self.ctx.sa.get_job_state(job_id) for job_id
-                      in todo_list}
-        for job_id, job_state in job_states.items():
-            if rerun_predicate(job_state):
-                rerun_candidates.append(self.ctx.sa.get_job(job_id))
-        return rerun_candidates
 
     def _get_ui_for_job(self, job):
         class CheckboxUI(NormalUI):
@@ -768,8 +675,19 @@ class Run(Command, MainLoopStage):
                 "0.99",
                 ["restartable"],
             )
+            # side-load providers local-providers
+            side_load_path = os.path.expandvars(os.path.join(
+                '/var', 'tmp', 'checkbox-providers'))
+            additional_providers = ()
+            if os.path.exists(side_load_path):
+                embedded_providers = EmbeddedProvider1PlugInCollection(
+                    side_load_path)
+                additional_providers = embedded_providers.get_all_plugin_objects()
             self._configure_restart()
-            try_selecting_providers(self.sa, '*')
+            try_selecting_providers(
+                self.sa,
+                '*',
+                additional_providers=additional_providers)
             self.sa.start_new_session(self.ctx.args.title or 'checkbox-run')
             tps = self.sa.get_test_plans()
             self._configure_report()

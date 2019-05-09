@@ -82,6 +82,15 @@ class MainLoopStage(CheckboxUiStage):
             if job.plugin in ('user-interact', 'user-interact-verify',
                               'user-verify', 'manual'):
                 job_state = self.sa.get_job_state(job.id)
+                if (not self.is_interactive and
+                        job.plugin in ('user-interact',
+                                       'user-interact-verify',
+                                       'manual')):
+                    result_builder = JobResultBuilder(
+                        outcome=IJobResult.OUTCOME_SKIP,
+                        comments=_("Trying to run interactive job in a silent"
+                                    " session"))
+                    return result_builder
                 if job_state.can_start():
                     ui.notify_about_purpose(job)
                 if (self.is_interactive and
@@ -244,6 +253,30 @@ class MainLoopStage(CheckboxUiStage):
             result_builder = self.sa.run_job(job_id, 'piano', False)
             self.sa.use_job_result(job_id, result_builder.get_result())
 
+    def _generate_job_infos(self, job_list):
+        test_info_list = tuple()
+        for job in job_list:
+            cat_id = self.ctx.sa.get_job_state(job.id).effective_category_id
+            duration_txt = _('No estimated duration provided for this job')
+            if job.estimated_duration is not None:
+                duration_txt = '{} {}'.format(job.estimated_duration, _(
+                    'seconds'))
+            test_info = {
+                "id": job.id,
+                "partial_id": job.partial_id,
+                "name": job.tr_summary(),
+                "category_id": cat_id,
+                "category_name": self.ctx.sa.get_category(cat_id).tr_name(),
+                "automated": (_('this job is fully automated') if job.automated
+                              else _('this job requires some manual interaction')),
+                "duration": duration_txt,
+                "description": (job.tr_description() or
+                                _('No description provided for this job')),
+                "outcome": self.ctx.sa.get_job_state(job.id).result.outcome,
+            }
+            test_info_list = test_info_list + ((test_info, ))
+        return test_info_list
+
 
 class ReportsStage(CheckboxUiStage):
 
@@ -372,17 +405,33 @@ class ReportsStage(CheckboxUiStage):
     def _export_results(self):
         if 'none' not in self.launcher.stock_reports:
             for report in self.launcher.stock_reports:
-                # skip stock c3 report if secure_id is not given from config
-                # files or launchers, and the UI is non-interactive (silent)
-                if (report in ['certification', 'certification-staging'] and
-                        'c3' not in self.launcher.transports and
-                        not self.is_interactive):
-                    continue
+                if report in ['certification', 'certification-staging']:
+                    # skip stock c3 report if secure_id is not given from
+                    # config files or launchers, and the UI is non-interactive
+                    # (silent)
+                    if ('c3' not in self.launcher.transports and
+                            not self.is_interactive):
+                        continue
+                    # don't generate stock c3 reports if sideloaded providers
+                    # were in use, something that should only be done during
+                    # development
+                    if self.sa.sideloaded_providers:
+                        _logger.warning(_("Using side-loaded providers "
+                                          "disabled the %s report"), report)
+                        continue
                 self._prepare_stock_report(report)
         # reports are stored in an ordinary dict(), so sorting them ensures
         # the same order of submitting them between runs, and if they
         # share common prefix, they are next to each other
         for name, params in sorted(self.launcher.reports.items()):
+            # don't generate stock c3 reports if sideloaded providers
+            # were in use, something that should only be done during
+            # development
+            if (params.get('transport') == 'certification' and
+                    self.sa.sideloaded_providers):
+                _logger.warning(_("Using side-loaded providers disabled "
+                                  "the %s report"), name)
+                continue
             if self.is_interactive and not params.get('forced', False):
                 message = _("Do you want to submit '{}' report?").format(name)
                 cmd = self._pick_action_cmd([
