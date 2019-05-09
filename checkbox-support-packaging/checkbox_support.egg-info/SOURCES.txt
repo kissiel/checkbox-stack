@@ -83,6 +83,7 @@ checkbox_support/parsers/tests/pactl_data/desktop-raring-t430s.txt
 checkbox_support/parsers/tests/pactl_data/desktop-trusty-bt-headset.txt
 checkbox_support/parsers/tests/pactl_data/modules-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/modules-desktop-precise.txt
+checkbox_support/parsers/tests/pactl_data/pa_ucm_pre_tag_bionic.txt
 checkbox_support/parsers/tests/pactl_data/samples-desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise-1.txt
@@ -138,7 +139,6 @@ checkbox_support/scripts/fwts_test.py
 checkbox_support/scripts/gputest_benchmark.py
 checkbox_support/scripts/nmea_test.py
 checkbox_support/scripts/run_watcher.py
-checkbox_support/scripts/snap_configuration.py
 checkbox_support/scripts/snap_connect.py
 checkbox_support/scripts/usb_read_write.py
 checkbox_support/scripts/tests/__init__.py
@@ -146,6 +146,8 @@ checkbox_support/scripts/tests/test_audio_settings.py
 checkbox_support/scripts/tests/test_gputest_benchmark.py
 checkbox_support/snap_utils/__init__.py
 checkbox_support/snap_utils/config.py
+checkbox_support/snap_utils/snapd.py
+checkbox_support/snap_utils/system.py
 checkbox_support/tests/__init__.py
 checkbox_support/tests/test_human_readable_bytes.py
 checkbox_support/vendor/__init__.py
