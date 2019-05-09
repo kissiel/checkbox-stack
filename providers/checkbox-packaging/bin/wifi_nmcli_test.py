@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2017-2018 Canonical Ltd.
+# Copyright 2017-2019 Canonical Ltd.
 # All rights reserved.
 #
 # Written by:
@@ -13,6 +13,7 @@ import argparse
 import functools
 import subprocess as sp
 import sys
+import time
 
 from distutils.version import LooseVersion
 
@@ -61,7 +62,13 @@ def device_rescan():
     print_head("Calling a rescan")
     cmd = "nmcli d wifi rescan"
     print_cmd(cmd)
-    sp.call(cmd, shell=True)
+    retcode = sp.call(cmd, shell=True)
+    if retcode != 0:
+        # Most often the rescan request fails because NM has itself started
+        # a scan in recent past, we should let these operations complete before
+        # attempting a connection
+        print('Scan request failed, allow other operations to complete (15s)')
+        time.sleep(15)
     print()
 
 
@@ -73,7 +80,8 @@ def list_aps(args):
         cmd = "nmcli -t -f {} d wifi list iface {}".format(fields, args.device)
     else:
         fields = "SSID,CHAN,FREQ,SIGNAL"
-        cmd = "nmcli -t -f {} d wifi list ifname {}".format(fields, args.device)
+        cmd = "nmcli -t -f {} d wifi list ifname {}".format(
+            fields, args.device)
     print_cmd(cmd)
     output = sp.check_output(cmd, shell=True)
     for line in output.decode(sys.stdout.encoding).splitlines():
@@ -108,10 +116,11 @@ def open_connection(args):
     print_cmd(cmd)
     sp.call(cmd, shell=True)
     if legacy_nmcli():
-        cmd_part = "nmcli -m tabular -t -f GENERAL d list | "
-        cmd = cmd_part + "grep {} | awk -F: '{{print $15}}'".format(args.device)
+        cmd = ("nmcli -m tabular -t -f GENERAL d list | grep {} | "
+               "awk -F: '{{print $15}}'".format(args.device))
     else:
-        cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(args.device)
+        cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(
+            args.device)
     print_cmd(cmd)
     output = sp.check_output(cmd, shell=True)
     state = output.decode(sys.stdout.encoding).strip()
@@ -126,18 +135,19 @@ def open_connection(args):
 def secured_connection(args):
     print_head("Connection attempt")
     if legacy_nmcli():
-        cmd = "nmcli d wifi connect {} password {} iface {} name TEST_CON".format(
-            args.essid, args.psk, args.device)
+        cmd = ("nmcli d wifi connect {} password {} iface {} name "
+               "TEST_CON".format(args.essid, args.psk, args.device))
     else:
-        cmd = "nmcli d wifi connect {} password {} ifname {} name TEST_CON".format(
-            args.essid, args.psk, args.device)
+        cmd = ("nmcli d wifi connect {} password {} ifname {} name "
+               "TEST_CON".format(args.essid, args.psk, args.device))
     print_cmd(cmd)
     sp.call(cmd, shell=True)
     if legacy_nmcli():
-        cmd_part = "nmcli -m tabular -t -f GENERAL d list | "
-        cmd = cmd_part + "grep {} | awk -F: '{{print $15}}'".format(args.device)
+        cmd = ("nmcli -m tabular -t -f GENERAL d list | "
+               "grep {} | awk -F: '{{print $15}}'".format(args.device))
     else:
-        cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(args.device)
+        cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(
+            args.device)
     print_cmd(cmd)
     output = sp.check_output(cmd, shell=True)
     state = output.decode(sys.stdout.encoding).strip()
@@ -147,6 +157,43 @@ def secured_connection(args):
         rc = 0
     print()
     return rc
+
+
+def hotspot(args):
+    print_head("Create Wi-Fi hotspot")
+    cmd = ("nmcli c add type wifi ifname {} con-name TEST_CON autoconnect no"
+           " ssid CHECKBOX_AP".format(args.device))
+    print_cmd(cmd)
+    retcode = sp.call(cmd, shell=True)
+    if retcode != 0:
+        print("Connection creation failed\n")
+        return retcode
+    cmd = ("nmcli c modify TEST_CON 802-11-wireless.mode ap ipv4.method shared"
+           " 802-11-wireless.band {}".format(args.band))
+    print_cmd(cmd)
+    retcode = sp.call(cmd, shell=True)
+    if retcode != 0:
+        print("Set band failed\n")
+        return retcode
+    cmd = "nmcli c modify TEST_CON wifi-sec.key-mgmt wpa-psk"
+    print_cmd(cmd)
+    retcode = sp.call(cmd, shell=True)
+    if retcode != 0:
+        print("Set key-mgmt failed\n")
+        return retcode
+    cmd = "nmcli connection modify TEST_CON wifi-sec.psk \"ubuntu1234\""
+    print_cmd(cmd)
+    retcode = sp.call(cmd, shell=True)
+    if retcode != 0:
+        print("Set PSK failed\n")
+        return retcode
+    cmd = "nmcli connection up TEST_CON"
+    print_cmd(cmd)
+    retcode = sp.call(cmd, shell=True)
+    if retcode != 0:
+        print("Failed to bring up connection\n")
+    print()
+    return retcode
 
 
 if __name__ == '__main__':
@@ -175,6 +222,14 @@ if __name__ == '__main__':
     parser_secured.add_argument('essid', type=str, help='ESSID')
     parser_secured.add_argument('psk', type=str, help='Pre-Shared Key')
     parser_secured.set_defaults(func=secured_connection)
+
+    parser_ap = subparsers.add_parser(
+        'ap', help='Test creation of a hotspot')
+    parser_ap.add_argument(
+        'device', type=str, help='Device name e.g. wlan0')
+    parser_ap.add_argument('band', type=str, help='Band')
+    parser_ap.set_defaults(func=hotspot)
+
     args = parser.parse_args()
 
     cleanup_nm_connections()
