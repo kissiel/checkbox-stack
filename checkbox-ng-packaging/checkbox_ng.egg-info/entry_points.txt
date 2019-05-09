@@ -1,5 +1,6 @@
 [console_scripts]
 checkbox-cli = checkbox_ng.launcher.checkbox_cli:main
+checkbox-provider-tools = checkbox_ng.launcher.provider_tools:main
 plainbox-trusted-launcher-1 = plainbox.impl.secure.launcher1:main
 
 [plainbox.buildsystem]
@@ -9,9 +10,9 @@ make = plainbox.impl.buildsystems:MakefileBuildSystem
 
 [plainbox.exporter]
 jinja2 = plainbox.impl.exporter.jinja2:Jinja2SessionStateExporter
-tar = plainbox.impl.exporter.tar:TARSessionStateExporter [xlsx]
+tar = plainbox.impl.exporter.tar:TARSessionStateExporter
 text = plainbox.impl.exporter.text:TextSessionStateExporter
-xlsx = plainbox.impl.exporter.xlsx:XLSXSessionStateExporter [xlsx]
+xlsx = plainbox.impl.exporter.xlsx:XLSXSessionStateExporter
 
 [plainbox.parsers]
 pxu = plainbox.impl.secure.rfc822:load_rfc822_records

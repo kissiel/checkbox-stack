@@ -28,6 +28,7 @@ import collections
 import datetime
 import fnmatch
 import itertools
+import json
 import logging
 import os
 import shlex
@@ -44,6 +45,7 @@ from plainbox.impl.developer import UnexpectedMethodCall
 from plainbox.impl.developer import UsageExpectation
 from plainbox.impl.jobcache import ResourceJobCache
 from plainbox.impl.result import JobResultBuilder
+from plainbox.impl.result import MemoryJobResult
 from plainbox.impl.providers import get_providers
 from plainbox.impl.runner import JobRunner
 from plainbox.impl.runner import JobRunnerUIDelegate
@@ -177,6 +179,7 @@ class SessionAssistant:
         # List of providers that were selected. This is buffered until a
         # session is created or resumed.
         self._selected_providers = []
+        self.sideloaded_providers = False
         # All the key state for the active session. Technically just the
         # manager matters, the context and metadata are just shortcuts to stuff
         # available on the manager.
@@ -449,25 +452,12 @@ class SessionAssistant:
         provider_list = [
             p for p in provider_list if qualified_name(p) not in side_loaded]
         provider_list = provider_list[:] + list(additional_providers)
+        prov_paths = {qualified_name(p): p.base_dir for p in provider_list}
         for prov in side_loaded:
-            _logger.warning("Using side-loaded provider: %s", prov)
+            _logger.warning("Using side-loaded provider: %s from %s",
+                            prov, prov_paths[prov])
         if side_loaded:
-            for disabled_rep in ['certification', 'certification-staging']:
-                if disabled_rep in self._config.stock_reports:
-                    _logger.warning(
-                        "Using side-loaded providers disabled the %s report",
-                        disabled_rep)
-                    self._config.stock_reports.remove(disabled_rep)
-            self._config.stock_reports = [
-                sr for sr in self._config.stock_reports if sr not in [
-                    'certification', 'certification-staging']]
-            # iterating over a copy so we can modify the original one
-            for rep_name, rep_params in self._config.reports.copy().items():
-                if rep_params.get('transport') == 'certification':
-                    _logger.warning(
-                        "Using side-loaded providers disabled the %s report",
-                        rep_name)
-                    del self._config.reports[rep_name]
+            self.sideloaded_providers = True
 
         # Select all of the plainbox providers in a separate iteration. This
         # way they get loaded unconditionally, regardless of what patterns are
@@ -674,7 +664,6 @@ class SessionAssistant:
                     io_log_filename=self._runner.get_record_path_for_job(job),
                 ).get_result()
                 self._context.state.update_job_result(job, result)
-                self._metadata.running_job_name = None
                 self._manager.checkpoint()
         if self._restart_strategy is not None:
             self._restart_strategy.diffuse_application_restart(self._app_id)
@@ -685,6 +674,8 @@ class SessionAssistant:
         else:
             UsageExpectation.of(self).allowed_calls = {
                 self.select_test_plan: "to save test plan selection",
+                self.use_alternate_configuration: (
+                    "use an alternate configuration system"),
             }
         return self._metadata
 
@@ -737,7 +728,13 @@ class SessionAssistant:
             Bytes sequence containing JSON-ised app_blob object.
 
         """
-        self._context.state.metadata.app_blob = app_blob
+        if self._context.state.metadata.app_blob == b'':
+            updated_blob = app_blob
+        else:
+            current_dict = json.loads(self._context.state.metadata.app_blob.decode('UTF-8'))
+            current_dict.update(json.loads(app_blob.decode('UTF-8')))
+            updated_blob = json.dumps(current_dict).encode('UTF-8')
+        self._context.state.metadata.app_blob = updated_blob
         self._manager.checkpoint()
 
     @morris.signal
@@ -1442,7 +1439,8 @@ class SessionAssistant:
         return builder
 
     @raises(UnexpectedMethodCall)
-    def use_job_result(self, job_id: str, result: 'IJobResult') -> None:
+    def use_job_result(self, job_id: str, result: 'IJobResult',
+            override_last: bool=False) -> None:
         """
         Feed job result back to the session.
 
@@ -1470,6 +1468,9 @@ class SessionAssistant:
         """
         UsageExpectation.of(self).enforce()
         job = self._context.get_unit(job_id, 'job')
+        job_state = self._context.state.job_state_map[job_id]
+        if len(job_state.result_history) > 0 and override_last:
+            job_state.result_history = job_state.result_history[:-1]
         self._context.state.update_job_result(job, result)
         try:
             if self._config.auto_retry:
@@ -1486,6 +1487,83 @@ class SessionAssistant:
         allowed_calls = UsageExpectation.of(self).allowed_calls
         del allowed_calls[self.use_job_result]
         allowed_calls[self.run_job] = "run another job"
+
+    @raises(UnexpectedMethodCall)
+    def get_rerun_candidates(self, session_type='manual'):
+        """
+        Get all the tests that might be selected for rerunning.
+
+        :returns:
+            The JobUnits that failed previously and satisfy the predicate.
+        :raises UnexpectedMethodCall:
+            If the call is made at an unexpected time. Do not catch this error.
+            It is a bug in your program. The error message will indicate what
+            is the likely cause.
+        """
+        rerun_candidates = []
+        todo_list = self.get_static_todo_list()
+        job_states = {job_id: self.get_job_state(job_id) for job_id
+                      in todo_list}
+        for job_id, job_state in job_states.items():
+            if session_type == 'manual':
+                if job_state.result.outcome in (
+                        IJobResult.OUTCOME_FAIL,
+                        IJobResult.OUTCOME_CRASH,
+                        IJobResult.OUTCOME_SKIP,
+                        IJobResult.OUTCOME_NOT_SUPPORTED):
+                    rerun_candidates.append(self.get_job(job_id))
+            if session_type == 'auto':
+                if job_state.result.outcome is None:
+                    rerun_candidates.append(self.get_job(job_id))
+                    continue
+                if job_state.attempts == 0:
+                    continue
+                if job_state.effective_auto_retry == 'no':
+                    continue
+                if job_state.result.outcome in (
+                        IJobResult.OUTCOME_NOT_SUPPORTED):
+                    for inhibitor in job_state.readiness_inhibitor_list:
+                        if inhibitor.cause == InhibitionCause.FAILED_DEP:
+                            rerun_candidates.append(self.get_job(job_id))
+                if job_state.result.outcome in (
+                        IJobResult.OUTCOME_FAIL,
+                        IJobResult.OUTCOME_CRASH):
+                    rerun_candidates.append(self.get_job(job_id))
+        return rerun_candidates
+
+    @raises(UnexpectedMethodCall)
+    def prepare_rerun_candidates(self, rerun_candidates):
+        """
+        Rearm jobs so they can be run again.
+
+        :returns:
+            List of JobUnits armed for running.
+        :raises UnexpectedMethodCall:
+            If the call is made at an unexpected time. Do not catch this error.
+            It is a bug in your program. The error message will indicate what
+            is the likely cause.
+        """
+        candidates = []
+        resources_to_rerun = []
+        for job in rerun_candidates:
+            job_state = self.get_job_state(job.id)
+            for inhibitor in job_state.readiness_inhibitor_list:
+                if inhibitor.cause == InhibitionCause.FAILED_DEP:
+                    resources_to_rerun.append(inhibitor.related_job)
+        # make the candidates pop only once in the list
+        final_candidates = []
+        for job in resources_to_rerun + list(rerun_candidates):
+            if job not in final_candidates:
+                final_candidates.append(job)
+        # reset outcome of jobs that are selected for re-running
+        for job in final_candidates:
+            self.get_job_state(job.id).result = MemoryJobResult({})
+            candidates.append(job.id)
+            _logger.info("{}: {} attempts".format(
+                job.id,
+                self.get_job_state(job.id).attempts
+            ))
+        return candidates
 
     def get_summary(self) -> 'defaultdict':
         """
@@ -1695,6 +1773,7 @@ class SessionAssistant:
     def _get_allowed_calls_in_normal_state(self) -> dict:
         return {
             self.get_job_state: "to access the state of any job",
+            self.get_rerun_candidates: "to get list of rerunnable jobs",
             self.get_job: "to access the definition of any job",
             self.get_test_plan: "to access the definition of any test plan",
             self.get_category: "to access the definition of ant category",

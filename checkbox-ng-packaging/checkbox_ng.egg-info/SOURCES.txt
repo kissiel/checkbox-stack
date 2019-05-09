@@ -19,10 +19,12 @@ checkbox_ng.egg-info/top_level.txt
 checkbox_ng/launcher/__init__.py
 checkbox_ng/launcher/check_config.py
 checkbox_ng/launcher/checkbox_cli.py
+checkbox_ng/launcher/master.py
 checkbox_ng/launcher/merge_reports.py
 checkbox_ng/launcher/merge_submissions.py
-checkbox_ng/launcher/remote.py
+checkbox_ng/launcher/provider_tools.py
 checkbox_ng/launcher/run.py
+checkbox_ng/launcher/slave.py
 checkbox_ng/launcher/stages.py
 checkbox_ng/launcher/startprovider.py
 checkbox_ng/launcher/subcommands.py

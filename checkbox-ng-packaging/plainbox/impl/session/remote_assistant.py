@@ -33,6 +33,7 @@ from plainbox.impl.ctrl import DaemonicExecutionController
 from plainbox.impl.launcher import DefaultLauncherDefinition
 from plainbox.impl.session.assistant import SessionAssistant
 from plainbox.impl.session.assistant import SA_RESTARTABLE
+from plainbox.impl.session.jobs import InhibitionCause
 from plainbox.impl.secure.sudo_broker import SudoBroker, EphemeralKey
 from plainbox.impl.result import JobResultBuilder
 from plainbox.impl.result import MemoryJobResult
@@ -42,7 +43,7 @@ from checkbox_ng.launcher.run import SilentUI
 
 _ = gettext.gettext
 
-_logger = logging.getLogger("plainbox.session.assistant2")
+_logger = logging.getLogger("plainbox.session.remote_assistant")
 
 Interaction = namedtuple('Interaction', ['kind', 'message', 'extra'])
 
@@ -74,7 +75,8 @@ class BufferedUI(SilentUI):
         self.clear_buffers()
 
     def got_program_output(self, stream_name, line):
-        self._queue.put(line.decode(sys.stdout.encoding, 'replace'))
+        self._queue.put(
+            (stream_name, line.decode(sys.stdout.encoding, 'replace')))
         self._whole_queue.put(line)
 
     def whole_output(self):
@@ -85,9 +87,9 @@ class BufferedUI(SilentUI):
 
     def get_output(self):
         """Returns all the output queued up since previous call."""
-        output = ''
+        output = []
         while not self._queue.empty():
-            output += self._queue.get()
+            output.append(self._queue.get())
         return output
 
     def clear_buffers(self):
@@ -126,7 +128,7 @@ class BackgroundExecutor(Thread):
 class RemoteSessionAssistant():
     """Remote execution enabling wrapper for the SessionAssistant"""
 
-    REMOTE_API_VERSION = 4
+    REMOTE_API_VERSION = 6
 
     def __init__(self, cmd_callback):
         _logger.debug("__init__()")
@@ -154,6 +156,7 @@ class RemoteSessionAssistant():
         self._jobs_count = 0
         self._job_index = 0
         self._currently_running_job = None  # XXX: yuck!
+        self._last_job = None
         self._current_comments = ""
         self._last_response = None
         self._normal_user = ''
@@ -218,12 +221,25 @@ class RemoteSessionAssistant():
     def start_session(self, configuration):
         self._reset_sa()
         _logger.debug("start_session: %r", configuration)
+        session_title = 'checkbox-slave'
+        session_desc = 'checkbox-slave session'
+
         self._launcher = DefaultLauncherDefinition()
         if configuration['launcher']:
             self._launcher.read_string(configuration['launcher'])
+            session_title = self._launcher.session_title
+            session_desc = self._launcher.session_desc
+
         self._sa.use_alternate_configuration(self._launcher)
         self._sa.select_providers(*self._launcher.providers)
-        self._sa.start_new_session('checkbox-service')
+
+        self._sa.start_new_session(session_title)
+
+        self._sa.update_app_blob(json.dumps(
+            {'description': session_desc, }).encode("UTF-8"))
+        self._sa.update_app_blob(json.dumps(
+            {'launcher': configuration['launcher'], }).encode("UTF-8"))
+
         self._session_id = self._sa.get_session_id()
         tps = self._sa.get_test_plans()
         filtered_tps = set()
@@ -262,6 +278,10 @@ class RemoteSessionAssistant():
     def finish_bootstrap(self):
         self._sa.finish_bootstrap()
         self._state = Bootstrapped
+        if self._launcher.auto_retry:
+            for job_id in self._sa.get_static_todo_list():
+                job_state = self._sa.get_job_state(job_id)
+                job_state.attempts = self._launcher.max_attempts
         return self._sa.get_static_todo_list()
 
     def save_todo_list(self, chosen_jobs):
@@ -303,7 +323,7 @@ class RemoteSessionAssistant():
             if self._last_response == 'skip':
                 result_builder = JobResultBuilder(
                     outcome=IJobResult.OUTCOME_SKIP,
-                    comments=_("Explicitly skipped before" " execution"))
+                    comments=_("Explicitly skipped before execution"))
                 if self._current_comments != "":
                     result_builder.comments = self._current_comments
                 self.finish_job(result_builder.get_result())
@@ -378,6 +398,8 @@ class RemoteSessionAssistant():
             payload = (
                 self._job_index, self._jobs_count, self._currently_running_job
             )
+        if self._state == TestsSelected and not self._currently_running_job:
+            payload = {'last_job': self._last_job}
         elif self._state == Started:
             payload = self._available_testplans
         elif self._state == Interacting:
@@ -431,10 +453,27 @@ class RemoteSessionAssistant():
         self._sa.use_job_result(self._currently_running_job, result)
         if self._state != Bootstrapping:
             if not self._sa.get_dynamic_todo_list():
-                self._state = Idle
+                if (
+                    self._launcher.auto_retry and
+                    self.get_rerun_candidates('auto')
+                ):
+                    self._state = TestsSelected
+                else:
+                    self._state = Idle
             else:
                 self._state = TestsSelected
         return result
+
+    def get_rerun_candidates(self, session_type='manual'):
+        return self._sa.get_rerun_candidates(session_type)
+
+    def prepare_rerun_candidates(self, rerun_candidates):
+        candidates = self._sa.prepare_rerun_candidates(rerun_candidates)
+        self._state = TestsSelected
+        return candidates
+
+    def get_job_result(self, job_id):
+        return self._sa.get_job_state(job_id).result
 
     def get_jobs_repr(self, job_ids, offset=0):
         """
@@ -475,27 +514,68 @@ class RemoteSessionAssistant():
                 "user": job.user,
                 "command": job.command,
                 "num": job_no,
+                "plugin": job.plugin,
             }
             test_info_list = test_info_list + ((test_info, ))
         return test_info_list
 
-    def resume_last(self):
-        last = next(self._sa.get_resumable_sessions())
-        meta = self._sa.resume_session(last.id)
+    def resume_by_id(self, session_id=None):
+        self._launcher = DefaultLauncherDefinition()
+        self._sa.select_providers(*self._launcher.providers)
+        resume_candidates = list(self._sa.get_resumable_sessions())
+        if not session_id:
+            if not resume_candidates:
+                print('No session to resume')
+                return
+            session_id = resume_candidates[0].id
+        if session_id not in [s.id for s in resume_candidates]:
+            print("Requested session not found")
+            return
+        _logger.warning("Resuming session: %r", session_id)
+        meta = self._sa.resume_session(session_id)
         app_blob = json.loads(meta.app_blob.decode("UTF-8"))
+        launcher = app_blob['launcher']
+        self._launcher.read_string(launcher)
+        self._sa.use_alternate_configuration(self._launcher)
         test_plan_id = app_blob['testplan_id']
         self._sa.select_test_plan(test_plan_id)
         self._sa.bootstrap()
-        result = MemoryJobResult({
+        self._last_job = meta.running_job_name
+
+        result_dict = {
             'outcome': IJobResult.OUTCOME_PASS,
-            'comments': _("Passed after resuming execution")
-        })
-        last_job = meta.running_job_name
-        if last_job:
+            'comments': _("Automatically passed after resuming execution"),
+        }
+        result_path = os.path.join(
+            self._sa.get_session_dir(), 'CHECKBOX_DATA', '__result')
+        if os.path.exists(result_path):
             try:
-                self._sa.use_job_result(last_job, result)
+                with open(result_path, 'rt') as f:
+                    result_dict = json.load(f)
+                    # the only really important field in the result is
+                    # 'outcome' so let's make sure it doesn't contain
+                    # anything stupid
+                    if result_dict.get('outcome') not in [
+                            'pass', 'fail', 'skip']:
+                        result_dict['outcome'] = IJobResult.OUTCOME_PASS
+            except json.JSONDecodeError as e:
+                pass
+        result = MemoryJobResult(result_dict)
+        if self._last_job:
+            try:
+                self._sa.use_job_result(self._last_job, result, True)
             except KeyError:
-                raise SystemExit(last_job)
+                raise SystemExit(self._last_job)
+
+        # some jobs have already been run, so we need to update the attempts
+        # count for future auto-rerunning
+        if self._launcher.auto_retry:
+            for job_id in [
+                    job.id for job in self.get_rerun_candidates('auto')]:
+                job_state = self._sa.get_job_state(job_id)
+                job_state.attempts = self._launcher.max_attempts - len(
+                    job_state.result_history)
+
         self._state = TestsSelected
 
     def finalize_session(self):
@@ -513,6 +593,10 @@ class RemoteSessionAssistant():
     @property
     def passwordless_sudo(self):
         return self._passwordless_sudo
+
+    @property
+    def sideloaded_providers(self):
+        return self._sa.sideloaded_providers
 
 
 def is_passwordless_sudo():

@@ -1,6 +1,6 @@
 # This file is part of Checkbox.
 #
-# Copyright 2017-2018 Canonical Ltd.
+# Copyright 2017-2019 Canonical Ltd.
 # Written by:
 #   Maciej Kisielewski <maciej.kisielewski@canonical.com>
 #
@@ -16,15 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
 """
-This module contains implementation of both ends of the remote execution
+This module contains implementation of the master end of the remote execution
 functionality.
-
-RemoteSlave implements functionality for the half that's actually running
-the tests - the one that was summoned using `checkbox-cli slave`.
-This part should be run on system-under-test.
-
-RemoteMaster implements the part that presents UI to the operator and steers
-the session.
 """
 import gettext
 import logging
@@ -44,19 +37,19 @@ from plainbox.impl.color import Colorizer
 from plainbox.impl.launcher import DefaultLauncherDefinition
 from plainbox.impl.secure.sudo_broker import SudoProvider
 from plainbox.impl.session.remote_assistant import RemoteSessionAssistant
+from plainbox.impl.session.restart import RemoteSnappyRestartStrategy
 from plainbox.vendor import rpyc
 from plainbox.vendor.rpyc.utils.server import ThreadedServer
 from checkbox_ng.urwid_ui import test_plan_browser
 from checkbox_ng.urwid_ui import CategoryBrowser
+from checkbox_ng.urwid_ui import ReRunBrowser
 from checkbox_ng.urwid_ui import interrupt_dialog
+from checkbox_ng.urwid_ui import resume_dialog
 from checkbox_ng.launcher.run import NormalUI
 from checkbox_ng.launcher.stages import MainLoopStage
 from checkbox_ng.launcher.stages import ReportsStage
-
 _ = gettext.gettext
-
-_logger = logging.getLogger("remote")
-
+_logger = logging.getLogger("master")
 
 class SimpleUI(NormalUI, MainLoopStage):
     """
@@ -82,7 +75,10 @@ class SimpleUI(NormalUI, MainLoopStage):
         print(SimpleUI.C.header(header, fill='-'))
 
     def green_text(text, end='\n'):
-        print(SimpleUI.C.GREEN(text), end)
+        print(SimpleUI.C.GREEN(text), end=end)
+
+    def red_text(text, end='\n'):
+        print(SimpleUI.C.RED(text), end=end)
 
     def horiz_line():
         print(SimpleUI.C.WHITE('-' * 80))
@@ -96,45 +92,14 @@ class SimpleUI(NormalUI, MainLoopStage):
         None
 
 
-class SessionAssistantSlave(rpyc.Service):
-
-    session_assistant = None
-
-    def exposed_get_sa(*args):
-        return SessionAssistantSlave.session_assistant
-
-
-class RemoteSlave(Command):
-    name = 'remote-service'
-
-    def invoked(self, ctx):
-        SessionAssistantSlave.session_assistant = RemoteSessionAssistant(
-            lambda s: [sys.argv[0] + ' remote-service --resume'])
-        if ctx.args.resume:
-            try:
-                SessionAssistantSlave.session_assistant.resume_last()
-            except StopIteration:
-                print("Couldn't resume the session")
-        self._server = ThreadedServer(
-            SessionAssistantSlave,
-            port=18871,
-            protocol_config={
-                "allow_all_attrs": True,
-                "allow_setattr": True,
-                "sync_request_timeout": 1,
-                "propagate_SystemExit_locally": True
-            },
-        )
-        SessionAssistantSlave.session_assistant.terminate_cb = (
-            self._server.close)
-        self._server.start()
-
-    def register_arguments(self, parser):
-        parser.add_argument('--resume', action='store_true', help=_(
-            "resume last session"))
-
-
 class RemoteMaster(Command, ReportsStage, MainLoopStage):
+    """
+    Control remote slave instance
+
+    This class implements the part that presents UI to the operator and
+    steers the session.
+    """
+
     name = 'remote-control'
 
     @property
@@ -169,7 +134,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
             self.launcher.read_string(self._launcher_text)
         timeout = 600
         deadline = time.time() + timeout
-        port = 18871
+        port = ctx.args.port
         print(_("Connecting to {}:{}. Timeout: {}s").format(
             ctx.args.host, port, timeout))
         while time.time() < deadline:
@@ -222,7 +187,8 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
                     'idle': self.new_session,
                     'running': self.wait_and_continue,
                     'finalizing': self.finish_session,
-                    'testsselected': self.run_jobs,
+                    'testsselected': partial(
+                        self.run_jobs, resumed_session_info=payload),
                     'bootstrapping': self.restart,
                     'bootstrapped': partial(
                         self.select_jobs, all_jobs=payload),
@@ -254,7 +220,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
 
         tps = self.sa.start_session(configuration)
         _logger.debug("master: Session started. Available TPs:\n%s",
-            '\n'.join(['  ' + tp[0] for tp in tps]))
+                      '\n'.join(['  ' + tp[0] for tp in tps]))
         if self.launcher.test_plan_forced:
             self.select_tp(self.launcher.test_plan_default_selection)
             self.select_jobs(self.jobs)
@@ -327,6 +293,8 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
         parser.add_argument('host', help=_("target host"))
         parser.add_argument('launcher', nargs='?', help=_(
             "launcher definition file to use"))
+        parser.add_argument('--port', type=int, default=18871, help=_(
+            "port to connect to"))
 
     def _handle_interrupt(self):
         """
@@ -349,6 +317,7 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
             return True
 
     def finish_session(self):
+        print(self.C.header("Results"))
         if self.launcher.local_submission:
             # Disable SIGINT while we save local results
             tmp_sig = signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -365,17 +334,136 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
         self.wait_for_job()
         self.run_jobs()
 
-    def run_jobs(self):
+    def _handle_last_job_after_resume(self, resumed_session_info):
+        if self.launcher.ui_type == 'silent':
+            time.sleep(20)
+        else:
+            resume_dialog(10)
+        jobs_repr = self.sa.get_jobs_repr([resumed_session_info['last_job']])
+        job = jobs_repr[-1]
+        SimpleUI.header(job['name'])
+        print(_("ID: {0}").format(job['id']))
+        print(_("Category: {0}").format(job['category_name']))
+        SimpleUI.horiz_line()
+        print(
+            _("Outcome") + ": " +
+            SimpleUI.C.result(self.sa.get_job_result(job['id'])))
+
+    def run_jobs(self, resumed_session_info=None):
+        if resumed_session_info:
+            self._handle_last_job_after_resume(resumed_session_info)
         _logger.info("master: Running jobs.")
         jobs = self.sa.get_session_progress()
         _logger.debug("master: Jobs to be run:\n%s",
-            '\n'.join(['  ' + job for job in jobs]))
+                      '\n'.join(['  ' + job for job in jobs]))
         total_num = len(jobs['done']) + len(jobs['todo'])
 
         jobs_repr = self.sa.get_jobs_repr(jobs['todo'], len(jobs['done']))
         if any([x['user'] is not None for x in jobs_repr]):
             self.password_query()
 
+        self._run_jobs(jobs_repr, total_num)
+        rerun_candidates = self.sa.get_rerun_candidates('manual')
+        if rerun_candidates:
+            if self.launcher.ui_type == 'interactive':
+                while True:
+                    if not self._maybe_manual_rerun_jobs():
+                        break
+        if self.launcher.auto_retry:
+            while True:
+                if not self._maybe_auto_rerun_jobs():
+                    break
+        self.finish_session()
+
+    def resume_interacting(self, interaction):
+        self.sa.remember_users_response('rollback')
+        self.run_jobs()
+
+    def wait_for_job(self, dont_finish=False):
+        _logger.info("master: Waiting for job to finish.")
+        while True:
+            state, payload = self.sa.monitor_job()
+            if payload and not self._is_bootstrapping:
+                for stream, line in payload:
+                    if stream == 'stderr':
+                        SimpleUI.red_text(line, end='')
+                    else:
+                        SimpleUI.green_text(line, end='')
+            if state == 'running':
+                time.sleep(0.5)
+                while True:
+                    res = select.select([sys.stdin], [], [], 0)
+                    if not res[0]:
+                        break
+                    # XXX: this assumes that sys.stdin is chunked in lines
+                    self.sa.transmit_input(res[0][0].readline())
+
+            else:
+                if dont_finish:
+                    return
+                self.finish_job()
+                break
+
+    def finish_job(self, result=None):
+        _logger.info("master: Finishing job with a result: %s", result)
+        job_result = self.sa.finish_job(result)
+        if not self._is_bootstrapping:
+            SimpleUI.horiz_line()
+            print(_("Outcome") + ": " + SimpleUI.C.result(job_result))
+
+    def abandon(self):
+        _logger.info("master: Abandoning session.")
+        self.sa.finalize_session()
+
+    def restart(self):
+        _logger.info("master: Restarting session.")
+        self.abandon()
+        self.new_session()
+
+    def local_export(self, exporter_id, transport, options=()):
+        _logger.info("master: Exporting locally'")
+        exporter = self._sa.manager.create_exporter(exporter_id, options)
+        exported_stream = SpooledTemporaryFile(max_size=102400, mode='w+b')
+        async_dump = rpyc.async_(exporter.dump_from_session_manager)
+        res = async_dump(self._sa.manager, exported_stream)
+        res.wait()
+        exported_stream.seek(0)
+        result = transport.send(exported_stream)
+        return result
+
+    def _maybe_auto_rerun_jobs(self):
+        # create a list of jobs that qualify for rerunning
+        rerun_candidates = self.sa.get_rerun_candidates('auto')
+        # bail-out early if no job qualifies for rerunning
+        if not rerun_candidates:
+            return False
+        # we wait before retrying
+        delay = self.launcher.delay_before_retry
+        _logger.info(_("Waiting {} seconds before retrying failed"
+                       " jobs...".format(delay)))
+        time.sleep(delay)
+        # include resource jobs that jobs to retry depend on
+
+        candidates = self.sa.prepare_rerun_candidates(rerun_candidates)
+        self._run_jobs(self.sa.get_jobs_repr(candidates), len(candidates))
+        return True
+
+    def _maybe_manual_rerun_jobs(self):
+        rerun_candidates = self.sa.get_rerun_candidates('manual')
+        if not rerun_candidates:
+            return False
+        test_info_list = self.sa.get_jobs_repr(
+            [j.id for j in rerun_candidates])
+        wanted_set = ReRunBrowser(
+            _("Select jobs to re-run"), test_info_list, rerun_candidates).run()
+        if not wanted_set:
+            return False
+        candidates = self.sa.prepare_rerun_candidates([
+            job for job in rerun_candidates if job.id in wanted_set])
+        self._run_jobs(self.sa.get_jobs_repr(candidates), len(candidates))
+        return True
+
+    def _run_jobs(self, jobs_repr, total_num=0):
         for job in jobs_repr:
             SimpleUI.header(
                 _('Running job {} / {}').format(
@@ -420,56 +508,3 @@ class RemoteMaster(Command, ReportsStage, MainLoopStage):
             if next_job:
                 continue
             self.wait_for_job()
-        self.finish_session()
-
-    def resume_interacting(self, interaction):
-        self.sa.remember_users_response('rollback')
-        self.run_jobs()
-
-    def wait_for_job(self, dont_finish=False):
-        _logger.info("master: Waiting for job to finish.")
-        while True:
-            state, payload = self.sa.monitor_job()
-            if payload and not self._is_bootstrapping:
-                SimpleUI.green_text(payload, end='')
-            if state == 'running':
-                time.sleep(0.5)
-                while True:
-                    res = select.select([sys.stdin], [], [], 0)
-                    if not res[0]:
-                        break
-                    # XXX: this assumes that sys.stdin is chunked in lines
-                    self.sa.transmit_input(res[0][0].readline())
-
-            else:
-                if dont_finish:
-                    return
-                self.finish_job()
-                break
-
-    def finish_job(self, result=None):
-        _logger.info("master: Finishing job with a result: %s", result)
-        job_result = self.sa.finish_job(result)
-        if not self._is_bootstrapping:
-            SimpleUI.horiz_line()
-            print(_("Outcome") + ": " + SimpleUI.C.result(job_result))
-
-    def abandon(self):
-        _logger.info("master: Abandoning session.")
-        self.sa.finalize_session()
-
-    def restart(self):
-        _logger.info("master: Restarting session.")
-        self.abandon()
-        self.new_session()
-
-    def local_export(self, exporter_id, transport, options=()):
-        _logger.info("master: Exporting locally'")
-        exporter = self._sa.manager.create_exporter(exporter_id, options)
-        exported_stream = SpooledTemporaryFile(max_size=102400, mode='w+b')
-        async_dump = rpyc.async_(exporter.dump_from_session_manager)
-        res = async_dump(self._sa.manager, exported_stream)
-        res.wait()
-        exported_stream.seek(0)
-        result = transport.send(exported_stream)
-        return result
