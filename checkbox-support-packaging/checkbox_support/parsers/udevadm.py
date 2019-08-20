@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from subprocess import check_output, CalledProcessError
+import os
 import re
 import string
 
@@ -142,10 +143,11 @@ class UdevadmDevice(object):
         "_vendor",
         "_vendor_id",
         "_subvendor_id",
-        "_vendor_slug",)
+        "_vendor_slug",
+        "_symlinks")
 
     def __init__(self, environment, name, lsblk=None, list_partitions=False,
-                 bits=None, stack=[]):
+                 bits=None, stack=[], symlinks=None):
         self._environment = environment
         self._name = name
         self._lsblk = lsblk
@@ -163,6 +165,9 @@ class UdevadmDevice(object):
         self._vendor_id = None
         self._subvendor_id = None
         self._vendor_slug = None
+        self._symlinks = []
+        if symlinks:
+            self._symlinks = symlinks
 
     def __repr__(self):
         vid = int(self.vendor_id) if self.vendor_id else 0
@@ -476,8 +481,8 @@ class UdevadmDevice(object):
                     # we need to report.
                     return "DISK"
                 if '/dev/mapper' in self._environment.get('DEVLINKS', ''):
-                    if "ID_FS_TYPE" in self._environment:
-                        if self._environment["ID_FS_TYPE"] != 'swap':
+                    if "ID_FS_USAGE" in self._environment:
+                        if self._environment["ID_FS_USAGE"] == 'filesystem':
                             return "DISK"
                     else:
                         return "DISK"
@@ -541,13 +546,11 @@ class UdevadmDevice(object):
             if self._environment["SUBSYSTEM"] == "video4linux":
                 return "CAPTURE"
 
-        if (
-           'RFKILL_TYPE' in self._environment and
-           'RFKILL_NAME' in self._environment
-        ):
-           if self._environment["RFKILL_TYPE"] == 'bluetooth':
-               if self._environment["RFKILL_NAME"].startswith('hci'):
-                   return 'BLUETOOTH'
+        if ('RFKILL_TYPE' in self._environment and
+                'RFKILL_NAME' in self._environment):
+            if self._environment["RFKILL_TYPE"] == 'bluetooth':
+                if self._environment["RFKILL_NAME"].startswith('hci'):
+                    return 'BLUETOOTH'
 
         # Any devices that have a product name and proper vendor and product
         # IDs, but had no other category, are lumped together in OTHER.
@@ -647,7 +650,8 @@ class UdevadmDevice(object):
         if match:
             return int(match.group("product_id"), 16)
         # disk
-        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
+        if (self.driver == "nvme" and self.bus in ('pci', 'misc')
+                and self._stack):
             parent = self._stack[-1]
             return parent.product_id
         elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
@@ -701,7 +705,8 @@ class UdevadmDevice(object):
                 vendor_id = 9
             return vendor_id
         # disk
-        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
+        if (self.driver == "nvme" and self.bus in ('pci', 'misc')
+                and self._stack):
             parent = self._stack[-1]
             return parent.vendor_id
         elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
@@ -734,9 +739,10 @@ class UdevadmDevice(object):
             return self._subproduct_id
         if "PCI_SUBSYS_ID" in self._environment:
             pci_subsys_id = self._environment["PCI_SUBSYS_ID"]
-            subvendor_id, subproduct_id = pci_subsys_id.split(":")
+            subproduct_id = pci_subsys_id.split(":")[1]
             return int(subproduct_id, 16)
-        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
+        if (self.driver == "nvme" and self.bus in ('pci', 'misc')
+                and self._stack):
             parent = self._stack[-1]
             return parent.subproduct_id
         elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
@@ -754,9 +760,10 @@ class UdevadmDevice(object):
             return self._subvendor_id
         if "PCI_SUBSYS_ID" in self._environment:
             pci_subsys_id = self._environment["PCI_SUBSYS_ID"]
-            subvendor_id, subproduct_id = pci_subsys_id.split(":")
+            subvendor_id = pci_subsys_id.split(":")[0]
             return int(subvendor_id, 16)
-        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
+        if (self.driver == "nvme" and self.bus in ('pci', 'misc')
+                and self._stack):
             parent = self._stack[-1]
             return parent.subvendor_id
         elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
@@ -770,7 +777,7 @@ class UdevadmDevice(object):
 
     @property
     def product_slug(self):
-        """Returns a version of the product name trimmed from any weird characters."""
+        """Returns the product name with special characters removed."""
         if self._product_slug is not None:
             return self._product_slug
         if self.product is not None:
@@ -780,7 +787,7 @@ class UdevadmDevice(object):
 
     @property
     def vendor_slug(self):
-        """Returns a version of the vendor name trimmed from any weird characters."""
+        """Returns the vendor name with special characters removed."""
         if self._vendor_slug is not None:
             return self._vendor_slug
         if self.vendor is not None:
@@ -808,18 +815,14 @@ class UdevadmDevice(object):
                 return parent.product
             else:
                 return self.name
-        elif (
-            self._environment.get("DEVTYPE") == "disk" and
-            self.driver == 'virtio_blk' and self.bus == 'virtio'
-        ):
+        elif (self._environment.get("DEVTYPE") == "disk" and
+                self.driver == 'virtio_blk' and self.bus == 'virtio'):
             return self.name
-        elif (
-            self._list_partitions and
-            self._environment.get("DEVTYPE") == "partition"
-        ):
+        elif (self._list_partitions and
+                self._environment.get("DEVTYPE") == "partition"):
             return self.name
         elif '/dev/md' in self._environment.get('DEVNAME', ''):
-             if "MD_NAME" in self._environment:
+            if "MD_NAME" in self._environment:
                 return self._environment.get("MD_NAME")
         elif self.major == "94":
             # See http://pad.lv/1559189
@@ -928,14 +931,15 @@ class UdevadmDevice(object):
 
         if "ID_VENDOR_FROM_DATABASE" in self._environment:
             return self._environment["ID_VENDOR_FROM_DATABASE"]
-        if self.driver == "nvme" and self.bus in ('pci', 'misc') and self._stack:
+        if (self.driver == "nvme" and self.bus in ('pci', 'misc')
+                and self._stack):
             parent = self._stack[-1]
             return parent.vendor
         elif self.driver == "nvme" and self.bus == 'nvme' and self._stack:
             parent = self._stack[-2]
             return parent.vendor
         elif '/dev/md' in self._environment.get('DEVNAME', ''):
-             if "MD_LEVEL" in self._environment:
+            if "MD_LEVEL" in self._environment:
                 return self._environment.get("MD_LEVEL")
         if "SUBSYSTEM" in self._environment:
             # hidraw
@@ -1022,6 +1026,14 @@ class UdevadmDevice(object):
 
         return {a: getattr(self, a) for a in attributes if getattr(self, a)}
 
+    @property
+    def symlink_uuid(self):
+        if self.category == "PARTITION":
+            for link in self._symlinks:
+                if 'by-uuid' in link:
+                    return link
+        return None
+
 
 class UdevadmParser(object):
     """Parser for the udevadm command."""
@@ -1047,8 +1059,8 @@ class UdevadmParser(object):
 
         # Keep /dev/mapper devices (non swap)
         if '/dev/mapper' in device._environment.get('DEVLINKS', ''):
-            if "ID_FS_TYPE" in device._environment:
-                if device._environment["ID_FS_TYPE"] == 'swap':
+            if "ID_FS_USAGE" in device._environment:
+                if device._environment["ID_FS_USAGE"] != 'filesystem':
                     return True
             return False
 
@@ -1099,8 +1111,7 @@ class UdevadmParser(object):
             return True
 
         # Ignore invalid subsystem information
-        if (
-            (device.subproduct_id is None
+        if ((device.subproduct_id is None
                 and device.subvendor_id is not None)
             or (device.subproduct_id is not None
                 and device.subvendor_id is None)):
@@ -1108,9 +1119,8 @@ class UdevadmParser(object):
 
         # Ignore FLOPPY, DISK and CDROM devices without a DEVNAME
         # (See pad.lv/1539041)
-        if (
-            (device.category in ('CDROM', 'DISK', 'FLOPPY')) and
-            "DEVNAME" not in device._environment):
+        if ((device.category in ('CDROM', 'DISK', 'FLOPPY')) and
+                "DEVNAME" not in device._environment):
             return True
 
         # Ignore ACPI devices
@@ -1125,8 +1135,8 @@ class UdevadmParser(object):
         # Ignore virtual devices created by Cisco CIMC manager
         # See pad.lv/1585802
         if (device.product == "Virtual FDD/HDD" or
-            device.product == "Virtual Floppy" or
-            device.product == "Virtual CD/DVD"):
+                device.product == "Virtual Floppy" or
+                device.product == "Virtual CD/DVD"):
             return True
 
         return False
@@ -1155,6 +1165,7 @@ class UdevadmParser(object):
             path = None
             name = None
             element = None
+            symlinks = []
             environment = {}
             for line in record.splitlines():
                 line_match = line_pattern.match(line)
@@ -1171,6 +1182,8 @@ class UdevadmParser(object):
                     path = value
                 elif key == "N":
                     name = value
+                elif key == "S":
+                    symlinks.append(value)
                 elif key == "E":
                     key_match = multi_pattern.match(value)
                     if not key_match:
@@ -1190,7 +1203,7 @@ class UdevadmParser(object):
 
             device = self.device_factory(
                 environment, name, self.lsblk, self.list_partitions, self.bits,
-                list(stack))
+                list(stack), symlinks)
             if not self._ignoreDevice(device):
                 if device._raw_path in self.devices:
                     if self.devices[device._raw_path].category == 'CARDREADER':
@@ -1220,8 +1233,8 @@ class UdevadmParser(object):
         for d in self.devices.values():
             if d.category == 'DISK':
                 if '/dev/mapper' in d._environment.get('DEVLINKS', ''):
-                    if "ID_FS_TYPE" in d._environment:
-                        if d._environment["ID_FS_TYPE"] != 'swap':
+                    if "ID_FS_USAGE" in d._environment:
+                        if d._environment["ID_FS_USAGE"] == 'filesystem':
                             dev_mapper_devices.append(d)
                     else:
                         dev_mapper_devices.append(d)
@@ -1246,7 +1259,7 @@ class UdevadmParser(object):
                     if parent._raw_path in HID_devices_path_list:
                         self.devices.pop(device._raw_path, None)
             elif device.category in ("INFINIBAND", "NETWORK", "SOCKETCAN",
-                                   "WIRELESS", "WWAN", "OTHER"):
+                                     "WIRELESS", "WWAN", "OTHER"):
                 dev_interface = [
                     d for d in self.devices.values()
                     if d.category in ("INFINIBAND", "NETWORK", "SOCKETCAN",
@@ -1275,6 +1288,17 @@ class UdevadmParser(object):
                     dev_interface = dev_interface.pop()
                     device.interface = dev_interface.interface
                     self.devices.pop(dev_interface._raw_path, None)
+            elif device.category == 'CAPTURE':
+                meta_capture_device = [
+                    d for d in self.devices.values()
+                    if d.category == 'CAPTURE' and
+                    device._raw_path != d._raw_path and
+                    device._environment["MINOR"] < d._environment["MINOR"] and
+                    os.path.dirname(device._raw_path) in d._raw_path
+                ]
+                if meta_capture_device:
+                    meta_device = meta_capture_device.pop()
+                    self.devices.pop(meta_device._raw_path, None)
             elif device.category == 'DISK':
                 # If dev/mapper list devices then they take precedence over the
                 # other block devices
@@ -1337,7 +1361,7 @@ def parse_udevadm_output(output, lsblk=None, list_partitions=False, bits=None):
             lsblk = check_output(
                 ['lsblk', '-i', '-n', '-P', '-o', 'KNAME,TYPE,MOUNTPOINT'],
                 universal_newlines=True)
-        except CalledProcessError as exc:
+        except CalledProcessError:
             lsblk = ''
     udev = UdevadmParser(output, lsblk, list_partitions, bits)
     result = UdevResult()
