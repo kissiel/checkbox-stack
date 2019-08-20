@@ -1,3 +1,15 @@
+
+id: wireless/detect
+category_id: com.canonical.plainbox::wireless
+plugin: shell
+flags: also-after-suspend
+estimated_duration: 2.0
+_summary: Detect if at least one Wireless LAN device is detected
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_wlan_adapter == 'True'
+command:
+  network_device_info.py detect WIRELESS
+
 unit: template
 template-resource: device
 template-filter: device.category == 'WIRELESS' and device.interface != 'UNKNOWN'
@@ -18,6 +30,7 @@ requires:
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
+# net_if_management.device == '{{ interface }}' and net_if_management.managed_by == 'NetworkManager'
 
 unit: template
 template-resource: device
@@ -39,6 +52,7 @@ requires:
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
+# net_if_management.device == '{{ interface }}' and net_if_management.managed_by == 'NetworkManager'
 
 unit: template
 template-resource: device
@@ -60,6 +74,7 @@ requires:
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
+# net_if_management.device == '{{ interface }}' and net_if_management.managed_by == 'NetworkManager'
 
 unit: template
 template-resource: device
@@ -81,6 +96,7 @@ requires:
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
+# net_if_management.device == '{{ interface }}' and net_if_management.managed_by == 'NetworkManager'
 
 unit: template
 template-resource: device
@@ -102,6 +118,7 @@ requires:
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
+# net_if_management.device == '{{ interface }}' and net_if_management.managed_by == 'NetworkManager'
 
 unit: template
 template-resource: device
@@ -124,6 +141,7 @@ requires:
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
+# net_if_management.device == '{{ interface }}' and net_if_management.managed_by == 'NetworkManager'
 
 unit: template
 template-resource: device
@@ -146,6 +164,7 @@ requires:
  {%- if __on_ubuntucore__ %}
  connections.slot == 'network-manager:service' and connections.plug == '{{ __system_env__["SNAP_NAME"] }}:network-manager'
  {% endif -%}
+# net_if_management.device == '{{ interface }}' and net_if_management.managed_by == 'NetworkManager'
 
 plugin: user-interact-verify
 category_id: com.canonical.plainbox::wireless
