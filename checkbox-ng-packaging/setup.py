@@ -55,7 +55,7 @@ else:
 
 setup(
     name="checkbox-ng",
-    version="1.4.0",
+    version="1.5.0rc1",
     url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",
@@ -89,8 +89,6 @@ setup(
         'console_scripts': [
             'checkbox-cli=checkbox_ng.launcher.checkbox_cli:main',
             'checkbox-provider-tools=checkbox_ng.launcher.provider_tools:main',
-            ('plainbox-trusted-launcher-1='
-             'plainbox.impl.secure.launcher1:main'),
         ],
         'plainbox.exporter': [
             'text=plainbox.impl.exporter.text:TextSessionStateExporter',

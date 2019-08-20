@@ -43,11 +43,10 @@ from plainbox.impl.applogic import PlainBoxConfig
 from plainbox.impl.decorators import raises
 from plainbox.impl.developer import UnexpectedMethodCall
 from plainbox.impl.developer import UsageExpectation
-from plainbox.impl.jobcache import ResourceJobCache
+from plainbox.impl.execution import UnifiedRunner
 from plainbox.impl.result import JobResultBuilder
 from plainbox.impl.result import MemoryJobResult
 from plainbox.impl.providers import get_providers
-from plainbox.impl.runner import JobRunner
 from plainbox.impl.runner import JobRunnerUIDelegate
 from plainbox.impl.secure.origin import Origin
 from plainbox.impl.secure.qualifiers import select_jobs
@@ -490,8 +489,6 @@ class SessionAssistant:
             "create a new session from scratch")
         allowed_calls[self.get_resumable_sessions] = (
             "get resume candidates")
-        allowed_calls[self.clear_cache] = (
-            "clear job cache")
         return self._selected_providers
 
     @morris.signal
@@ -569,7 +566,8 @@ class SessionAssistant:
                 storage.remove()
 
     @raises(UnexpectedMethodCall)
-    def start_new_session(self, title: str, runner_cls=JobRunner):
+    def start_new_session(self, title: str, runner_cls=UnifiedRunner,
+                          runner_kwargs=dict()):
         """
         Create a new testing session.
 
@@ -606,7 +604,7 @@ class SessionAssistant:
         self._metadata.flags = {'bootstrapping'}
         self._manager.checkpoint()
         self._command_io_delegate = JobRunnerUIDelegate(_SilentUI())
-        self._init_runner(runner_cls)
+        self._init_runner(runner_cls, runner_kwargs)
         self.session_available(self._manager.storage.id)
         _logger.debug("New session created: %s", title)
         UsageExpectation.of(self).allowed_calls = {
@@ -622,7 +620,8 @@ class SessionAssistant:
 
     @raises(KeyError, UnexpectedMethodCall)
     def resume_session(self, session_id: str,
-                       runner_cls=JobRunner) -> 'SessionMetaData':
+                       runner_cls=UnifiedRunner,
+                       runner_kwargs=dict()) -> 'SessionMetaData':
         """
         Resume a session.
 
@@ -650,7 +649,7 @@ class SessionAssistant:
         self._context = self._manager.default_device_context
         self._metadata = self._context.state.metadata
         self._command_io_delegate = JobRunnerUIDelegate(_SilentUI())
-        self._init_runner(runner_cls)
+        self._init_runner(runner_cls, runner_kwargs)
         if self._metadata.running_job_name:
             job = self._context.get_unit(
                 self._metadata.running_job_name, 'job')
@@ -1765,10 +1764,8 @@ class SessionAssistant:
         url = transport_details["url"]
         return OAuthTransport(url, '', transport_details)
 
-    @raises(UnexpectedMethodCall)
-    def clear_cache(self) -> None:
-        UsageExpectation.of(self).enforce()
-        ResourceJobCache().clear()
+    def send_signal(self, signal, target_user):
+        self._runner.send_signal(signal, target_user)
 
     def _get_allowed_calls_in_normal_state(self) -> dict:
         return {
@@ -1801,18 +1798,21 @@ class SessionAssistant:
             self.finish_bootstrap: "to finish bootstrapping",
         }
 
-    def _init_runner(self, runner_cls):
+    def _init_runner(self, runner_cls, runner_kwargs=dict()):
         self._execution_ctrl_list = []
         for ctrl_cls, args, kwargs in self._ctrl_setup_list:
             self._execution_ctrl_list.append(
                 ctrl_cls(self._context.provider_list, *args, **kwargs))
+        runner_kwargs['jobs_io_log_dir'] = os.path.join(
+            self._manager.storage.location, 'io-logs')
+        runner_kwargs['command_io_delegate'] = self._command_io_delegate
+        runner_kwargs['execution_ctrl_list'] = (
+            self._execution_ctrl_list or None)
+
         self._runner = runner_cls(
             self._manager.storage.location,
             self._context.provider_list,
-            jobs_io_log_dir=os.path.join(
-                self._manager.storage.location, 'io-logs'),
-            command_io_delegate=self._command_io_delegate,
-            execution_ctrl_list=self._execution_ctrl_list or None)
+            **runner_kwargs)
         return
 
 

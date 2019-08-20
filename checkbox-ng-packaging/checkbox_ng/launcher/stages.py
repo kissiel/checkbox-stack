@@ -1,6 +1,6 @@
 # This file is part of Checkbox.
 #
-# Copyright 2016 Canonical Ltd.
+# Copyright 2016-2019 Canonical Ltd.
 # Written by:
 #   Maciej Kisielewski <maciej.kisielewski@canonical.com>
 #
@@ -25,6 +25,7 @@ import gettext
 import json
 import logging
 import os
+import sys
 
 from plainbox.abc import IJobResult
 from plainbox.i18n import pgettext as C_
@@ -72,6 +73,11 @@ class CheckboxUiStage(metaclass=abc.ABCMeta):
 
 class MainLoopStage(CheckboxUiStage):
 
+    def __init__(self):
+        super().__init__()
+        self._sudo_password = None
+        self._passwordless_sudo = False
+
     def _run_single_job_with_ui_loop(self, job, ui):
         print(self.C.header(job.tr_summary(), fill='-'))
         print(_("ID: {0}").format(job.id))
@@ -89,7 +95,7 @@ class MainLoopStage(CheckboxUiStage):
                     result_builder = JobResultBuilder(
                         outcome=IJobResult.OUTCOME_SKIP,
                         comments=_("Trying to run interactive job in a silent"
-                                    " session"))
+                                   " session"))
                     return result_builder
                 if job_state.can_start():
                     ui.notify_about_purpose(job)
@@ -276,6 +282,16 @@ class MainLoopStage(CheckboxUiStage):
             }
             test_info_list = test_info_list + ((test_info, ))
         return test_info_list
+
+    def _generate_tp_infos(self, tp_list):
+        tp_info_list = []
+        for tp_id in tp_list:
+            tp_info = {
+                'id': tp_id,
+                'name': self.sa.get_test_plan(tp_id).name
+            }
+            tp_info_list.append(tp_info)
+        return tp_info_list
 
 
 class ReportsStage(CheckboxUiStage):
