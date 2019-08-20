@@ -38,7 +38,7 @@ with open(os.path.join(base_dir, "README.rst"), encoding="UTF-8") as stream:
 
 setup(
     name="checkbox-support",
-    version="0.41.0",
+    version="0.42.0rc1",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     test_suite='checkbox_support.tests.test_suite',
@@ -88,6 +88,8 @@ setup(
                 "checkbox_support.scripts.snap_connect:main"),
             ("checkbox-support-eddystone_scanner="
                 "checkbox_support.scripts.eddystone_scanner:main"),
+            ("checkbox-support-lsusb="
+                "checkbox_support.scripts.lsusb:main"),
         ],
     },
 )
