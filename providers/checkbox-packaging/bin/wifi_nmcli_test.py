@@ -10,12 +10,12 @@
 
 
 import argparse
+import datetime
 import functools
+import os
 import subprocess as sp
 import sys
 import time
-
-from distutils.version import LooseVersion
 
 
 print = functools.partial(print, flush=True)
@@ -29,17 +29,6 @@ def print_cmd(cmd):
     print("+", cmd)
 
 
-def legacy_nmcli():
-    cmd = "nmcli -v"
-    output = sp.check_output(cmd, shell=True)
-    version = LooseVersion(output.strip().split()[-1].decode())
-    # check if using an earlier nmcli version with different api
-    # nmcli in trusty is 0.9.8.8
-    if version < LooseVersion("0.9.9"):
-        return True
-    return False
-
-
 def cleanup_nm_connections():
     print_head("Cleaning up NM connections")
     cmd = "nmcli -t -f TYPE,UUID,NAME c"
@@ -49,10 +38,7 @@ def cleanup_nm_connections():
         type, uuid, name = line.strip().split(':')
         if type == '802-11-wireless':
             print("Deleting connection", name)
-            if legacy_nmcli():
-                cmd = "nmcli c delete uuid {}".format(uuid)
-            else:
-                cmd = "nmcli c delete {}".format(uuid)
+            cmd = "nmcli c delete {}".format(uuid)
             print_cmd(cmd)
             sp.call(cmd, shell=True)
     print()
@@ -75,27 +61,18 @@ def device_rescan():
 def list_aps(args):
     print_head("List APs")
     count = 0
-    if legacy_nmcli():
-        fields = "SSID,FREQ,SIGNAL"
-        cmd = "nmcli -t -f {} d wifi list iface {}".format(fields, args.device)
-    else:
-        fields = "SSID,CHAN,FREQ,SIGNAL"
-        cmd = "nmcli -t -f {} d wifi list ifname {}".format(
-            fields, args.device)
+    fields = "SSID,CHAN,FREQ,SIGNAL"
+    cmd = "nmcli -t -f {} d wifi list ifname {}".format(
+        fields, args.device)
     print_cmd(cmd)
     output = sp.check_output(cmd, shell=True)
     for line in output.decode(sys.stdout.encoding).splitlines():
         # lp bug #1723372 - extra line in output on zesty
         if line.strip() == args.device:
             continue
-        if legacy_nmcli():
-            ssid, frequency, signal = line.strip().split(':')
-            print("SSID: {} Freq: {} Signal: {}".format(
-                ssid, frequency, signal))
-        else:
-            ssid, channel, frequency, signal = line.strip().split(':')
-            print("SSID: {} Chan: {} Freq: {} Signal: {}".format(
-                ssid, channel, frequency, signal))
+        ssid, channel, frequency, signal = line.strip().split(':')
+        print("SSID: {} Chan: {} Freq: {} Signal: {}".format(
+            ssid, channel, frequency, signal))
         if hasattr(args, 'essid'):
             if ssid == args.essid:
                 count += 1
@@ -107,20 +84,12 @@ def list_aps(args):
 
 def open_connection(args):
     print_head("Connection attempt")
-    if legacy_nmcli():
-        cmd = "nmcli d wifi connect {} iface {} name TEST_CON".format(
-            args.essid, args.device)
-    else:
-        cmd = "nmcli d wifi connect {} ifname {} name TEST_CON".format(
-            args.essid, args.device)
+    cmd = "nmcli d wifi connect {} ifname {} name TEST_CON".format(
+        args.essid, args.device)
     print_cmd(cmd)
     sp.call(cmd, shell=True)
-    if legacy_nmcli():
-        cmd = ("nmcli -m tabular -t -f GENERAL d list | grep {} | "
-               "awk -F: '{{print $15}}'".format(args.device))
-    else:
-        cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(
-            args.device)
+    cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(
+        args.device)
     print_cmd(cmd)
     output = sp.check_output(cmd, shell=True)
     state = output.decode(sys.stdout.encoding).strip()
@@ -134,20 +103,12 @@ def open_connection(args):
 
 def secured_connection(args):
     print_head("Connection attempt")
-    if legacy_nmcli():
-        cmd = ("nmcli d wifi connect {} password {} iface {} name "
-               "TEST_CON".format(args.essid, args.psk, args.device))
-    else:
-        cmd = ("nmcli d wifi connect {} password {} ifname {} name "
-               "TEST_CON".format(args.essid, args.psk, args.device))
+    cmd = ("nmcli --wait 180 d wifi connect {} password {} ifname {} name "
+           "TEST_CON".format(args.essid, args.psk, args.device))
     print_cmd(cmd)
     sp.call(cmd, shell=True)
-    if legacy_nmcli():
-        cmd = ("nmcli -m tabular -t -f GENERAL d list | "
-               "grep {} | awk -F: '{{print $15}}'".format(args.device))
-    else:
-        cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(
-            args.device)
+    cmd = "nmcli -m tabular -t -f GENERAL.STATE d show {}".format(
+        args.device)
     print_cmd(cmd)
     output = sp.check_output(cmd, shell=True)
     state = output.decode(sys.stdout.encoding).strip()
@@ -196,6 +157,17 @@ def hotspot(args):
     return retcode
 
 
+def print_journal_entries(start):
+    print_head("Journal Entries")
+    cmd = ('journalctl -q --no-pager '
+           '-u snap.network-manager.networkmanager.service '
+           '-u NetworkManager.service '
+           '-u wpa_supplicant.service '
+           '--since "{}" '.format(start.strftime('%Y-%m-%d %H:%M:%S')))
+    print_cmd(cmd)
+    sp.call(cmd, shell=True)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='WiFi connection test using mmcli')
@@ -232,9 +204,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    start_time = datetime.datetime.now()
+
     cleanup_nm_connections()
-    if not legacy_nmcli():
-        device_rescan()
+    device_rescan()
     count = list_aps(args)
 
     if args.test_type == 'scan':
@@ -247,6 +220,13 @@ if __name__ == '__main__':
 
     if args.func:
         try:
-            sys.exit(args.func(args))
-        finally:
+            result = args.func(args)
+        except:
             cleanup_nm_connections()
+
+    # The test is not required to run as root, but root access is required for
+    # journal access so only attempt to print when e.g. running under Remote
+    if result != 0 and os.geteuid() == 0:
+        print_journal_entries(start_time)
+
+    sys.exit(result)
