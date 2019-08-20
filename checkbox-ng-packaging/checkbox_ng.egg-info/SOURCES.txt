@@ -34,8 +34,6 @@ contrib/checkbox-ci-mailer.service
 contrib/checkbox-ci-script.sh
 contrib/checkbox-sru-desktop.sh
 contrib/checkbox-sru.service
-contrib/policykit_auth_admin_keep/org.freedesktop.policykit.pkexec.run-plainbox-job.policy
-contrib/policykit_yes/org.freedesktop.policykit.pkexec.run-plainbox-job.policy
 docs/bugs.rst
 docs/conf.py
 docs/configs.rst
@@ -46,6 +44,7 @@ docs/launcher-tutorial.rst
 docs/nested-test-plan.rst
 docs/remote.rst
 docs/side-loading.rst
+docs/slave-daemon.rst
 docs/snappy.rst
 docs/stack.rst
 docs/testing-snappy.rst
@@ -88,6 +87,7 @@ plainbox/impl/ctrl.py
 plainbox/impl/decorators.py
 plainbox/impl/depmgr.py
 plainbox/impl/developer.py
+plainbox/impl/execution.py
 plainbox/impl/highlevel.py
 plainbox/impl/ingredients.py
 plainbox/impl/job.py
@@ -214,18 +214,15 @@ plainbox/impl/providers/stubbox/po/zh_TW.po
 plainbox/impl/providers/stubbox/units/jobs/categories.pxu
 plainbox/impl/providers/stubbox/units/jobs/representative.pxu
 plainbox/impl/providers/stubbox/units/jobs/stub.pxu
-plainbox/impl/providers/stubbox/units/jobs/win.pxu
 plainbox/impl/providers/stubbox/units/testplans/all.pxu
 plainbox/impl/secure/__init__.py
 plainbox/impl/secure/config.py
-plainbox/impl/secure/launcher1.py
 plainbox/impl/secure/origin.py
 plainbox/impl/secure/plugins.py
 plainbox/impl/secure/qualifiers.py
 plainbox/impl/secure/rfc822.py
 plainbox/impl/secure/sudo_broker.py
 plainbox/impl/secure/test_config.py
-plainbox/impl/secure/test_launcher1.py
 plainbox/impl/secure/test_origin.py
 plainbox/impl/secure/test_plugins.py
 plainbox/impl/secure/test_qualifiers.py

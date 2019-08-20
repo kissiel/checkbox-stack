@@ -42,11 +42,13 @@ from guacamole import Command
 from plainbox.abc import IJobResult
 from plainbox.i18n import ngettext
 from plainbox.impl.color import Colorizer
+from plainbox.impl.execution import UnifiedRunner
 from plainbox.impl.highlevel import Explorer
 from plainbox.impl.providers import get_providers
 from plainbox.impl.providers.embedded_providers import (
     EmbeddedProvider1PlugInCollection)
 from plainbox.impl.result import MemoryJobResult
+from plainbox.impl.secure.sudo_broker import sudo_password_provider
 from plainbox.impl.session.assistant import SessionAssistant, SA_RESTARTABLE
 from plainbox.impl.session.jobs import InhibitionCause
 from plainbox.impl.session.restart import detect_restart_strategy
@@ -56,6 +58,7 @@ from plainbox.impl.transport import InvalidSecureIDError
 from plainbox.impl.transport import get_all_transports
 from plainbox.impl.transport import SECURE_ID_PATTERN
 
+from checkbox_ng.config import load_configs
 from checkbox_ng.launcher.stages import MainLoopStage, ReportsStage
 from checkbox_ng.launcher.startprovider import (
     EmptyProviderSkeleton, IQN, ProviderSkeleton)
@@ -63,7 +66,7 @@ from checkbox_ng.launcher.run import Action
 from checkbox_ng.launcher.run import NormalUI
 from checkbox_ng.urwid_ui import CategoryBrowser
 from checkbox_ng.urwid_ui import ReRunBrowser
-from checkbox_ng.urwid_ui import test_plan_browser
+from checkbox_ng.urwid_ui import TestPlanBrowser
 
 _ = gettext.gettext
 
@@ -233,8 +236,6 @@ class Launcher(Command, MainLoopStage, ReportsStage):
                 ctx.sa,
                 *self.launcher.providers,
                 additional_providers=additional_providers)
-            if ctx.args.clear_cache:
-                ctx.sa.clear_cache()
             if not self._maybe_resume_session():
                 self._start_new_session()
                 self._pick_jobs_to_run()
@@ -379,7 +380,12 @@ class Launcher(Command, MainLoopStage, ReportsStage):
             title = os.path.basename(self.ctx.args.launcher)
         if self.launcher.app_version:
             title += ' {}'.format(self.launcher.app_version)
-        self.ctx.sa.start_new_session(title)
+        runner_kwargs = {
+            'normal_user_provider': lambda: self.launcher.normal_user,
+            'password_provider': sudo_password_provider.get_sudo_password,
+            'stdin': None,
+        }
+        self.ctx.sa.start_new_session(title, UnifiedRunner, runner_kwargs)
         if self.launcher.test_plan_forced:
             tp_id = self.launcher.test_plan_default_selection
         elif not self.is_interactive:
@@ -409,27 +415,15 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         filtered_tp_ids = set()
         for filter in self.launcher.test_plan_filters:
             filtered_tp_ids.update(fnmatch.filter(test_plan_ids, filter))
-        filtered_tp_ids = list(filtered_tp_ids)
-        filtered_tp_ids.sort(
-            key=lambda tp_id: self.ctx.sa.get_test_plan(tp_id).name)
-        test_plan_names = [self.ctx.sa.get_test_plan(tp_id).name for tp_id in
-                           filtered_tp_ids]
-        preselected_index = None
-        if self.launcher.test_plan_default_selection:
-            try:
-                preselected_index = test_plan_names.index(
-                    self.ctx.sa.get_test_plan(
-                        self.launcher.test_plan_default_selection).name)
-            except KeyError:
-                _logger.warning(_('%s test plan not found'),
-                                self.launcher.test_plan_default_selection)
-                preselected_index = None
-        try:
-            selected_index = test_plan_browser(
-                _("Select test plan"), test_plan_names, preselected_index)
-            return filtered_tp_ids[selected_index]
-        except (IndexError, TypeError):
-            return None
+        tp_info_list = self._generate_tp_infos(filtered_tp_ids)
+        if not tp_info_list:
+            print(self.C.RED(_("There were no test plans to select from!")))
+            return
+        selected_tp = TestPlanBrowser(
+            _("Select test plan"),
+            tp_info_list,
+            self.launcher.test_plan_default_selection).run()
+        return selected_tp
 
     def _pick_jobs_to_run(self):
         if self.launcher.test_selection_forced:
@@ -684,11 +678,15 @@ class Run(Command, MainLoopStage):
                     side_load_path)
                 additional_providers = embedded_providers.get_all_plugin_objects()
             self._configure_restart()
+            config = load_configs()
+            self.sa.use_alternate_configuration(config)
             try_selecting_providers(
                 self.sa,
                 '*',
                 additional_providers=additional_providers)
-            self.sa.start_new_session(self.ctx.args.title or 'checkbox-run')
+            self.sa.start_new_session(
+                self.ctx.args.title or 'checkbox-run',
+                UnifiedRunner)
             tps = self.sa.get_test_plans()
             self._configure_report()
             selection = ctx.args.PATTERN
@@ -917,7 +915,7 @@ class TestPlanExport(Command):
         if ctx.args.nofake:
             self.sa.start_new_session('tp-export-ephemeral')
         else:
-            from plainbox.impl.runner import FakeJobRunner
+            from plainbox.impl.execution import FakeJobRunner
             self.sa.start_new_session('tp-export-ephemeral', FakeJobRunner)
             self.sa._context.state._fake_resources = True
         tps = self.sa.get_test_plans()

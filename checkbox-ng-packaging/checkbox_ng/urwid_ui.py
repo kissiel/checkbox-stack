@@ -325,13 +325,7 @@ class CategoryBrowser:
         urwid.Text("Back to parent category  Left"),
         urwid.Text("Toggle job id/summary    i"),
         urwid.Text('Show job details         m'),
-        urwid.Text("Exit (abandon session)   Ctrl+C"),
-        urwid.Divider(),
-        urwid.Text(('focus', " Mouse Support "), 'center'),
-        urwid.Divider(),
-        urwid.Text("Line selection           Left-click"),
-        urwid.Text("Expand/Collapse          Left-click on +/-"),
-        urwid.Text("Select/Deselect          Left-click on [X]")]))
+        urwid.Text("Exit (abandon session)   Ctrl+C")]))
 
     def __init__(self, title, tests):
         global test_info_list
@@ -356,7 +350,8 @@ class CategoryBrowser:
     def run(self):
         """Run the urwid MainLoop."""
         self.loop = urwid.MainLoop(
-            self.view, self.palette, unhandled_input=self.unhandled_input)
+            self.view, self.palette, unhandled_input=self.unhandled_input,
+            handle_mouse=False)
         self.loop.run()
         selection = []
         global test_info_list, _widget_cache
@@ -518,49 +513,143 @@ class ReRunBrowser(CategoryBrowser):
                 self.loop.widget = self.view
 
 
-def test_plan_browser(title, test_plan_list, selection=None):
+class TestPlanButton(urwid.RadioButton):
+
+    def __init__(self, tp_info, group):
+        self._tp_info = tp_info
+        self.is_name = True
+        super(TestPlanButton, self).__init__(
+            group, self._tp_info.get('name'), state=False)
+
+    def label_toggle(self):
+        if self.is_name:
+            self.set_label(self._tp_info.get('id'))
+            self.is_name = False
+        else:
+            self.set_label(self._tp_info.get('name'))
+            self.is_name = True
+
+    @property
+    def tp_id(self):
+        return self._tp_info.get('id')
+
+    @property
+    def name(self):
+        return self._tp_info.get('name')
+
+
+class TestPlanBrowser():
+
     palette = [
+        ('focus', 'black', 'light gray', 'standout'),
         ('body', 'light gray', 'black', 'standout'),
-        ('header', 'black', 'light gray', 'bold'),
+        ('head', 'black', 'light gray', 'bold'),
         ('buttnf', 'black', 'light gray'),
         ('buttn', 'light gray', 'black', 'bold'),
         ('foot', 'light gray', 'black'),
         ('start', 'dark green,bold', 'black'),
     ]
+
     footer_text = [('Press '), ('start', '<Enter>'), (' to continue')]
-    radio_button_group = []
-    blank = urwid.Divider()
-    listbox_content = [
-        blank,
-        urwid.Padding(urwid.Pile(
-            [urwid.AttrWrap(urwid.RadioButton(
-                radio_button_group,
-                txt, state=False), 'buttn', 'buttnf')
-                for txt in test_plan_list]),
-            left=4, right=3, min_width=13),
-        blank,
-    ]
-    if selection:
-        radio_button_group[selection].set_state(True)
-    header = urwid.AttrWrap(urwid.Padding(urwid.Text(title), left=1), 'header')
-    footer = urwid.AttrWrap(
-        urwid.Padding(urwid.Text(footer_text), left=1), 'foot')
-    listbox = urwid.ListBox(urwid.SimpleListWalker(listbox_content))
-    frame = urwid.Frame(urwid.AttrWrap(urwid.LineBox(listbox), 'body'),
-                        header=header, footer=footer)
-    if frame._command_map["enter"]:
-        del frame._command_map["enter"]
 
-    def unhandled(key):
-        if key == "enter":
-            raise urwid.ExitMainLoop()
+    help_text = urwid.ListBox(urwid.SimpleListWalker([
+        urwid.Text(('focus', " Keyboard Controls and Shortcuts "), 'center'),
+        urwid.Divider(),
+        urwid.Text("Select/Deselect                 Space"),
+        urwid.Text("Navigation                      Up/Down"),
+        urwid.Text("                                Home/End"),
+        urwid.Text("                                PageUp/PageDown"),
+        urwid.Text("Toggle test plan id/summary     i"),
+        urwid.Text("Filter test plan list           f,s,/"),
+        urwid.Text("Exit (abandon session)          Ctrl+C")]))
 
-    urwid.MainLoop(frame, palette, unhandled_input=unhandled).run()
-    try:
-        return next(
-            radio_button_group.index(i) for i in radio_button_group if i.state)
-    except StopIteration:
-        return None
+    def __init__(self, title, test_plan_list, selection=None):
+        self.master_list = sorted(
+            test_plan_list, key=lambda tp_info: tp_info.get('name'))
+        # Header
+        self.header = urwid.Padding(urwid.Text(title), left=1)
+        # Body
+        self.radio_button_group = []
+        self.button_pile = None
+        self._update_button_pile(self.master_list)
+        listbox_content = [
+            urwid.Divider(),
+            urwid.Padding(self.button_pile, left=4, right=3, min_width=13),
+            urwid.Divider(),
+        ]
+        self.listbox = urwid.ListBox(urwid.SimpleListWalker(listbox_content))
+        # Footer
+        self.default_footer = urwid.AttrWrap(urwid.Columns(
+            [urwid.Padding(urwid.Text(self.footer_text), left=1),
+             urwid.Text('(H) Help ', 'right')]), 'foot')
+        self.filter_footer = urwid.AttrWrap(
+            urwid.Edit("filter: "), 'foot')
+        self.filtering = False
+        # Main frame
+        self.frame = urwid.Frame(
+            urwid.AttrWrap(urwid.LineBox(self.listbox), 'body'),
+            header=urwid.AttrWrap(self.header, 'head'),
+            footer=self.default_footer)
+        if self.frame._command_map["enter"]:
+            del self.frame._command_map["enter"]
+        # Pop up
+        help_w = urwid.AttrWrap(urwid.LineBox(self.help_text), 'body')
+        self.help_view = urwid.Overlay(
+            help_w, self.frame,
+            'center', ('relative', 80), 'middle', ('relative', 80))
+
+    def _update_button_pile(self, tplist):
+        if tplist:
+            contents = [
+                urwid.AttrWrap(TestPlanButton(tp, self.radio_button_group),
+                               'buttn', 'buttnf')
+                for tp in tplist]
+            if self.button_pile is None:
+                self.button_pile = urwid.Pile(contents)
+            else:
+                self.button_pile.widget_list[:] = contents
+
+    def unhandled_input(self, key):
+        if self.loop.widget == self.frame:
+            if self.filtering:
+                if key in ('esc'):
+                    self.frame.contents['footer'] = (self.default_footer, None)
+                    self.frame.set_focus('body')
+                    self.filtering = False
+                elif key in ('enter'):
+                    filter_str = self.filter_footer.get_edit_text()
+                    if filter_str == '':
+                        self._update_button_pile(self.master_list)
+                    else:
+                        self._update_button_pile(
+                            [x for x in self.master_list
+                             if filter_str in x.get('name')])
+            else:
+                if key == 'enter':
+                    raise urwid.ExitMainLoop()
+                elif key in ('i', 'I'):
+                    for b in self.radio_button_group:
+                        b.label_toggle()
+                elif key in ('h', 'H', '?', 'f1'):
+                    self.loop.widget = self.help_view
+                    return True
+                elif key in ('/', 's', 'S', 'f', 'F'):
+                    self.frame.contents['footer'] = (self.filter_footer, None)
+                    self.frame.set_focus('footer')
+                    self.filtering = True
+        else:
+            if key in ('h', 'H', '?', 'f1', 'esc'):
+                self.loop.widget = self.frame
+
+    def run(self):
+        self.loop = urwid.MainLoop(
+            self.frame, self.palette, unhandled_input=self.unhandled_input,
+            handle_mouse=False)
+        self.loop.run()
+        try:
+            return next(i.tp_id for i in self.radio_button_group if i.state)
+        except StopIteration:
+            return None
 
 
 def interrupt_dialog(host):
@@ -574,6 +663,7 @@ def interrupt_dialog(host):
     ]
     choices = [
         _("Cancel the interruption and resume the session (ESC)"),
+        _("Kill test in progress and move on to next"),
         _("Disconnect the master (Same as CTRL+C)"),
         _("Stop the checkbox slave @{}".format(host)),
         _("Abandon the session on the slave @{}".format(host)),
@@ -614,11 +704,13 @@ def interrupt_dialog(host):
             radio_button_group[0].set_state(True)
             raise urwid.ExitMainLoop()
 
-    urwid.MainLoop(frame, palette, unhandled_input=unhandled).run()
+    urwid.MainLoop(frame, palette, unhandled_input=unhandled,
+                   handle_mouse=False).run()
     try:
         index = next(
             radio_button_group.index(i) for i in radio_button_group if i.state)
-        return ['cancel', 'kill-controller', 'kill-service', 'abandon'][index]
+        return ['cancel', 'kill-command', 'kill-controller',
+                'kill-service', 'abandon'][index]
     except StopIteration:
         return None
 
@@ -671,7 +763,7 @@ def resume_dialog(duration):
         if timer.update():
             loop.set_alarm_in(0.1, update_timer, timer)
 
-    loop = urwid.MainLoop(frame, palette)
+    loop = urwid.MainLoop(frame, palette, handle_mouse=False)
     update_timer(loop, timer)
     loop.run()
 

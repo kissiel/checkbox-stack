@@ -27,18 +27,18 @@ from collections import namedtuple
 from threading import Thread, Lock
 from subprocess import DEVNULL, CalledProcessError, check_call
 
-from plainbox.impl.ctrl import RootViaSudoWithPassExecutionController
-from plainbox.impl.ctrl import UserJobExecutionController
-from plainbox.impl.ctrl import DaemonicExecutionController
-from plainbox.impl.launcher import DefaultLauncherDefinition
+from plainbox.impl.execution import UnifiedRunner
 from plainbox.impl.session.assistant import SessionAssistant
 from plainbox.impl.session.assistant import SA_RESTARTABLE
 from plainbox.impl.session.jobs import InhibitionCause
 from plainbox.impl.secure.sudo_broker import SudoBroker, EphemeralKey
+from plainbox.impl.secure.sudo_broker import is_passwordless_sudo
+from plainbox.impl.secure.sudo_broker import validate_pass
 from plainbox.impl.result import JobResultBuilder
 from plainbox.impl.result import MemoryJobResult
 from plainbox.abc import IJobResult
 
+from checkbox_ng.config import load_configs
 from checkbox_ng.launcher.run import SilentUI
 
 _ = gettext.gettext
@@ -72,18 +72,11 @@ class BufferedUI(SilentUI):
     #      might be a cleaner approach than those queues
     def __init__(self):
         super().__init__()
-        self.clear_buffers()
+        self._queue = queue.Queue()
 
     def got_program_output(self, stream_name, line):
         self._queue.put(
             (stream_name, line.decode(sys.stdout.encoding, 'replace')))
-        self._whole_queue.put(line)
-
-    def whole_output(self):
-        """Returns all the output since last clear_buffers() call."""
-        while not self._whole_queue.empty():
-            self._whole_output += self._whole_queue.get()
-        return self._whole_output
 
     def get_output(self):
         """Returns all the output queued up since previous call."""
@@ -91,11 +84,6 @@ class BufferedUI(SilentUI):
         while not self._queue.empty():
             output.append(self._queue.get())
         return output
-
-    def clear_buffers(self):
-        self._queue = queue.Queue()
-        self._whole_queue = queue.Queue()
-        self._whole_output = ""
 
 
 class BackgroundExecutor(Thread):
@@ -105,18 +93,20 @@ class BackgroundExecutor(Thread):
         self._job_id = job_id
         self._real_run = real_run
         self._builder = None
+        self._started_real_run = False
         self._sa.session_change_lock.acquire()
         self.start()
         _logger.debug("BackgroundExecutor started for %s" % job_id)
 
     def wait(self):
-        while self.is_alive():
+        while self.is_alive() or not self._started_real_run:
             # return control to RPC server
             time.sleep(0.1)
         self.join()
         return self._builder
 
     def run(self):
+        self._started_real_run = True
         self._builder = self._real_run(
             self._job_id, self._sa.buffered_ui, False)
         _logger.debug("Finished running")
@@ -128,7 +118,7 @@ class BackgroundExecutor(Thread):
 class RemoteSessionAssistant():
     """Remote execution enabling wrapper for the SessionAssistant"""
 
-    REMOTE_API_VERSION = 6
+    REMOTE_API_VERSION = 7
 
     def __init__(self, cmd_callback):
         _logger.debug("__init__()")
@@ -144,13 +134,13 @@ class RemoteSessionAssistant():
         self._pipe_from_master = open(self._input_piping[1], 'w')
         self._pipe_to_subproc = open(self._input_piping[0])
         self._reset_sa()
+        self._currently_running_job = None
 
     def _reset_sa(self):
         _logger.info("Resetting RSA")
         self._state = Idle
         self._sa = SessionAssistant('service', api_flags={SA_RESTARTABLE})
         self._sa.configure_application_restart(self._cmd_callback)
-        self._choose_exec_ctrls()
         self._be = None
         self._session_id = ""
         self._jobs_count = 0
@@ -162,29 +152,6 @@ class RemoteSessionAssistant():
         self._normal_user = ''
         self.session_change_lock.acquire(blocking=False)
         self.session_change_lock.release()
-
-    def _choose_exec_ctrls(self):
-        normal_user_provider = lambda: self._normal_user
-        if os.getuid() == 0:
-            self._sa.use_alternate_execution_controllers([
-                (
-                    DaemonicExecutionController,
-                    (),
-                    {
-                        'normal_user_provider': normal_user_provider,
-                        'stdin': self._pipe_to_subproc,
-                    }
-                ),
-            ])
-        else:
-            self._sa.use_alternate_execution_controllers([
-                (
-                    RootViaSudoWithPassExecutionController,
-                    (),
-                    {'password_provider_cls': self.get_decrypted_password}
-                ),
-                (UserJobExecutionController, [], {}),
-            ])
 
     @property
     def session_change_lock(self):
@@ -224,17 +191,24 @@ class RemoteSessionAssistant():
         session_title = 'checkbox-slave'
         session_desc = 'checkbox-slave session'
 
-        self._launcher = DefaultLauncherDefinition()
+        self._launcher = load_configs()
         if configuration['launcher']:
-            self._launcher.read_string(configuration['launcher'])
+            self._launcher.read_string(configuration['launcher'], False)
             session_title = self._launcher.session_title
             session_desc = self._launcher.session_desc
 
         self._sa.use_alternate_configuration(self._launcher)
         self._sa.select_providers(*self._launcher.providers)
 
-        self._sa.start_new_session(session_title)
-
+        self._normal_user = self._launcher.normal_user
+        pass_provider = (None if self._passwordless_sudo else
+                         self.get_decrypted_password)
+        runner_kwargs = {
+            'normal_user_provider': lambda: self._normal_user,
+            'password_provider': pass_provider,
+            'stdin': self._pipe_to_subproc,
+        }
+        self._sa.start_new_session(session_title, UnifiedRunner, runner_kwargs)
         self._sa.update_app_blob(json.dumps(
             {'description': session_desc, }).encode("UTF-8"))
         self._sa.update_app_blob(json.dumps(
@@ -245,7 +219,6 @@ class RemoteSessionAssistant():
         filtered_tps = set()
         for filter in self._launcher.test_plan_filters:
             filtered_tps.update(fnmatch.filter(tps, filter))
-        self._normal_user = self._launcher.normal_user
         filtered_tps = list(filtered_tps)
         response = zip(filtered_tps, [self._sa.get_test_plan(
             tp).name for tp in filtered_tps])
@@ -341,6 +314,8 @@ class RemoteSessionAssistant():
                     pass_is_correct = validate_pass(
                         self._sudo_broker.decrypt_password(
                             self._sudo_password))
+                    if not pass_is_correct:
+                        print(_('Sorry, try again.'))
                 assert(self._sudo_password is not None)
             self._state = Running
             self._be = BackgroundExecutor(self, job_id, self._sa.run_job)
@@ -520,7 +495,7 @@ class RemoteSessionAssistant():
         return test_info_list
 
     def resume_by_id(self, session_id=None):
-        self._launcher = DefaultLauncherDefinition()
+        self._launcher = load_configs()
         self._sa.select_providers(*self._launcher.providers)
         resume_candidates = list(self._sa.get_resumable_sessions())
         if not session_id:
@@ -532,10 +507,18 @@ class RemoteSessionAssistant():
             print("Requested session not found")
             return
         _logger.warning("Resuming session: %r", session_id)
-        meta = self._sa.resume_session(session_id)
+        self._normal_user = self._launcher.normal_user
+        pass_provider = (None if self._passwordless_sudo else
+                         self.get_decrypted_password)
+        runner_kwargs = {
+            'normal_user_provider': lambda: self._normal_user,
+            'password_provider': pass_provider,
+            'stdin': self._pipe_to_subproc,
+        }
+        meta = self._sa.resume_session(session_id, runner_kwargs=runner_kwargs)
         app_blob = json.loads(meta.app_blob.decode("UTF-8"))
         launcher = app_blob['launcher']
-        self._launcher.read_string(launcher)
+        self._launcher.read_string(launcher, False)
         self._sa.use_alternate_configuration(self._launcher)
         test_plan_id = app_blob['testplan_id']
         self._sa.select_test_plan(test_plan_id)
@@ -586,6 +569,12 @@ class RemoteSessionAssistant():
         self._pipe_from_master.write(text)
         self._pipe_from_master.flush()
 
+    def send_signal(self, signal):
+        if not self._currently_running_job:
+            return
+        target_user = self._sa.get_job(self._currently_running_job).user
+        self._sa.send_signal(signal, target_user)
+
     @property
     def manager(self):
         return self._sa._manager
@@ -597,32 +586,3 @@ class RemoteSessionAssistant():
     @property
     def sideloaded_providers(self):
         return self._sa.sideloaded_providers
-
-
-def is_passwordless_sudo():
-    """
-    Check if system can run sudo without pass.
-    """
-    # running sudo with -A will try using ASKPASS envvar that should specify
-    # the program to use when asking for password
-    # If the system is configured to not ask for password, this will silently
-    # succeed. If the pass is required, it'll return 1 and not ask for pass,
-    # as the askpass program is not provided
-    try:
-        check_call(['sudo', '-A', 'true'], stdout=DEVNULL, stderr=DEVNULL)
-    except CalledProcessError:
-        return False
-    return True
-
-
-def validate_pass(password):
-    cmd = ['sudo', '--prompt=', '--reset-timestamp', '--stdin',
-           '--user', 'root', 'true']
-    r, w = os.pipe()
-    os.write(w, (password + "\n").encode('utf-8'))
-    os.close(w)
-    try:
-        check_call(cmd, stdin=r, stdout=DEVNULL, stderr=DEVNULL)
-        return True
-    except CalledProcessError:
-        return False
