@@ -70,10 +70,6 @@ plainbox/test_abc.py
 plainbox/test_i18n.py
 plainbox/test_provider_manager.py
 plainbox/tests.py
-plainbox/data/plainbox-qml-modules/Plainbox/QmlJob.qml
-plainbox/data/plainbox-qml-modules/Plainbox/qmldir
-plainbox/data/qml-shell/pipe_handler.py
-plainbox/data/qml-shell/plainbox_qml_shell.qml
 plainbox/impl/__init__.py
 plainbox/impl/_argparse.py
 plainbox/impl/_shlex.py
@@ -200,8 +196,6 @@ plainbox/impl/providers/manifest/units/manifest.pxu
 plainbox/impl/providers/stubbox/manage.py
 plainbox/impl/providers/stubbox/bin/stub_package_list
 plainbox/impl/providers/stubbox/data/all-bytes
-plainbox/impl/providers/stubbox/data/qml-navigation.qml
-plainbox/impl/providers/stubbox/data/qml-simple.qml
 plainbox/impl/providers/stubbox/po/POTFILES.in
 plainbox/impl/providers/stubbox/po/de.po
 plainbox/impl/providers/stubbox/po/en_GB.po
