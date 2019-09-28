@@ -91,6 +91,7 @@ checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise-1.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise.txt
 checkbox_support/parsers/tests/udevadm_data/CALXEDA_HIGHBANK.txt
 checkbox_support/parsers/tests/udevadm_data/CAPTURE_METADATA.txt
+checkbox_support/parsers/tests/udevadm_data/CAPTURE_METADATA_2.txt
 checkbox_support/parsers/tests/udevadm_data/CARA_T.txt
 checkbox_support/parsers/tests/udevadm_data/CARA_T_SOCKETCAN.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_IDRAC.txt
