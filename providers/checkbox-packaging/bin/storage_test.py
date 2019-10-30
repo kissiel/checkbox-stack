@@ -31,6 +31,9 @@ def find_largest_partition(device):
     blk_devs = [BlkDev(*p.strip().split())
                 for p in out.decode(sys.stdout.encoding).splitlines()]
     blk_devs[:] = [bd for bd in blk_devs if bd.type == 'part']
+    if not blk_devs:
+        raise SystemExit(
+            'ERROR: No partitions found on device {}'.format(device))
     blk_devs.sort(key=lambda bd: int(bd.size))
     return blk_devs[-1].name
 
@@ -78,7 +81,7 @@ def run_bonnie(test_dir, user='root'):
     free = free_space(test_dir)
     print('{}MB of free space avaialble'.format(free))
     if (force_mem_mb * 2) > free:
-        force_mem_mb = free / 2
+        force_mem_mb = free / 4
     print('Forcing memory setting to {}MB'.format(force_mem_mb))
     cmd = 'bonnie++ -d {} -u {} -r {}'.format(test_dir, user, force_mem_mb)
     print('+', cmd, flush=True)
