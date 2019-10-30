@@ -58,6 +58,7 @@ checkbox_support/parsers/tests/test_dmi.py
 checkbox_support/parsers/tests/test_dmidecode.py
 checkbox_support/parsers/tests/test_efi.py
 checkbox_support/parsers/tests/test_image_info.py
+checkbox_support/parsers/tests/test_kernel_cmdline.py
 checkbox_support/parsers/tests/test_modinfo.py
 checkbox_support/parsers/tests/test_modprobe.py
 checkbox_support/parsers/tests/test_pactl.py
@@ -95,6 +96,7 @@ checkbox_support/parsers/tests/udevadm_data/CAPTURE_METADATA_2.txt
 checkbox_support/parsers/tests/udevadm_data/CARA_T.txt
 checkbox_support/parsers/tests/udevadm_data/CARA_T_SOCKETCAN.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_IDRAC.txt
+checkbox_support/parsers/tests/udevadm_data/DELL_IDRAC_2.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON3521_TOUCHSCREEN.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON_3048.txt
 checkbox_support/parsers/tests/udevadm_data/DELL_INSPIRON_7737_NVIDIA.txt
@@ -130,11 +132,13 @@ checkbox_support/parsers/tests/udevadm_data/ONE_CDROM_ONLY.txt
 checkbox_support/parsers/tests/udevadm_data/PANDABOARD.txt
 checkbox_support/parsers/tests/udevadm_data/QEMU_KVM.txt
 checkbox_support/parsers/tests/udevadm_data/REALTEK_CARD_READER_AND_NVME.txt
+checkbox_support/parsers/tests/udevadm_data/RNDIS.txt
 checkbox_support/parsers/tests/udevadm_data/SAMSUNG_N310.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK_REBOOTED.txt
 checkbox_support/parsers/tests/udevadm_data/TOSHIBA_NVME.txt
 checkbox_support/parsers/tests/udevadm_data/VESTA_300.txt
+checkbox_support/parsers/tests/udevadm_data/VIRT_CDROM.txt
 checkbox_support/parsers/tests/udevadm_data/VM_WITH_FLOPPY.txt
 checkbox_support/parsers/tests/udevadm_data/XEON.txt
 checkbox_support/scripts/__init__.py
