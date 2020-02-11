@@ -133,6 +133,8 @@ checkbox_support/parsers/tests/udevadm_data/PANDABOARD.txt
 checkbox_support/parsers/tests/udevadm_data/QEMU_KVM.txt
 checkbox_support/parsers/tests/udevadm_data/REALTEK_CARD_READER_AND_NVME.txt
 checkbox_support/parsers/tests/udevadm_data/RNDIS.txt
+checkbox_support/parsers/tests/udevadm_data/RPI2_WITH_CAMERA.txt
+checkbox_support/parsers/tests/udevadm_data/RPI2_WITH_CAMERA_V4L2.txt
 checkbox_support/parsers/tests/udevadm_data/SAMSUNG_N310.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK_REBOOTED.txt
