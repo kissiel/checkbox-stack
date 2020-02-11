@@ -45,7 +45,6 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = [
-        'guacamole >= 0.9',
         'requests >= 1.0',
         'urwid >= 1.1.1',
         'Jinja2 >= 2.7',
@@ -55,7 +54,7 @@ else:
 
 setup(
     name="checkbox-ng",
-    version="1.6.0",
+    version="1.7.0rc1",
     url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",

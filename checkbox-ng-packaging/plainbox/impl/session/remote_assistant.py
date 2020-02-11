@@ -119,7 +119,7 @@ class BackgroundExecutor(Thread):
 class RemoteSessionAssistant():
     """Remote execution enabling wrapper for the SessionAssistant"""
 
-    REMOTE_API_VERSION = 8
+    REMOTE_API_VERSION = 9
 
     def __init__(self, cmd_callback):
         _logger.debug("__init__()")
@@ -157,6 +157,10 @@ class RemoteSessionAssistant():
     @property
     def session_change_lock(self):
         return self._session_change_lock
+
+    @property
+    def config(self):
+        return self._sa.config
 
     def allowed_when(*states):
         def wrap(f):
@@ -207,6 +211,10 @@ class RemoteSessionAssistant():
             except AttributeError:
                 # psutil < 4.0.0 doesn't provide Process.environ()
                 return self._prepare_display_without_psutil()
+            except psutil.NoSuchProcess:
+                # quietly ignore the process that died before we had a chance to
+                # read the environment from them
+                continue
             if ("DISPLAY" in p_environ and p_user != 'gdm'):  # gdm uses :1024
                 return {'DISPLAY': p_environ['DISPLAY']}
 
@@ -224,7 +232,6 @@ class RemoteSessionAssistant():
             session_desc = self._launcher.session_desc
 
         self._sa.use_alternate_configuration(self._launcher)
-        self._sa.load_providers()
 
         self._normal_user = self._launcher.normal_user
         if configuration['normal_user']:
@@ -285,6 +292,12 @@ class RemoteSessionAssistant():
                 job_state = self._sa.get_job_state(job_id)
                 job_state.attempts = self._launcher.max_attempts
         return self._sa.get_static_todo_list()
+
+    def get_manifest_repr(self):
+        return self._sa.get_manifest_repr()
+
+    def save_manifest(self, manifest_answers):
+        return self._sa.save_manifest(manifest_answers)
 
     def modify_todo_list(self, chosen_jobs):
         self._sa.use_alternate_selection(chosen_jobs)
@@ -532,7 +545,6 @@ class RemoteSessionAssistant():
 
     def resume_by_id(self, session_id=None):
         self._launcher = load_configs()
-        self._sa.load_providers()
         resume_candidates = list(self._sa.get_resumable_sessions())
         if not session_id:
             if not resume_candidates:

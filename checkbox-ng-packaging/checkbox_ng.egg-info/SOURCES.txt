@@ -85,7 +85,6 @@ plainbox/impl/depmgr.py
 plainbox/impl/developer.py
 plainbox/impl/execution.py
 plainbox/impl/highlevel.py
-plainbox/impl/ingredients.py
 plainbox/impl/job.py
 plainbox/impl/jobcache.py
 plainbox/impl/launcher.py
