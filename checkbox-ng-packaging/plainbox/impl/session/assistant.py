@@ -26,7 +26,6 @@ Session Assistant.
 
 import collections
 import datetime
-import fnmatch
 import itertools
 import json
 import logging
@@ -50,9 +49,11 @@ from plainbox.impl.providers.embedded_providers import (
 from plainbox.impl.result import JobResultBuilder
 from plainbox.impl.result import MemoryJobResult
 from plainbox.impl.runner import JobRunnerUIDelegate
+from plainbox.impl.secure.config import Unset
 from plainbox.impl.secure.origin import Origin
 from plainbox.impl.secure.qualifiers import select_jobs
 from plainbox.impl.secure.qualifiers import FieldQualifier
+from plainbox.impl.secure.qualifiers import JobIdQualifier
 from plainbox.impl.secure.qualifiers import PatternMatcher
 from plainbox.impl.secure.qualifiers import RegExpJobQualifier
 from plainbox.impl.session import SessionMetaData
@@ -185,15 +186,16 @@ class SessionAssistant:
         self._runner = None
         # Keep a record of jobs run during bootstrap phase
         self._bootstrap_done_list = []
+        self._load_providers()
         UsageExpectation.of(self).allowed_calls = {
+            self.start_new_session: "create a new session from scratch",
+            self.get_resumable_sessions: "get resume candidates",
             self.use_alternate_repository: (
                 "use an alternate storage repository"),
             self.use_alternate_configuration: (
                 "use an alternate configuration system"),
             self.use_alternate_execution_controllers: (
                 "use an alternate execution controllers"),
-            self.load_providers: (
-                "load all available providers"),
             self.get_old_sessions: (
                 "get previously created sessions"),
             self.delete_sessions: (
@@ -209,6 +211,13 @@ class SessionAssistant:
                 "configure automatic restart capability")
             allowed_calls[self.use_alternate_restart_strategy] = (
                 "configure automatic restart capability")
+        # Manifest
+        self._manifest_path = os.path.expanduser(
+            '~/.local/share/plainbox/machine-manifest.json')
+
+    @property
+    def config(self):
+        return self._config
 
     @raises(UnexpectedMethodCall, LookupError)
     def configure_application_restart(
@@ -382,20 +391,13 @@ class SessionAssistant:
         del UsageExpectation.of(self).allowed_calls[
             self.use_alternate_execution_controllers]
 
-    @raises(SystemExit, UnexpectedMethodCall)
-    def load_providers(self) -> None:
+    def _load_providers(self) -> None:
         """
         Load all Checkbox providers
 
         :raises SystemExit:
             When no provider was found in the system.
-        :raises UnexpectedMethodCall:
-            If the call is made at an unexpected time. Do not catch this error.
-            It is a bug in your program. The error message will indicate what
-            is the likely cause.
         """
-        UsageExpectation.of(self).enforce()
-
         def qualified_name(provider):
             return "{}:{}".format(provider.namespace, provider.name)
         sideload_path = os.path.expandvars(os.path.join(
@@ -420,13 +422,9 @@ class SessionAssistant:
                 *all_providers.provider_search_paths))
             raise SystemExit(message)
         self._selected_providers = loaded_provs
-        UsageExpectation.of(self).allowed_calls = {
-            self.start_new_session: "create a new session from scratch",
-            self.get_resumable_sessions: "get resume candidates",
-            self.get_old_sessions: "get previously created sessions",
-            self.delete_sessions: "delete previously created sessions",
-            self.finalize_session: "to finalize session",
-        }
+
+    def get_selected_providers(self):
+        return self._selected_providers
 
     @morris.signal
     def provider_selected(self, provider, auto):
@@ -930,7 +928,9 @@ class SessionAssistant:
         desired_job_list = select_jobs(
             self._context.state.job_list,
             [plan.get_qualifier() for plan in self._manager.test_plans] +
-                self._exclude_qualifiers)
+                self._exclude_qualifiers +
+                [JobIdQualifier(
+                    'com.canonical.plainbox::collect-manifest', None, False)])
         self._context.state.update_desired_job_list(desired_job_list)
         # Set subsequent usage expectations i.e. all of the runtime parts are
         # available now.
@@ -1244,6 +1244,100 @@ class SessionAssistant:
             if jsm[job.id].result.outcome is None
         ]
 
+    def _strtobool(self, val):
+        return val.lower() in ('y', 'yes', 't', 'true', 'on', '1')
+
+    @raises(SystemExit, UnexpectedMethodCall)
+    def get_manifest_repr(self) -> 'Dict[List[Dict]]':
+        """
+        Get the manifest units required by the jobs selection.
+
+        :returns:
+            A dict of manifest questions.
+        :raises SystemExit:
+            When the launcher manifest section contains invalid entries.
+        :raises UnexpectedMethodCall:
+            If the call is made at an unexpected time. Do not catch this error.
+            It is a bug in your program. The error message will indicate what
+            is the likely cause.
+        """
+        UsageExpectation.of(self).enforce()
+        # XXX: job_state_map is a bit low level, can we avoid that?
+        jsm = self._context.state.job_state_map
+        todo_list = [
+            job for job in self._context.state.run_list
+            if jsm[job.id].result.outcome is None
+        ]
+        expression_list = []
+        manifest_id_set = set()
+        for job in todo_list:
+            if job.get_resource_program():
+                expression_list.extend(
+                    job.get_resource_program().expression_list)
+        for e in expression_list:
+            manifest_id_set.update(e.manifest_id_list)
+        manifest_list = [unit for unit in self._context.unit_list
+                        if unit.Meta.name == 'manifest entry'
+                        and unit.id in manifest_id_set]
+        manifest_cache = {}
+        if os.path.isfile(self._manifest_path):
+            with open(self._manifest_path, 'rt', encoding='UTF-8') as stream:
+                manifest_cache = json.load(stream)
+        if self._config is not None and self._config.manifest is not Unset:
+            for manifest_id in self._config.manifest:
+                manifest_cache.update(
+                    {manifest_id: self._config.manifest[manifest_id]})
+        manifest_info_dict = dict()
+        for m in manifest_list:
+            prompt = m.prompt()
+            if prompt is None:
+                if m.value_type == 'bool':
+                    prompt = "Does this machine have this piece of hardware?"
+                elif m.value_type == 'natural':
+                    prompt = "Please enter the requested data:"
+                else:
+                    _logger.error("Unsupported value-type: '%s'", m.value_type)
+                    continue
+            if prompt not in manifest_info_dict:
+                manifest_info_dict[prompt] = []
+            manifest_info = {
+                "id": m.id,
+                "partial_id": m.partial_id,
+                "name": m.name,
+                "value_type": m.value_type,
+            }
+            try:
+                value = manifest_cache[m.id]
+                if m.value_type == 'bool':
+                    if isinstance(manifest_cache[m.id], str):
+                        value = self._strtobool(manifest_cache[m.id])
+                elif m.value_type == 'natural':
+                    value = int(manifest_cache[m.id])
+            except ValueError:
+                _logger.error(
+                    ("Invalid manifest %s value '%s'"),
+                    m.id, manifest_cache[m.id])
+                raise SystemExit(1)
+            except KeyError:
+                value = None
+            manifest_info.update({'value': value})
+            manifest_info_dict[prompt].append(manifest_info)
+        return manifest_info_dict
+
+    def save_manifest(self, manifest_answers):
+        """
+        Record the manifest on disk.
+        """
+        manifest_cache = dict()
+        if os.path.isfile(self._manifest_path):
+            with open(self._manifest_path, 'rt', encoding='UTF-8') as stream:
+                manifest_cache = json.load(stream)
+        os.makedirs(os.path.dirname(self._manifest_path), exist_ok=True)
+        manifest_cache.update(manifest_answers)
+        print("Saving manifest to {}".format(self._manifest_path))
+        with open(self._manifest_path, 'wt', encoding='UTF-8') as stream:
+            json.dump(manifest_cache, stream, sort_keys=True, indent=2)
+
     @raises(ValueError, TypeError, UnexpectedMethodCall)
     def run_job(
         self, job_id: str, ui: 'Union[str, IJobRunnerUI]',
@@ -1338,9 +1432,12 @@ class SessionAssistant:
                         f.writelines(self._restart_cmd_callback(
                             self.get_session_id()))
             if not native:
-                builder = self._runner.run_job(
-                    job, job_state, self._config, ui
-                ).get_builder()
+                if self._config.environment is Unset:
+                    result = self._runner.run_job(job, job_state, ui=ui)
+                else:
+                    result = self._runner.run_job(job, job_state,
+                                                  self._config.environment, ui)
+                builder = result.get_builder()
             else:
                 builder = JobResultBuilder(
                     outcome=IJobResult.OUTCOME_UNDECIDED,
@@ -1581,7 +1678,6 @@ class SessionAssistant:
             The identifier of the exporter unit to use. This must have been
             loaded into the session from an existing provider. Many users will
             want to load the ``com.canonical.palainbox:exporter`` provider
-            (via :meth:`load_providers()`.
         :param transport:
             A pre-created transport object such as the `CertificationTransport`
             that is useful for sending data to the Canonical Certification
@@ -1626,7 +1722,6 @@ class SessionAssistant:
             The identifier of the exporter unit to use. This must have been
             loaded into the session from an existing provider. Many users will
             want to load the ``com.canonical.palainbox:exporter`` provider
-            (via :meth:`load_providers()`.
         :param option_list:
             List of options customary to the exporter that is being created.
         :param dir_path:
@@ -1671,7 +1766,6 @@ class SessionAssistant:
             The identifier of the exporter unit to use. This must have been
             loaded into the session from an existing provider. Many users will
             want to load the ``com.canonical.palainbox:exporter`` provider
-            (via :meth:`load_providers()`.
         :param option_list:
             List of options customary to the exporter that is being created.
         :param stream:
@@ -1728,6 +1822,8 @@ class SessionAssistant:
             self.remove_all_filters: "to remove all filters",
             self.get_static_todo_list: "to see what is meant to be executed",
             self.get_dynamic_todo_list: "to see what is yet to be executed",
+            self.get_manifest_repr: (
+                "to get participating manifest units"),
             self.run_job: "to run a given job",
             self.use_alternate_selection: "to change the selection",
             self.hand_pick_jobs: "to generate new selection and use it",

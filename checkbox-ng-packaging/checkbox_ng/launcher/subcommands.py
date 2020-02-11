@@ -37,17 +37,17 @@ import sys
 import tarfile
 import time
 
-from guacamole import Command
-
 from plainbox.abc import IJobResult
 from plainbox.i18n import ngettext
 from plainbox.impl.color import Colorizer
 from plainbox.impl.execution import UnifiedRunner
 from plainbox.impl.highlevel import Explorer
+from plainbox.impl.launcher import DefaultLauncherDefinition
 from plainbox.impl.providers import get_providers
 from plainbox.impl.providers.embedded_providers import (
     EmbeddedProvider1PlugInCollection)
 from plainbox.impl.result import MemoryJobResult
+from plainbox.impl.secure.config import Unset
 from plainbox.impl.secure.sudo_broker import sudo_password_provider
 from plainbox.impl.session.assistant import SessionAssistant, SA_RESTARTABLE
 from plainbox.impl.session.jobs import InhibitionCause
@@ -65,6 +65,7 @@ from checkbox_ng.launcher.startprovider import (
 from checkbox_ng.launcher.run import Action
 from checkbox_ng.launcher.run import NormalUI
 from checkbox_ng.urwid_ui import CategoryBrowser
+from checkbox_ng.urwid_ui import ManifestBrowser
 from checkbox_ng.urwid_ui import ReRunBrowser
 from checkbox_ng.urwid_ui import TestPlanBrowser
 
@@ -73,7 +74,7 @@ _ = gettext.gettext
 _logger = logging.getLogger("checkbox-ng.launcher.subcommands")
 
 
-class Submit(Command):
+class Submit():
     def register_arguments(self, parser):
         def secureid(secure_id):
             if not re.match(SECURE_ID_PATTERN, secure_id):
@@ -141,7 +142,7 @@ class Submit(Command):
                         ": {0}").format(result))
 
 
-class StartProvider(Command):
+class StartProvider():
     def register_arguments(self, parser):
         parser.add_argument(
             'name', metavar=_('name'), type=IQN,
@@ -161,12 +162,7 @@ class StartProvider(Command):
             gettext_domain=re.sub("[.:]", "_", ctx.args.name))
 
 
-class Launcher(Command, MainLoopStage, ReportsStage):
-
-    name = 'launcher'
-
-    app_id = 'com.canonical:checkbox-cli'
-
+class Launcher(MainLoopStage, ReportsStage):
     @property
     def sa(self):
         return self.ctx.sa
@@ -192,7 +188,10 @@ class Launcher(Command, MainLoopStage, ReportsStage):
             # exited by now, so validation passed
             print(_("Launcher seems valid."))
             return
-        self.launcher = ctx.cmd_toplevel.launcher
+        if ctx.args.launcher:
+            self.launcher = load_configs(ctx.args.launcher)
+        else:
+            self.launcher = DefaultLauncherDefinition()
         logging_level = {
             'normal': logging.WARNING,
             'verbose': logging.INFO,
@@ -206,16 +205,9 @@ class Launcher(Command, MainLoopStage, ReportsStage):
             self.ctx = ctx
             # now we have all the correct flags and options, so we need to
             # replace the previously built SA with the defaults
-            ctx.sa = SessionAssistant(
-                self.get_app_id(),
-                self.get_cmd_version(),
-                self.get_sa_api_version(),
-                self.get_sa_api_flags(),
-            )
             self._configure_restart(ctx)
             self._prepare_transports()
             ctx.sa.use_alternate_configuration(self.launcher)
-            ctx.sa.load_providers()
             if not self._maybe_resume_session():
                 self._start_new_session()
                 self._pick_jobs_to_run()
@@ -410,6 +402,11 @@ class Launcher(Command, MainLoopStage, ReportsStage):
 
     def _pick_jobs_to_run(self):
         if self.launcher.test_selection_forced:
+            if self.launcher.manifest is not Unset:
+                self.ctx.sa.save_manifest(
+                    {manifest_id: self.launcher.manifest[manifest_id] for
+                     manifest_id in self.launcher.manifest}
+                )
             # by default all tests are selected; so we're done here
             return
         job_list = [self.ctx.sa.get_job(job_id) for job_id in
@@ -420,6 +417,11 @@ class Launcher(Command, MainLoopStage, ReportsStage):
         test_info_list = self._generate_job_infos(job_list)
         wanted_set = CategoryBrowser(
             _("Choose tests to run on your system:"), test_info_list).run()
+        manifest_repr = self.ctx.sa.get_manifest_repr()
+        if manifest_repr:
+            manifest_answers = ManifestBrowser(
+                "System Manifest:", manifest_repr).run()
+            self.ctx.sa.save_manifest(manifest_answers)
         # no need to set an alternate selection if the job list not changed
         if len(test_info_list) == len(wanted_set):
             return
@@ -569,6 +571,8 @@ class Launcher(Command, MainLoopStage, ReportsStage):
             'print debug messages from checkbox'))
         parser.add_argument('--clear-cache', action='store_true', help=_(
             'remove cached results from the system'))
+        parser.add_argument('--clear-old-sessions', action='store_true', help=_(
+            "remove previous sessions' data"))
         parser.add_argument('--version', action='store_true', help=_(
             "show program's version information and exit"))
 
@@ -579,9 +583,7 @@ class CheckboxUI(NormalUI):
         pass
 
 
-class Run(Command, MainLoopStage):
-    name = 'run'
-
+class Run(MainLoopStage):
     def register_arguments(self, parser):
         parser.add_argument(
             'PATTERN', nargs="*",
@@ -649,16 +651,10 @@ class Run(Command, MainLoopStage):
         try:
             self._C = Colorizer()
             self.ctx = ctx
-            ctx.sa = SessionAssistant(
-                "com.canonical:checkbox-cli",
-                self.get_cmd_version(),
-                "0.99",
-                ["restartable"],
-            )
+
             self._configure_restart()
             config = load_configs()
             self.sa.use_alternate_configuration(config)
-            self.sa.load_providers()
             self.sa.start_new_session(
                 self.ctx.args.title or 'checkbox-run',
                 UnifiedRunner)
@@ -699,7 +695,7 @@ class Run(Command, MainLoopStage):
     def _configure_report(self):
         """Configure transport and exporter."""
         if self.ctx.args.output_format == '?':
-            print_objs('exporter')
+            print_objs('exporter', self.ctx.sa)
             raise SystemExit(0)
         if self.ctx.args.transport == '?':
             print(', '.join(get_all_transports()))
@@ -759,9 +755,7 @@ class Run(Command, MainLoopStage):
             lambda session_id: [respawn_cmd.format(session_id)])
 
 
-class List(Command):
-    name = 'list'
-
+class List():
     def register_arguments(self, parser):
         parser.add_argument(
             'GROUP', nargs='?',
@@ -775,14 +769,13 @@ class List(Command):
                     "Use '?' to list possible values")))
 
     def invoked(self, ctx):
-        _logger.warning(_('List subcommand ignores sideloaded providers!'))
         if ctx.args.GROUP == 'all-jobs':
             if ctx.args.attrs:
-                print_objs('job', True)
+                print_objs('job', ctx.sa, True)
 
                 def filter_fun(u): return u.attrs['template_unit'] == 'job'
-                print_objs('template', True, filter_fun)
-            jobs = get_all_jobs()
+                print_objs('template', ctx.sa, True, filter_fun)
+            jobs = get_all_jobs(ctx.sa)
             if ctx.args.format == '?':
                 all_keys = set()
                 for job in jobs:
@@ -814,12 +807,10 @@ class List(Command):
             return
         elif ctx.args.format:
             print(_("--format applies only to 'all-jobs' group.  Ignoring..."))
-        print_objs(ctx.args.GROUP, ctx.args.attrs)
+        print_objs(ctx.args.GROUP, ctx.sa, ctx.args.attrs)
 
 
-class ListBootstrapped(Command):
-    name = 'list-bootstrapped'
-
+class ListBootstrapped():
     @property
     def sa(self):
         return self.ctx.sa
@@ -835,7 +826,6 @@ class ListBootstrapped(Command):
 
     def invoked(self, ctx):
         self.ctx = ctx
-        self.sa.load_providers()
         self.sa.start_new_session('checkbox-listing-ephemeral')
         tps = self.sa.get_test_plans()
         if ctx.args.TEST_PLAN not in tps:
@@ -871,8 +861,7 @@ class ListBootstrapped(Command):
                 print(job_id)
 
 
-class TestPlanExport(Command):
-    name = 'tp-export'
+class TestPlanExport():
 
     @property
     def sa(self):
@@ -887,7 +876,6 @@ class TestPlanExport(Command):
 
     def invoked(self, ctx):
         self.ctx = ctx
-        self.sa.load_providers()
         if ctx.args.nofake:
             self.sa.start_new_session('tp-export-ephemeral')
         else:
@@ -906,8 +894,9 @@ class TestPlanExport(Command):
         print(path)
 
 
-def get_all_jobs():
-    root = Explorer(get_providers()).get_object_tree()
+def get_all_jobs(sa):
+    providers = sa.get_selected_providers()
+    root = Explorer(providers).get_object_tree()
 
     def get_jobs(obj):
         jobs = []
@@ -922,8 +911,9 @@ def get_all_jobs():
     return sorted(get_jobs(root), key=operator.itemgetter('full_id'))
 
 
-def print_objs(group, show_attrs=False, filter_fun=None):
-    obj = Explorer(get_providers()).get_object_tree()
+def print_objs(group, sa, show_attrs=False, filter_fun=None):
+    providers = sa.get_selected_providers()
+    obj = Explorer(providers).get_object_tree()
 
     def _show(obj, indent):
         if group is None or obj.group == group:
