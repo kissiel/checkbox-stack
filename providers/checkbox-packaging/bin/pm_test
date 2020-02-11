@@ -68,7 +68,7 @@ def main():
         operation.teardown()
         result = {
             'outcome': 'fail',
-            'comment': message,
+            'comments': message,
         }
         with open(os.path.join(args.log_dir, '__result'), 'wt') as f:
             json.dump(result, f)
@@ -256,8 +256,12 @@ class PowerManagementOperation():
             fwts_log_path = os.path.join(self.args.log_dir, 'fwts.log')
             try:
                 with open(fwts_log_path, 'rt') as f:
-                    magic_line = 'Completed S3 cycle(s) \n'
-                    count = f.readlines().count(magic_line)
+                    magic_line_s3 = 'Completed S3 cycle(s) \n'
+                    magic_line_s2idle = 'Completed s2idle cycle(s) \n'
+                    lines = f.readlines()
+                    count_s3 = lines.count(magic_line_s3)
+                    count_s2idle = lines.count(magic_line_s2idle)
+                    count = count_s3 + count_s2idle
                     if count != total_suspends_expected:
                         problems = (
                             "Found {} occurrences of '{}'. Expected {}".format(
@@ -268,7 +272,7 @@ class PowerManagementOperation():
             if problems:
                 result = {
                     'outcome': 'fail' if problems else 'pass',
-                    'comment': problems,
+                    'comments': problems,
                 }
                 result_filename = os.path.join(self.args.log_dir, '__result')
                 with open(result_filename, 'wt') as f:

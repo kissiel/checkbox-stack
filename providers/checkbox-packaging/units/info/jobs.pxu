@@ -103,7 +103,7 @@ category_id: com.canonical.plainbox::info
 user: root
 command:
  if [[ -v SNAP ]]; then
-     checkbox-support-lsusb -f $SNAP/checkbox-runtime/var/lib/usbutils/usb.ids
+     checkbox-support-lsusb -f $CHECKBOX_RUNTIME/var/lib/usbutils/usb.ids
  else
      lsusb -vv | iconv -t 'utf-8' -c
  fi
@@ -218,7 +218,7 @@ plugin: attachment
 category_id: com.canonical.plainbox::info
 requires:
   package.name == 'dkms'
-command: dkms_info  --format json
+command: dkms_info.py  --format json
 _description: Attaches json dumps of installed dkms package information.
 _summary: Attaches json dumps of installed dkms package information.
 
@@ -361,7 +361,7 @@ user: root
 estimated_duration: 0.2
 _summary: Check existence of recovery partition
 _description: Check existence of recovery partition
-command: recovery_info
+command: recovery_info.py
 
 plugin: shell
 category_id: com.canonical.plainbox::info
@@ -372,7 +372,7 @@ user: root
 estimated_duration: 0.2
 _summary: Check the recovery type is dell or not
 _description: Check the recovery type is dell or not
-command: recovery_info checktype DELL
+command: recovery_info.py checktype DELL
 
 plugin: attachment
 category_id: com.canonical.plainbox::info
@@ -389,7 +389,7 @@ _description:
  Example:
  image_version: somerville-trusty-amd64-20140620-0
  bto_version: A00_dell-bto-trusty-houston-15-A11-iso-20141203-0.iso
-command: recovery_info version
+command: recovery_info.py version
 
 plugin: attachment
 category_id: com.canonical.plainbox::info
@@ -404,7 +404,7 @@ _description:
  The information include:
   - fish packages
   - dell recovery stage 2 boot log
-command: recovery_info file bto.xml
+command: recovery_info.py file bto.xml
 
 plugin: attachment
 category_id: com.canonical.plainbox::info
@@ -463,7 +463,11 @@ command: network_configs
 id: parts_meta_info_attachment
 plugin: attachment
 category_id: com.canonical.plainbox::info
-command: cat $SNAP/parts_meta_info $SNAP/checkbox-runtime/parts_meta_info || echo "no parts meta info available" 
+command:
+  # some top-level snaps don't bother with parts
+  cat $SNAP/parts_meta_info || true
+  # should always have parts info from content snap
+  cat $CHECKBOX_RUNTIME/parts_meta_info
 environ: SNAP
 estimated_duration: 0.02
 _summary: Attaches an information about all parts that constituted this snap

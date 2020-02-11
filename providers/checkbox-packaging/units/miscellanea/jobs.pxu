@@ -150,12 +150,23 @@ command: boot_mode_test secureboot
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 0.5
+id: miscellanea/reboot_firmware
+requires:
+ cpuinfo.platform in ("i386", "x86_64", "aarch64")
+depends: miscellanea/efi_boot_mode
+_summary: Test that system supports booting into firmware setup utility
+_description:
+ Test that the system supports rebooting into the firmware setup utility.
+command: boot_mode_test reboot_firmware
+
+plugin: shell
+category_id: com.canonical.plainbox::miscellanea
+estimated_duration: 0.5
 unit: template
 template-resource: model_assertion
 template-unit: job
 requires:
- executable.name == 'dumpimage'
- executable.name == 'mokutil'
+ executable.name == 'dumpimage' or executable.name == 'mokutil'
 id: miscellanea/secure_boot_mode_{gadget}
 _summary: Test that {gadget} Ubuntu Core system booted with Secure Boot active
 _description:
@@ -187,6 +198,16 @@ _description:
  Test to verify that the system uses production, rather
  than pre-release, versions of the kernel and the OS.
 command: check-prerelease
+
+plugin: shell
+category_id: com.canonical.plainbox::miscellanea
+estimated_duration: 0.5
+id: miscellanea/kernel_taint_test
+_summary: Test that kernel is not tainted
+_description:
+ Test to verify that the kernel is not tainted by out-of-tree
+ drivers, live patches, proprietary modules, etc.
+command: kernel_taint_test
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea

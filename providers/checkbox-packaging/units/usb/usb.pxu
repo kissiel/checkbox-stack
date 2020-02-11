@@ -7,7 +7,7 @@ estimated_duration: 1.0
 command:
  set -o pipefail
  if [[ -v SNAP ]]; then
-     checkbox-support-lsusb -f $SNAP/checkbox-runtime/var/lib/usbutils/usb.ids 2>/dev/null | sed 's/.*\(ID .*\)/\1/' | head -n 4 || echo "No USB devices were detected" >&2
+     checkbox-support-lsusb -f $CHECKBOX_RUNTIME/var/lib/usbutils/usb.ids 2>/dev/null | sed 's/.*\(ID .*\)/\1/' | head -n 4 || echo "No USB devices were detected" >&2
  else
      lsusb 2>/dev/null | sort || echo "No USB devices were detected" >&2
  fi
@@ -18,6 +18,8 @@ plugin: user-interact-verify
 category_id: com.canonical.plainbox::usb
 id: usb/disk_detect
 depends: usb/detect
+requires:
+ package.name == 'udisks2' or snap.name == 'udisks2'
 estimated_duration: 1.0
 command: removable_storage_test -l usb
 _description:
@@ -232,7 +234,7 @@ category_id: com.canonical.plainbox::usb
 id: usb/storage-preinserted
 user: root
 estimated_duration: 45.0
-command: removable_storage_test -l usb && removable_storage_test -s 268400000 usb
+command: removable_storage_test -l usb && timeout 300 removable_storage_test -s 268400000 usb
 flags: also-after-suspend preserve-cwd
 requires:
  cpuinfo.platform != 's390x'
@@ -256,7 +258,7 @@ requires:
  package.name == 'udisks2' or snap.name == 'udisks2'
  package.name == 'udisks2' or (snap.name == 'core' and int(snap.revision) >= 1804)
 estimated_duration: 45.0
-command: removable_storage_test -l usb && removable_storage_test -s 268400000 -m 500000000 usb --driver xhci_hcd
+command: removable_storage_test -l usb && timeout 300 removable_storage_test -s 268400000 -m 500000000 usb --driver xhci_hcd
 _summary: 
  Test USB 3.0 or 3.1 ports
 _description:
@@ -291,6 +293,18 @@ _description:
  This test will check that your USB 2.0 port transfers data at a
  minimum expected speed.
 
+id: usb/storage-detect
+category_id: com.canonical.plainbox::usb
+plugin: shell
+_summary: Detect storage partitions on a device on the USB bus
+command:
+  udev_resource -f PARTITION | grep "bus: usb"
+estimated_duration: 1.0
+flags: also-after-suspend
+imports: from com.canonical.plainbox import manifest
+requires:
+  manifest.has_usb_storage == 'True'
+
 unit: template
 template-resource: removable_partition
 template-filter: "usb" in removable_partition.bus
@@ -308,6 +322,7 @@ _description:
  Tests USB 2.0 or 1.1 ports on a system by doing write/read/compare tests on
  randomly created data.  It requires that a USB stick is plugged into an
  available USB port before running the certification suite.
+depends: usb/storage-detect
 
 id: usb/hid
 _summary: USB keyboard works
