@@ -271,10 +271,7 @@ plainbox/test-data/html-exporter/with_certification_non_blocker.html
 plainbox/test-data/html-exporter/without_certification_status.html
 plainbox/test-data/tar-exporter/example-data.tar.xz
 plainbox/testing_utils/__init__.py
-plainbox/testing_utils/cwd.py
 plainbox/testing_utils/io.py
-plainbox/testing_utils/resource.py
-plainbox/testing_utils/test_cwd.py
 plainbox/testing_utils/test_io.py
 plainbox/testing_utils/test_testcases.py
 plainbox/testing_utils/testcases.py
@@ -298,9 +295,6 @@ plainbox/vendor/rpyc/core/reactor.py
 plainbox/vendor/rpyc/core/service.py
 plainbox/vendor/rpyc/core/stream.py
 plainbox/vendor/rpyc/core/vinegar.py
-plainbox/vendor/rpyc/experimental/__init__.py
-plainbox/vendor/rpyc/experimental/retunnel.py
-plainbox/vendor/rpyc/experimental/splitbrain.py
 plainbox/vendor/rpyc/lib/__init__.py
 plainbox/vendor/rpyc/lib/colls.py
 plainbox/vendor/rpyc/lib/compat.py
