@@ -3,11 +3,6 @@ unit: packaging meta-data
 os-id: debian
 Depends: genisoimage
 
-# The 'miscellanea/fwupdate' job requires the fwupdate package
-unit: packaging meta-data
-os-id: debian
-Recommends: fwupdate
-
 # The 'memory/memory_stress_ng' job requires numactl
 unit: packaging meta-data
 os-id: debian
@@ -17,3 +12,8 @@ Depends: numactl
 unit: packaging meta-data
 os-id: debian
 Depends: bc
+
+# The canonical-certification-precheck tool requires ipcalc
+unit: packaging meta-data
+os-id: debian
+Depends: ipcalc
