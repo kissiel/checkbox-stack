@@ -63,7 +63,8 @@
             "io_log": {{ job_state.result.io_log_as_flat_text | jsonify | safe }},
             "type": "test",
             "project": "certification",
-            "duration": {{ job_state.result.execution_duration if job_state.result.execution_duration else 0}}
+            "duration": {{ job_state.result.execution_duration if job_state.result.execution_duration else 0 }},
+            "plugin": "{{ job_state.job.plugin }}"
         }{%- if not loop.last -%},{%- endif %}
     {%- endfor %}
     ],
@@ -172,8 +173,10 @@
 {%- endif %}
 {%- if ns ~ 'info/buildstamp' in state.job_state_map and state.job_state_map[ns ~ 'info/buildstamp'].result.outcome == 'pass' %},
 {%- set buildstamp = state.job_state_map[ns ~ 'info/buildstamp'].result.io_log_as_text_attachment.rstrip().splitlines() %}
-{%- if buildstamp|length == 2 %}
+{%- if buildstamp|length >= 2 %}
     "buildstamp": {{ buildstamp[1] | jsonify | safe }}
+{%- else %}
+    "buildstamp": ""
 {%- endif %}
 {%- endif %}
 }

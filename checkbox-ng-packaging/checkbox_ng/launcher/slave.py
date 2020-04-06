@@ -26,11 +26,10 @@ import socket
 import sys
 
 from plainbox.impl.session.remote_assistant import RemoteSessionAssistant
+from plainbox.impl.session.restart import RemoteDebRestartStrategy
 from plainbox.impl.session.restart import RemoteSnappyRestartStrategy
 from plainbox.vendor import rpyc
 from plainbox.vendor.rpyc.utils.server import ThreadedServer
-
-from checkbox_ng.config import load_configs
 
 _ = gettext.gettext
 _logger = logging.getLogger("slave")
@@ -39,9 +38,44 @@ _logger = logging.getLogger("slave")
 class SessionAssistantSlave(rpyc.Service):
 
     session_assistant = None
+    controlling_master_conn = None
+    master_blaster = None
 
     def exposed_get_sa(*args):
         return SessionAssistantSlave.session_assistant
+
+    def exposed_register_master_blaster(self, callable):
+        """
+        Register a callable that will be called when the slave decides to
+        disconnect the master. This should be used to prepare the master for
+        the disconnection, so it can differentiate between network failures
+        and a planned disconnect.
+        The callable will be called with one param - a string with a reason
+        for the disconnect.
+        """
+        SessionAssistantSlave.master_blaster = callable
+
+    def on_connect(self, conn):
+        try:
+            if SessionAssistantSlave.master_blaster:
+                msg = 'Forcefully disconnected by new master from {}:{}'.format(
+                    conn._config['endpoints'][1][0], conn._config['endpoints'][1][1])
+                SessionAssistantSlave.master_blaster(msg)
+                old_master = SessionAssistantSlave.controlling_master_conn
+                if old_master is not None:
+                    old_master.close()
+                SessionAssistantSlave.master_blaster = None
+
+            SessionAssistantSlave.controlling_master_conn = conn
+        except TimeoutError as exc:
+            # this happens when the reference to .master_blaster times out,
+            # meaning the master is blocked on an urwid screen or some other
+            # thread blocking operation. In any case it means there was a
+            # previous master, so we need to kill it
+            old_master = SessionAssistantSlave.controlling_master_conn
+            SessionAssistantSlave.master_blaster = None
+            old_master.close()
+            SessionAssistantSlave.controlling_master_conn = conn
 
 
 class RemoteSlave():
@@ -88,6 +122,19 @@ class RemoteSlave():
                 # XXX: explicitly passing None to not have to bump Remote API
                 # TODO: remove on the next Remote API bump
                 SessionAssistantSlave.session_assistant.resume_by_id(None)
+        else:
+            _logger.info("RemoteDebRestartStrategy")
+            if remote_restart_strategy_debug:
+                strategy = RemoteDebRestartStrategy(debug=True)
+            else:
+                strategy = RemoteDebRestartStrategy()
+            if os.path.exists(strategy.session_resume_filename):
+                with open(strategy.session_resume_filename, 'rt') as f:
+                    session_id = f.readline()
+                _logger.info(
+                    "RemoteDebRestartStrategy resume_by_id %r", session_id)
+                SessionAssistantSlave.session_assistant.resume_by_id(
+                    session_id)
         self._server = ThreadedServer(
             SessionAssistantSlave,
             port=slave_port,

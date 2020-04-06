@@ -22,6 +22,7 @@
 
 import abc
 import errno
+import json
 import os
 import shlex
 import subprocess
@@ -149,6 +150,9 @@ class SnappyRestartStrategy(IRestartStrategy):
         section = 'Service'
         config.add_section(section)
         config.set(section, 'Type', 'oneshot')
+        config.set(section, 'StandardOutput', 'tty')
+        config.set(section, 'StandardError', 'tty')
+        config.set(section, 'TTYPath', '/dev/console')
         if os.getenv('USER'):
             config.set(section, 'User', os.getenv('USER'))
 
@@ -229,10 +233,34 @@ class RemoteSnappyRestartStrategy(IRestartStrategy):
                 raise
 
 
-def detect_restart_strategy() -> IRestartStrategy:
+class RemoteDebRestartStrategy(RemoteSnappyRestartStrategy):
+
+    """
+    Remote Restart strategy for checkbox installed from deb packages.
+    """
+
+    service_name = "checkbox-ng.service"
+
+    def get_session_resume_filename(self) -> str:
+        if self.debug:
+            return '/tmp/session_resume'
+        cache_dir = os.getenv('XDG_CACHE_HOME', '/var/cache')
+        return os.path.join(cache_dir, 'session_resume')
+
+    def prime_application_restart(self, app_id: str,
+                                  session_id: str, cmd: str) -> None:
+        with open(self.session_resume_filename, 'wt') as f:
+            f.write(session_id)
+            os.fsync(f.fileno())
+        if cmd == self.service_name:
+            subprocess.call(['systemctl', 'disable', self.service_name])
+
+
+def detect_restart_strategy(session=None) -> IRestartStrategy:
     """
     Detect the restart strategy for the current environment.
-
+    :param session:
+        The current session object.
     :returns:
         A restart strategy object.
     :raises LookupError:
@@ -255,16 +283,42 @@ def detect_restart_strategy() -> IRestartStrategy:
         except subprocess.CalledProcessError:
             return SnappyRestartStrategy()
 
-    # Classic + remote service enabled
+    try:
+        if session:
+            app_blob = json.loads(
+                session._context.state.metadata.app_blob.decode('UTF-8'))
+            session_type = app_blob.get("type")
+        else:
+            session_type = None
+    except AttributeError:
+        session_type = None
+
+    # Classic snaps
     snap_data = os.getenv('SNAP_DATA')
     if snap_data:
+        # Classic snaps w/ remote service enabled and in use
+        if session_type == "checkbox-slave":
+            try:
+                slave_status = subprocess.check_output(
+                    ['snapctl', 'get', 'slave'],
+                    universal_newlines=True).rstrip()
+                if slave_status == 'enabled':
+                    return RemoteSnappyRestartStrategy()
+            except subprocess.CalledProcessError:
+                pass
+        # Classic snaps w/o remote service
+        else:
+            return SnappyRestartStrategy()
+
+    # debian checkbox-ng.service
+    if session_type == "checkbox-slave":
         try:
-            slave_status = subprocess.check_output(
-                ['snapctl', 'get', 'slave'], universal_newlines=True).rstrip()
-            if slave_status == 'enabled':
-                return RemoteSnappyRestartStrategy()
+            subprocess.run(
+                ['systemctl', 'is-active', '--quiet', 'checkbox-ng.service'],
+                check=True)
+            return RemoteDebRestartStrategy()
         except subprocess.CalledProcessError:
-            pass
+                pass
 
     if os.path.isdir('/etc/xdg/autostart'):
         # NOTE: Assume this is a terminal application

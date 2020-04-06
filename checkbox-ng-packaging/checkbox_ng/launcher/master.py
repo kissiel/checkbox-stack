@@ -19,6 +19,7 @@
 This module contains implementation of the master end of the remote execution
 functionality.
 """
+import contextlib
 import getpass
 import gettext
 import ipaddress
@@ -49,6 +50,7 @@ from checkbox_ng.urwid_ui import resume_dialog
 from checkbox_ng.launcher.run import NormalUI, ReRunJob
 from checkbox_ng.launcher.stages import MainLoopStage
 from checkbox_ng.launcher.stages import ReportsStage
+from tqdm import tqdm
 _ = gettext.gettext
 _logger = logging.getLogger("master")
 
@@ -77,10 +79,13 @@ class SimpleUI(NormalUI, MainLoopStage):
         print(SimpleUI.C.header(header, fill='-'))
 
     def green_text(text, end='\n'):
-        print(SimpleUI.C.GREEN(text), end=end)
+        print(SimpleUI.C.GREEN(text), end=end, file=sys.stdout)
 
     def red_text(text, end='\n'):
-        print(SimpleUI.C.RED(text), end=end)
+        print(SimpleUI.C.RED(text), end=end, file=sys.stderr)
+
+    def black_text(text, end='\n'):
+        print(SimpleUI.C.BLACK(text), end=end, file=sys.stdout)
 
     def horiz_line():
         print(SimpleUI.C.WHITE('-' * 80))
@@ -160,8 +165,9 @@ class RemoteMaster(ReportsStage, MainLoopStage):
     def connect_and_run(self, host, port=18871):
         config = rpyc.core.protocol.DEFAULT_CONFIG.copy()
         config['allow_all_attrs'] = True
-        config['sync_request_timeout'] = 60
+        config['sync_request_timeout'] = 120
         keep_running = False
+        server_msg = None
         self._prepare_transports()
         interrupted = False
         while True:
@@ -177,6 +183,18 @@ class RemoteMaster(ReportsStage, MainLoopStage):
                         break
                 conn = rpyc.connect(host, port, config=config)
                 keep_running = True
+                def quitter(msg):
+                    # this will be called when the slave decides to disconnect
+                    # this master
+                    nonlocal server_msg
+                    nonlocal keep_running
+                    keep_running = False
+                    server_msg = msg
+                with contextlib.suppress(AttributeError):
+                    # TODO: REMOTE_API
+                    # when bumping the remote api make this bit obligatory
+                    # i.e. remove the suppressing
+                    conn.root.register_master_blaster(quitter)
                 self._sa = conn.root.get_sa()
                 self.sa.conn = conn
                 if not self._sudo_provider:
@@ -209,9 +227,23 @@ class RemoteMaster(ReportsStage, MainLoopStage):
                         self.resume_interacting, interaction=payload),
                 }[state]()
             except EOFError as exc:
-                print("Connection lost!")
-                _logger.info("master: Connection lost due to: %s", exc)
-                time.sleep(1)
+                if keep_running:
+                    print("Connection lost!")
+                    # this is yucky but it works, in case of explicit
+                    # connection closing by the slave we get this msg
+                    _logger.info("master: Connection lost due to: %s", exc)
+                    if str(exc) == 'stream has been closed':
+                        print('Slave explicitly disconnected you. Possible '
+                              'reason: new master connected to the slave')
+                        break
+                    print(exc)
+                    time.sleep(1)
+                else:
+                    # if keep_running got set to False it means that the
+                    # network interruption was planned, AKA slave disconnected
+                    # this master
+                    print(server_msg)
+                    break
             except (ConnectionRefusedError, socket.timeout, OSError) as exc:
                 _logger.info("master: Connection lost due to: %s", exc)
                 if not keep_running:
@@ -285,11 +317,15 @@ class RemoteMaster(ReportsStage, MainLoopStage):
         self._is_bootstrapping = False
         self.jobs = self.sa.finish_bootstrap()
 
+    def _strtobool(self, val):
+        return val.lower() in ('y', 'yes', 't', 'true', 'on', '1')
+
     def select_jobs(self, all_jobs):
         if self.launcher.test_selection_forced:
             if self.launcher.manifest is not Unset:
                 self.sa.save_manifest(
-                    {manifest_id: self.launcher.manifest[manifest_id] for
+                    {manifest_id:
+                     self._strtobool(self.launcher.manifest[manifest_id]) for
                      manifest_id in self.launcher.manifest}
                 )
         else:
@@ -412,11 +448,13 @@ class RemoteMaster(ReportsStage, MainLoopStage):
         while True:
             state, payload = self.sa.monitor_job()
             if payload and not self._is_bootstrapping:
-                for stream, line in payload:
-                    if stream == 'stderr':
-                        SimpleUI.red_text(line, end='')
+                for line in payload.splitlines():
+                    if line.startswith('stderr'):
+                        SimpleUI.red_text(line[6:])
+                    elif line.startswith('stdout'):
+                        SimpleUI.green_text(line[6:])
                     else:
-                        SimpleUI.green_text(line, end='')
+                        SimpleUI.black_text(line[6:])
             if state == 'running':
                 time.sleep(0.5)
                 while True:
@@ -450,11 +488,24 @@ class RemoteMaster(ReportsStage, MainLoopStage):
 
     def local_export(self, exporter_id, transport, options=()):
         _logger.info("master: Exporting locally'")
-        exporter = self._sa.manager.create_exporter(exporter_id, options)
+        rf = self.sa.cache_report(exporter_id, options)
         exported_stream = SpooledTemporaryFile(max_size=102400, mode='w+b')
-        async_dump = rpyc.async_(exporter.dump_from_session_manager)
-        res = async_dump(self._sa.manager, exported_stream)
-        res.wait()
+        chunk_size = 16384
+        with tqdm(
+            total=rf.tell(),
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+            disable=not self.is_interactive
+        ) as pbar:
+            rf.seek(0)
+            while True:
+                buf = rf.read(chunk_size)
+                pbar.set_postfix(file=transport.url, refresh=False)
+                pbar.update(chunk_size)
+                if not buf:
+                    break
+                exported_stream.write(buf)
         exported_stream.seek(0)
         result = transport.send(exported_stream)
         return result

@@ -16,14 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Checkbox.  If not, see <http://www.gnu.org/licenses/>.
 import fnmatch
+import io
 import json
 import gettext
 import logging
 import os
-import queue
 import time
-import sys
 from collections import namedtuple
+from tempfile import SpooledTemporaryFile
 from threading import Thread, Lock
 from subprocess import CalledProcessError, check_output
 
@@ -69,30 +69,51 @@ Finalizing = 'finalizing'
 class BufferedUI(SilentUI):
     """UI type that queues the output for later reading."""
 
-    # XXX: using as string as a buffer and one lock over it
-    #      might be a cleaner approach than those queues
     def __init__(self):
         super().__init__()
-        self._queue = queue.Queue()
+        self.lock = Lock()
+        self._output = io.StringIO()
+
+    def _ignore_program_output(self, stream_name, line):
+        pass
 
     def got_program_output(self, stream_name, line):
-        self._queue.put(
-            (stream_name, line.decode(sys.stdout.encoding, 'replace')))
+        with self.lock:
+            try:
+                self._output.write(stream_name + line.decode("UTF-8"))
+            except UnicodeDecodeError:
+                # Don't start a slave->master transfer for binary attachments
+                self._output.write("hidden(Hiding binary test output)\n")
+                self.got_program_output = self._ignore_program_output
 
     def get_output(self):
         """Returns all the output queued up since previous call."""
-        output = []
-        while not self._queue.empty():
-            output.append(self._queue.get())
-        return output
+        with self.lock:
+            output = self._output.getvalue()
+            self._output = io.StringIO()
+            return output
+
+
+class RemoteSilentUI(SilentUI):
+    """SilentUI + fake get_output."""
+
+    def __init__(self):
+        super().__init__()
+        self._msg = "hidden(Command output hidden)"
+
+    def get_output(self):
+        msg = self._msg
+        self._msg = ''
+        return msg
 
 
 class BackgroundExecutor(Thread):
-    def __init__(self, sa, job_id, real_run):
+    def __init__(self, sa, job_id, real_run, ui=RemoteSilentUI()):
         super().__init__()
         self._sa = sa
         self._job_id = job_id
         self._real_run = real_run
+        self._ui = ui
         self._builder = None
         self._started_real_run = False
         self._sa.session_change_lock.acquire()
@@ -108,8 +129,7 @@ class BackgroundExecutor(Thread):
 
     def run(self):
         self._started_real_run = True
-        self._builder = self._real_run(
-            self._job_id, self._sa.buffered_ui, False)
+        self._builder = self._real_run(self._job_id, self._ui, False)
         _logger.debug("Finished running")
 
     def outcome(self):
@@ -119,7 +139,7 @@ class BackgroundExecutor(Thread):
 class RemoteSessionAssistant():
     """Remote execution enabling wrapper for the SessionAssistant"""
 
-    REMOTE_API_VERSION = 9
+    REMOTE_API_VERSION = 10
 
     def __init__(self, cmd_callback):
         _logger.debug("__init__()")
@@ -128,7 +148,7 @@ class RemoteSessionAssistant():
         self._sudo_password = None
         self._session_change_lock = Lock()
         self._operator_lock = Lock()
-        self.buffered_ui = BufferedUI()
+        self._ui = BufferedUI()
         self._input_piping = os.pipe()
         self._passwordless_sudo = is_passwordless_sudo()
         self.terminate_cb = None
@@ -141,7 +161,6 @@ class RemoteSessionAssistant():
         _logger.info("Resetting RSA")
         self._state = Idle
         self._sa = SessionAssistant('service', api_flags={SA_RESTARTABLE})
-        self._sa.configure_application_restart(self._cmd_callback)
         self._be = None
         self._session_id = ""
         self._jobs_count = 0
@@ -191,11 +210,15 @@ class RemoteSessionAssistant():
 
     def _prepare_display_without_psutil(self):
         try:
-            value = check_output(
+            display_value = check_output(
                 'strings /proc/*/environ 2>/dev/null | '
                 'grep -m 1 -oP "(?<=DISPLAY=).*"',
                 shell=True, universal_newlines=True).rstrip()
-            return {'DISPLAY': value}
+            xauth_value = check_output(
+                'strings /proc/*/environ 2>/dev/null | '
+                'grep -m 1 -oP "(?<=XAUTHORITY=).*"',
+                shell=True, universal_newlines=True).rstrip()
+            return {'DISPLAY': display_value, 'XAUTHORITY': xauth_value}
         except CalledProcessError:
             return None
 
@@ -212,24 +235,34 @@ class RemoteSessionAssistant():
                 # psutil < 4.0.0 doesn't provide Process.environ()
                 return self._prepare_display_without_psutil()
             except psutil.NoSuchProcess:
-                # quietly ignore the process that died before we had a chance to
-                # read the environment from them
+                # quietly ignore the process that died before we had a chance
+                # to read the environment from them
                 continue
-            if ("DISPLAY" in p_environ and p_user != 'gdm'):  # gdm uses :1024
-                return {'DISPLAY': p_environ['DISPLAY']}
+            if (
+                "DISPLAY" in p_environ and
+                "XAUTHORITY" in p_environ and
+                p_user != 'gdm'
+            ):  # gdm uses :1024
+                return {
+                    'DISPLAY': p_environ['DISPLAY'],
+                    'XAUTHORITY': p_environ['XAUTHORITY']
+                    }
 
     @allowed_when(Idle)
     def start_session(self, configuration):
         self._reset_sa()
-        _logger.debug("start_session: %r", configuration)
+        _logger.info("start_session: %r", configuration)
         session_title = 'checkbox-slave'
         session_desc = 'checkbox-slave session'
+        session_type = 'checkbox-slave'
 
         self._launcher = load_configs()
         if configuration['launcher']:
             self._launcher.read_string(configuration['launcher'], False)
-            session_title = self._launcher.session_title
-            session_desc = self._launcher.session_desc
+            if self._launcher.session_title:
+                session_title = self._launcher.session_title
+            if self._launcher.session_desc:
+                session_desc = self._launcher.session_desc
 
         self._sa.use_alternate_configuration(self._launcher)
 
@@ -248,7 +281,10 @@ class RemoteSessionAssistant():
         self._sa.update_app_blob(json.dumps(
             {'description': session_desc, }).encode("UTF-8"))
         self._sa.update_app_blob(json.dumps(
+            {'type': session_type, }).encode("UTF-8"))
+        self._sa.update_app_blob(json.dumps(
             {'launcher': configuration['launcher'], }).encode("UTF-8"))
+        self._sa.configure_application_restart(self._cmd_callback)
 
         self._session_id = self._sa.get_session_id()
         tps = self._sa.get_test_plans()
@@ -313,6 +349,22 @@ class RemoteSessionAssistant():
         self.session_change_lock.release()
         self._state = TestsSelected
 
+    def _get_ui_for_job(self, job):
+        show_out = True
+        if self._launcher.output == 'hide-resource-and-attachment':
+            if job.plugin in ('local', 'resource', 'attachment'):
+                show_out = False
+        elif self._launcher.output in ['hide', 'hide-automated']:
+            if job.plugin in ('shell', 'local', 'resource', 'attachment'):
+                show_out = False
+        if 'suppress-output' in job.get_flag_set():
+            show_out = False
+        if show_out:
+            self._ui = BufferedUI()
+        else:
+            self._ui = RemoteSilentUI()
+        return self._ui
+
     @allowed_when(TestsSelected)
     def run_job(self, job_id):
         """
@@ -353,7 +405,8 @@ class RemoteSessionAssistant():
                     if self._current_comments != "":
                         result_builder.comments = self._current_comments
                     return result_builder
-                self._be = BackgroundExecutor(self, job_id, skipped_builder)
+                self._be = BackgroundExecutor(
+                    self, job_id, skipped_builder)
                 yield from self.interact(
                     Interaction('skip', job.verification, self._be))
         if job.command:
@@ -373,7 +426,8 @@ class RemoteSessionAssistant():
                         print(_('Sorry, try again.'))
                 assert(self._sudo_password is not None)
             self._state = Running
-            self._be = BackgroundExecutor(self, job_id, self._sa.run_job)
+            ui = self._get_ui_for_job(job)
+            self._be = BackgroundExecutor(self, job_id, self._sa.run_job, ui)
         else:
             def undecided_builder(*args, **kwargs):
                 return JobResultBuilder(outcome=IJobResult.OUTCOME_UNDECIDED)
@@ -403,9 +457,9 @@ class RemoteSessionAssistant():
         # either return [done, running, awaiting response]
         # TODO: handle awaiting_response (reading from stdin by the job)
         if self._be and self._be.is_alive():
-            return ('running', self.buffered_ui.get_output())
+            return ('running', self._ui.get_output())
         else:
-            return ('done', self.buffered_ui.get_output())
+            return ('done', self._ui.get_output())
 
     def get_remote_api_version(self):
         return self.REMOTE_API_VERSION
@@ -416,7 +470,7 @@ class RemoteSessionAssistant():
         :returns:
             (state, payload) tuple.
         """
-        _logger.debug("whats_up()")
+        _logger.debug("whats_up() -> %r", self._state)
         payload = None
         if self._state == Running:
             payload = (
@@ -544,6 +598,7 @@ class RemoteSessionAssistant():
         return test_info_list
 
     def resume_by_id(self, session_id=None):
+        _logger.info("resume_by_id: %r", session_id)
         self._launcher = load_configs()
         resume_candidates = list(self._sa.get_resumable_sessions())
         if not session_id:
@@ -635,3 +690,10 @@ class RemoteSessionAssistant():
     @property
     def sideloaded_providers(self):
         return self._sa.sideloaded_providers
+
+    def exposed_cache_report(self, exporter_id, options):
+        exporter = self._sa._manager.create_exporter(exporter_id, options)
+        exported_stream = SpooledTemporaryFile(max_size=102400, mode='w+b')
+        exporter.dump_from_session_manager(self._sa._manager, exported_stream)
+        exported_stream.flush()
+        return exported_stream
