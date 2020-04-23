@@ -76,6 +76,7 @@ checkbox_support/parsers/tests/pactl_data/cards-desktop-precise-1.txt
 checkbox_support/parsers/tests/pactl_data/cards-desktop-precise-2.txt
 checkbox_support/parsers/tests/pactl_data/cards-desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/desktop-bionic-t480s.txt
+checkbox_support/parsers/tests/pactl_data/desktop-focal-vostro5590.txt
 checkbox_support/parsers/tests/pactl_data/desktop-precise-radeon-hdmi-available.txt
 checkbox_support/parsers/tests/pactl_data/desktop-precise-radeon.txt
 checkbox_support/parsers/tests/pactl_data/desktop-precise-xps1340.txt

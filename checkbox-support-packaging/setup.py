@@ -38,7 +38,7 @@ with open(os.path.join(base_dir, "README.rst"), encoding="UTF-8") as stream:
 
 setup(
     name="checkbox-support",
-    version="0.45.0",
+    version="0.46.0",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     test_suite='checkbox_support.tests.test_suite',
@@ -51,6 +51,7 @@ setup(
     install_requires=[
         'pyparsing >= 2.0.0',
         'requests >= 1.0',
+        'distro >= 1.0'
     ] + (['configparser'] if sys.version_info.major == 2 else []) + (
         ['requests_unixsocket >= 0.1.2']
         if sys.version_info >= (3, 5) else []),
