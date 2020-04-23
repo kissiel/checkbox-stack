@@ -1,5 +1,5 @@
-id: client-cert-18-04
-_name: 18.04 Client Certification Tests
+id: client-cert-20-04
+_name: 20.04 Client Certification Tests
 unit: test plan
 _description:
  This test plan is intended for use inside Canonical's test labs. The tests
@@ -40,7 +40,6 @@ nested_part:
     # after coming back from suspend if the system has hybrid graphics.
     after-suspend-graphics-discrete-gpu-cert-full
     after-suspend-monitor-discrete-gpu-cert-full
-    # hibernate-discrete-gpu-cert-full (No hibernate in 18.04)
     # Now we ask to switch to the integrated graphics card. This requires a
     # restart of checkbox.
     after-suspend-graphics-integrated-gpu-cert-full
@@ -48,7 +47,7 @@ nested_part:
     suspend-key-led-oops-check-cert    
     after-suspend-audio-cert-full
     after-suspend-camera-cert-full
-    after-suspend-input-cert-full
+    after-suspend-input-cert-full    
     after-suspend-keys-cert-full
     after-suspend-led-cert-full
     after-suspend-mediacard-cert-full
@@ -58,8 +57,7 @@ nested_part:
     after-suspend-usb-cert-full
     after-suspend-usb3-cert-full
     after-suspend-usb-c-cert-full
-    after-suspend-wireless-cert-full    
-    # hibernate-integrated-gpu-cert-full (No hibernate in 18.04)
+    after-suspend-wireless-cert-full
     # The following tests should run BEFORE the automated tests. The reboot and
     # power off tests will also give us a clean system to start the stress run
     # with.
@@ -77,7 +75,7 @@ nested_part:
     stress-ng-cert-automated
     stress-30-reboot-poweroff-automated
     stress-pm-graph
-    tpm2.0_3.0.4
+    tpm2.0_4.1.1-automated
     info-attachment-cert-full
 exclude:
     com.canonical.certification::keys/hibernate
