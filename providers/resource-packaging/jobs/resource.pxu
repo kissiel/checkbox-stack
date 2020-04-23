@@ -228,7 +228,7 @@ command:
      echo -n "usb$version: "
  {%- if __on_ubuntucore__ %}
      checkbox-support-lsusb -f $SNAP/checkbox-runtime/var/lib/usbutils/usb.ids | grep -q "Linux Foundation ${version}.00 root hub" && echo "supported" || echo "unsupported"
- {%- else %}
+ {% else %}
      lsusb | grep -q "Linux Foundation ${version}.0 root hub" && echo "supported" || echo "unsupported"
  {% endif -%}
  done
@@ -475,3 +475,18 @@ estimated_duration: 1.0
 user: root
 command:
   bootloader_resource.py
+
+id: nvdimm_resource
+estimated_duration: 0.25
+plugin: resource
+user: root
+requires:
+  package.name == 'ipmctl' or executable.name == 'ipmctl'
+_summary: Resource for NVDIMM detection
+command:
+ if ipmctl show -dimm |grep -iq "No DIMMs in the system";
+ then
+     echo "detected: false"
+ else
+     echo "detected: true"
+ fi
