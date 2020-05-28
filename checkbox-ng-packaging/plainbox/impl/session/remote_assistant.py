@@ -139,7 +139,7 @@ class BackgroundExecutor(Thread):
 class RemoteSessionAssistant():
     """Remote execution enabling wrapper for the SessionAssistant"""
 
-    REMOTE_API_VERSION = 10
+    REMOTE_API_VERSION = 11
 
     def __init__(self, cmd_callback):
         _logger.debug("__init__()")
@@ -180,6 +180,9 @@ class RemoteSessionAssistant():
     @property
     def config(self):
         return self._sa.config
+
+    def update_app_blob(self, app_blob):
+        self._sa.update_app_blob(app_blob)
 
     def allowed_when(*states):
         def wrap(f):
@@ -595,7 +598,7 @@ class RemoteSessionAssistant():
                 "plugin": job.plugin,
             }
             test_info_list = test_info_list + ((test_info, ))
-        return test_info_list
+        return json.dumps(test_info_list)
 
     def resume_by_id(self, session_id=None):
         _logger.info("resume_by_id: %r", session_id)
@@ -611,6 +614,7 @@ class RemoteSessionAssistant():
             return
         _logger.warning("Resuming session: %r", session_id)
         self._normal_user = self._launcher.normal_user
+        _logger.info("normal_user: %r", self._normal_user)
         pass_provider = (None if self._passwordless_sudo else
                          self.get_decrypted_password)
         runner_kwargs = {
@@ -624,6 +628,9 @@ class RemoteSessionAssistant():
         launcher = app_blob['launcher']
         self._launcher.read_string(launcher, False)
         self._sa.use_alternate_configuration(self._launcher)
+        self._normal_user = self._launcher.normal_user
+        _logger.info(
+            "normal_user after loading metadata: %r", self._normal_user)
         test_plan_id = app_blob['testplan_id']
         self._sa.select_test_plan(test_plan_id)
         self._sa.bootstrap()
