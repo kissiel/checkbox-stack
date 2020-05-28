@@ -249,7 +249,7 @@ class DiskTest():
                     UDISKS2_BLOCK_INTERFACE in interfaces):
                 # To be an IO candidate there must be a drive object
                 drive = interfaces[UDISKS2_BLOCK_INTERFACE].get('Drive:')
-                if drive is None or drive is '/':
+                if drive is None or drive == '/':
                     continue
                 drive_object = udisks_devices[os.path.basename(drive)]
 
@@ -616,6 +616,11 @@ def main():
     args = parser.parse_args()
 
     test = DiskTest(args.device, args.memorycard, args.lsblkcommand)
+
+    # LP:1876966
+    if os.getuid() != 0:
+        print("ERROR: This script must be run as root!")
+        return 1
 
     errors = 0
     # If we do have removable drives attached and mounted
