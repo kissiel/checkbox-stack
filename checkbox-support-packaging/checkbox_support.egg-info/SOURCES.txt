@@ -71,11 +71,13 @@ checkbox_support/parsers/tests/cpuinfo_data/amd64.txt
 checkbox_support/parsers/tests/cpuinfo_data/ppc64el.txt
 checkbox_support/parsers/tests/fixtures/xinput_quantal.txt
 checkbox_support/parsers/tests/fixtures/xinput_toshiba.txt
+checkbox_support/parsers/tests/pactl_data/cards-desktop-bionic-x13.txt
 checkbox_support/parsers/tests/pactl_data/cards-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/cards-desktop-precise-1.txt
 checkbox_support/parsers/tests/pactl_data/cards-desktop-precise-2.txt
 checkbox_support/parsers/tests/pactl_data/cards-desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/desktop-bionic-t480s.txt
+checkbox_support/parsers/tests/pactl_data/desktop-bionic-x13.txt
 checkbox_support/parsers/tests/pactl_data/desktop-focal-vostro5590.txt
 checkbox_support/parsers/tests/pactl_data/desktop-precise-radeon-hdmi-available.txt
 checkbox_support/parsers/tests/pactl_data/desktop-precise-radeon.txt
@@ -88,6 +90,7 @@ checkbox_support/parsers/tests/pactl_data/modules-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/modules-desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/pa_ucm_pre_tag_bionic.txt
 checkbox_support/parsers/tests/pactl_data/samples-desktop-precise.txt
+checkbox_support/parsers/tests/pactl_data/sinks-desktop-bionic-x13.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise-1.txt
 checkbox_support/parsers/tests/pactl_data/sinks-desktop-precise.txt
