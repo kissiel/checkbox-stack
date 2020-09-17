@@ -3,45 +3,45 @@ unit: packaging meta-data
 os-id: debian
 Depends: python3 (>= 3.2)
 
-# This is for bin/efi_resource, bin/cpuinfo_resource, bin/meminfo_resource,
-# bin/udev_resource and bin/xinput_resource
+# This is for bin/efi_resource.py, bin/cpuinfo_resource.py,
+# bin/meminfo_resource.py, bin/udev_resource.py and bin/xinput_resource.py
 unit: packaging meta-data
 os-id: debian
 Depends: python3-checkbox-support (>= 0.22)
 
-# This is for bin/display_resource
+# This is for bin/display_resource.py
 unit: packaging meta-data
 os-id: debian
 # NOTE: This is not a hard dependency so that
 # plainbox-provider-resource-generic has minimalistic dependencies.
 Suggests: x11-server-utils
 
-# This is for bin/dmi_resource
+# This is for bin/dmi_resource.py
 unit: packaging meta-data
 os-id: debian
-Depends: dmidecode [!arm64 !armel !mips !mipsel !powerpc !ppc64el !s390x !alpha !hppa !m68k !mips64el !ppc64 !sh4 !sparc64]
+Depends: dmidecode [!riscv64 !arm64 !armel !mips !mipsel !powerpc !ppc64el !s390x !alpha !hppa !m68k !mips64el !ppc64 !sh4 !sparc64]
 
-# This is for bin/dpkg_resource
+# This is for bin/dpkg_resource.py
 unit: packaging meta-data
 os-id: debian
 Depends: dpkg (>= 1.13)
 
-# This is for bin/lsb_resource
+# This is for bin/lsb_resource.py
 unit: packaging meta-data
 os-id: debian
 Depends: lsb-release
 
-# This is for bin/mobilebroadband_resource
+# This is for bin/mobilebroadband_resource.sh
 unit: packaging meta-data
 os-id: debian
 Depends: network-manager
 
-# This is for bin/optical_resource and bin/udev_resource
+# This is for bin/optical_resource.py and bin/udev_resource.py
 unit: packaging meta-data
 os-id: debian
 Depends: udev
 
-# This is for bin/xinput_resource
+# This is for bin/xinput_resource.py
 unit: packaging meta-data
 os-id: debian
 # NOTE: This is not a hard dependency so that
@@ -67,7 +67,8 @@ Depends: iw (>= 5.3)
 id: cpuinfo
 estimated_duration: 0.37
 plugin: resource
-command: cpuinfo_resource
+user: root
+command: cpuinfo_resource.py
 _summary: Collect information about the CPU
 _description: Gets CPU resource info from /proc/cpuinfo
 
@@ -75,28 +76,28 @@ id: cdimage
 estimated_duration: 0.61
 plugin: resource
 user: root
-command: cdimage_resource
+command: cdimage_resource.py
 _summary: Collect information about installation media (casper)
 _description: Gets installation info from casper.log and media-info
 
 id: dpkg
 estimated_duration: 0.19
 plugin: resource
-command: dpkg_resource
+command: dpkg_resource.py
 _summary: Collect information about dpkg version
 _description: Gets info on the version of dpkg installed
 
 id: lsb
 estimated_duration: 1.63
 plugin: resource
-command: lsb_resource
+command: lsb_resource.py
 _description: Generates release info based on /etc/lsb-release
 _summary: Collect information about installed system (lsb-release)
 
 id: meminfo
 estimated_duration: 0.1
 plugin: resource
-command: meminfo_resource
+command: meminfo_resource.py
 _description: Generates resource info based on /proc/meminfo
 _summary: Collect information about system memory (/proc/meminfo)
 
@@ -104,7 +105,7 @@ id: module
 estimated_duration: 0.13
 plugin: resource
 user: root
-command: module_resource
+command: module_resource.py
 _description: Generates resources info on running kernel modules
 _summary: Collect information about kernel modules
 
@@ -112,9 +113,8 @@ id: package
 estimated_duration: 1.16
 plugin: resource
 command:
-    dpkg-query -W -f='name: ${Package}\nversion: ${Version}\nmodalias: ${Modaliases}\n\n' || \
-    echo -e 'name: plainbox\nversion: 0.1\nmodalias:  \n\n' |\
-    awk 'BEGIN {RS = ""; FS = "\n"}{print $1; print $2; if ($3 ~ /^modalias: .+$/) {print $3}; print "" }'
+  # shellcheck disable=SC2016
+  dpkg-query -W -f='name: ${Package}\nversion: ${Version}\n\n' || true
 _description: Generates a list of packages
 _summary: Collect information about installed software packages
 
@@ -124,33 +124,21 @@ plugin: resource
 _summary: Enumerate available system executables
 _description: Generates a resource for all available executables
 command:
-    find -H $(echo "$PATH" | sed -e 's/:/ /g') -maxdepth 1 -xtype f -executable -printf "name: %f\nlocation: %h\n\n"
-    true
+  xargs -n1 -d: <<< "$PATH" | xargs -I{} find -H {} -maxdepth 1 -xtype f -executable -printf "name: %f\n\n" 2> /dev/null | sort -u | awk '{print}' ORS='\n\n' || true
 
 id: device
 estimated_duration: 0.48
 plugin: resource
-command: udev_resource
+command: udev_resource.py
 _description: Creates resource info from udev
 _summary: Collect information about hardware devices (udev)
 
 id: removable_partition
 estimated_duration: 0.48
 plugin: resource
-command: udev_resource -f PARTITION || true
+command: udev_resource.py -f PARTITION || true
 _description: Creates removable partitions info from udev
 _summary: Collect removable partitions info from udev
-
-id: staging/udev
-estimated_duration: 1.1
-plugin: resource
-shell: /bin/sh
-command: udevadm info --export-db | udev2resource
-_summary: Collect unfiltered udev data
-_description:
- This job collects the udev database in mostly raw format. The only
- transformations applied are basic changes to make the format compatible with
- RFC822 syntax required by PlainBox.
 
 id: dmi_present
 estimated_duration: 0.02
@@ -171,27 +159,28 @@ plugin: resource
 requires:
   dmi_present.state == 'supported'
 user: root
-command: dmi_resource
+command: dmi_resource.py
 _summary: Collect information about hardware devices (DMI)
 
 id: efi
 estimated_duration: 0.56
 plugin: resource
 user: root
-command: efi_resource
+command: efi_resource.py
 _summary: Collect information about the EFI configuration
 
 id: uname
 estimated_duration: 0.09
 plugin: resource
-command: uname_resource
+command: uname_resource.py
 _description: Creates resource info from uname output
 _summary: Collect information about the running kernel
 
 id: sleep
 estimated_duration: 0.03
 plugin: resource
-command: for state in `cat /sys/power/state`; do echo "$state: supported"; done
+command:
+  tr ' ' '\n' < /sys/power/state | while IFS= read -r state; do echo "$state: supported"; done
 _summary: Create resource info for supported sleep states
 
 unit: template
@@ -199,7 +188,7 @@ template-resource: device
 template-filter: device.category == 'CDROM'
 id: optical_drive_{name}
 plugin: resource
-command: optical_resource /dev/{name}
+command: optical_resource.py /dev/{name}
 estimated_duration: 0.5
 _summary: Create resource info for supported optical actions ({name})
 
@@ -207,13 +196,13 @@ id: block_device
 estimated_duration: 0.08
 plugin: resource
 user: root
-command: block_device_resource
+command: block_device_resource.py
 _summary: Create resource info for removable block devices
 
 id: display
 estimated_duration: 0.43
 plugin: resource
-command: display_resource
+command: display_resource.py
 requires: package.name == "x11-xserver-utils"
 _summary: Creates display resource info from xrandr output
 
@@ -236,7 +225,7 @@ command:
 id: xinput
 estimated_duration: 0.19
 plugin: resource
-command: xinput_resource
+command: xinput_resource.py
 requires: package.name == "xinput"
 _summary: Creates resource info from xinput output.
 
@@ -246,15 +235,15 @@ plugin: resource
 _summary: Create resource info for environment variables
 command:
  IFS=$'\n'
- for e in `env | sed 's/=/:/g'`; do
-     echo $e | awk -F':' '{print $1 ": " $2}'
+ for e in $(env | sed 's/=/:/g'); do
+     echo "$e" | awk -F':' '{print $1 ": " $2}'
  done
 
 id: mobilebroadband
 estimated_duration: 0.38
 plugin: resource
 _summary: Create resource for mobile broadband devices
-command: mobilebroadband_resource
+command: mobilebroadband_resource.sh
 
 id: virtualization
 estimated_duration: 0.13
@@ -282,9 +271,11 @@ _summary: Resource job to identify Wi-Fi STA supported protocols
 _description:
  Job listing STA supported 802.11 protocols per interfaces.
 command:
- for i in `iw dev | grep -oP 'Interface\s+\K\w+'`; do iw phy phy$(iw dev $i info | grep -oP 'wiphy\s+\K\d+') info | grep -q 'VHT' && echo $i"_ac: supported" || echo $i"_ac: unsupported"; done
+ # shellcheck disable=SC2046
+ for i in $(iw dev | grep -oP 'Interface\s+\K\w+'); do iw phy phy$(iw dev "$i" info | grep -oP 'wiphy\s+\K\d+') info | grep -q 'VHT' && echo "$i""_ac: supported" || echo "$i""_ac: unsupported"; done
  # MCS 10 and 11 if present support the ax only 1024-QAM 
- for i in `iw dev | grep -oP 'Interface\s+\K\w+'`; do iw phy phy$(iw dev $i info | grep -oP 'wiphy\s+\K\d+') info | grep -q 'MCS 0-11' && echo $i"_ax: supported" || echo $i"_ax: unsupported"; done
+ # shellcheck disable=SC2046
+ for i in $(iw dev | grep -oP 'Interface\s+\K\w+'); do iw phy phy$(iw dev "$i" info | grep -oP 'wiphy\s+\K\d+') info | grep -q 'MCS 0-11' && echo "$i""_ax: supported" || echo "$i""_ax: unsupported"; done
 estimated_duration: 0.5
 flags: preserve-locale
 
@@ -304,8 +295,8 @@ id: requirements
 estimated_duration: 0.01
 plugin: resource
 command:
- if [ -f $PLAINBOX_SESSION_SHARE/requirements_docs.txt ];then
-    cat $PLAINBOX_SESSION_SHARE/requirements_docs.txt
+ if [ -f "$PLAINBOX_SESSION_SHARE"/requirements_docs.txt ];then
+    cat "$PLAINBOX_SESSION_SHARE"/requirements_docs.txt
  else
     true
  fi
@@ -339,7 +330,7 @@ id: graphics_card
 estimated_duration: 0.05
 plugin: resource
 _summary: Generate an entry for each graphics card present in the system.
-command: graphics_card_resource
+command: graphics_card_resource.py
 
 id: fwts
 estimated_duration: 0.5
@@ -347,7 +338,7 @@ plugin: resource
 requires: executable.name == "fwts"
 _summary: Generate an entry for each FWTS test available
 command:
- for test in `checkbox-support-fwts_test --list`; do echo "name: $test"; echo ""; done
+ for test in $(checkbox-support-fwts_test --list); do echo "name: $test"; echo ""; done
 
 id: mir
 estimated_duration: 0.5
@@ -355,17 +346,18 @@ plugin: resource
 requires: package.name == "mir-test-tools"
 _summary: Generate an entry for each MIR integration tests
 command:
- for test in `mir_integration_tests --gtest_list_tests | sed -n '/\.$/s/\.$//p'`; do echo "category: integration"; echo "name: $test"; echo ""; done
- for test in `mir_acceptance_tests --gtest_list_tests | sed -n '/\.$/s/\.$//p'`; do echo "category: acceptance"; echo "name: $test"; echo ""; done
+ for test in $(mir_integration_tests --gtest_list_tests | sed -n '/\.$/s/\.$//p'); do echo "category: integration"; echo "name: $test"; echo ""; done
+ for test in $(mir_acceptance_tests --gtest_list_tests | sed -n '/\.$/s/\.$//p'); do echo "category: acceptance"; echo "name: $test"; echo ""; done
 
 id: wifi_interface_mode
 estimated_duration: 0.1
 plugin: resource
 command:
- for i in `iw dev | grep -oP 'Interface\s+\K\w+'`;
- do iw phy phy$(iw dev $i info | grep -oP 'wiphy\s+\K\d+') info |
+ # shellcheck disable=SC2046
+ for i in $(iw dev | grep -oP 'Interface\s+\K\w+');
+ do iw phy phy$(iw dev "$i" info | grep -oP 'wiphy\s+\K\d+') info |
  grep -Pzo '(?s)Supported interface modes:\n\K(\s+\*\s.*?\n)+' |
- sed "s/.*\* \(.*\)/"$i"_\1: supported/" | tr -d '\000';
+ sed "s/.*\* \(.*\)/""$i""_\1: supported/" | tr -d '\000';
  done
 _summary: Create resource info for supported wifi interface modes
 
