@@ -220,7 +220,6 @@ plainbox/impl/secure/test_origin.py
 plainbox/impl/secure/test_plugins.py
 plainbox/impl/secure/test_qualifiers.py
 plainbox/impl/secure/test_rfc822.py
-plainbox/impl/secure/test_sudo_broker.py
 plainbox/impl/secure/providers/__init__.py
 plainbox/impl/secure/providers/test_v1.py
 plainbox/impl/secure/providers/v1.py
