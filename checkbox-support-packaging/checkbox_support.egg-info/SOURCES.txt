@@ -5,6 +5,7 @@ setup.cfg
 setup.py
 checkbox_support/__init__.py
 checkbox_support/bt_helper.py
+checkbox_support/disk_support.py
 checkbox_support/interactive_cmd.py
 checkbox_support/udev.py
 checkbox_support.egg-info/PKG-INFO
