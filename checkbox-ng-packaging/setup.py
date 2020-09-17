@@ -48,13 +48,12 @@ else:
         'requests >= 1.0',
         'urwid >= 1.1.1',
         'Jinja2 >= 2.7',
-        'pycrypto >= 2.6.1',
         'xlsxwriter >= 0.3',
     ]
 
 setup(
     name="checkbox-ng",
-    version="1.9.0",
+    version="1.10.0rc1",
     url="https://launchpad.net/checkbox-ng/",
     packages=find_packages(),
     author="Zygmunt Krynicki",

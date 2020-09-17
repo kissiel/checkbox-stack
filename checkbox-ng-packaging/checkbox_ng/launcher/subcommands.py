@@ -24,7 +24,6 @@ from collections import defaultdict
 from string import Formatter
 from tempfile import TemporaryDirectory
 import copy
-import datetime
 import fnmatch
 import gettext
 import json
@@ -32,7 +31,6 @@ import logging
 import operator
 import os
 import re
-import socket
 import sys
 import tarfile
 import time
@@ -42,19 +40,14 @@ from plainbox.i18n import ngettext
 from plainbox.impl.color import Colorizer
 from plainbox.impl.execution import UnifiedRunner
 from plainbox.impl.highlevel import Explorer
-from plainbox.impl.launcher import DefaultLauncherDefinition
-from plainbox.impl.providers import get_providers
-from plainbox.impl.providers.embedded_providers import (
-    EmbeddedProvider1PlugInCollection)
 from plainbox.impl.result import MemoryJobResult
 from plainbox.impl.secure.config import Unset
 from plainbox.impl.secure.sudo_broker import sudo_password_provider
-from plainbox.impl.session.assistant import SessionAssistant, SA_RESTARTABLE
-from plainbox.impl.session.jobs import InhibitionCause
+from plainbox.impl.session.assistant import SA_RESTARTABLE
 from plainbox.impl.session.restart import detect_restart_strategy
 from plainbox.impl.session.restart import get_strategy_by_name
+from plainbox.impl.session.storage import WellKnownDirsHelper
 from plainbox.impl.transport import TransportError
-from plainbox.impl.transport import InvalidSecureIDError
 from plainbox.impl.transport import get_all_transports
 from plainbox.impl.transport import SECURE_ID_PATTERN
 
@@ -105,6 +98,8 @@ class Submit():
         if ctx.args.staging:
             url = ('https://certification.staging.canonical.com/'
                    'api/v1/submission/{}/'.format(ctx.args.secure_id))
+        elif os.getenv('C3_URL'):
+            url = ('{}/{}/'.format(os.getenv('C3_URL'), ctx.args.secure_id))
         from checkbox_ng.certification import SubmissionServiceTransport
         transport_cls = SubmissionServiceTransport
         transport = transport_cls(url, options_string)
@@ -188,10 +183,7 @@ class Launcher(MainLoopStage, ReportsStage):
             # exited by now, so validation passed
             print(_("Launcher seems valid."))
             return
-        if ctx.args.launcher:
-            self.launcher = load_configs(ctx.args.launcher)
-        else:
-            self.launcher = DefaultLauncherDefinition()
+        self.launcher = load_configs(ctx.args.launcher)
         logging_level = {
             'normal': logging.WARNING,
             'verbose': logging.INFO,
@@ -345,11 +337,8 @@ class Launcher(MainLoopStage, ReportsStage):
 
     def _start_new_session(self):
         print(_("Preparing..."))
-        title = self.launcher.app_id
-        if self.ctx.args.title:
-            title = self.ctx.args.title
-        elif self.ctx.args.launcher:
-            title = os.path.basename(self.ctx.args.launcher)
+        title = self.ctx.args.title or self.launcher.session_title
+        title = title or self.launcher.app_id
         if self.launcher.app_version:
             title += ' {}'.format(self.launcher.app_version)
         runner_kwargs = {
@@ -375,9 +364,10 @@ class Launcher(MainLoopStage, ReportsStage):
             if tp_id is None:
                 raise SystemExit(_("No test plan selected."))
         self.ctx.sa.select_test_plan(tp_id)
+        description = self.ctx.args.message or self.launcher.session_desc
         self.ctx.sa.update_app_blob(json.dumps(
             {'testplan_id': tp_id,
-             'description': self.ctx.args.message, }).encode("UTF-8"))
+             'description': description}).encode("UTF-8"))
         bs_jobs = self.ctx.sa.get_bootstrap_todo_list()
         self._run_bootstrap_jobs(bs_jobs)
         self.ctx.sa.finish_bootstrap()
@@ -445,8 +435,9 @@ class Launcher(MainLoopStage, ReportsStage):
                 'outcome': IJobResult.OUTCOME_PASS,
                 'comments': _("Automatically passed after resuming execution"),
             }
-            result_path = os.path.join(
-                self.ctx.sa.get_session_dir(), 'CHECKBOX_DATA', '__result')
+            session_share = WellKnownDirsHelper.session_share(
+                self.ctx.sa.get_session_id())
+            result_path = os.path.join(session_share, '__result')
             if os.path.exists(result_path):
                 try:
                     with open(result_path, 'rt') as f:
