@@ -25,10 +25,9 @@
 # Modifications: 2019 Jeffrey Lane (jeffrey.lane@canonical.com)
 
 import ctypes
-import os
 import platform
 import sys
-from ctypes import (c_uint32, c_int, c_long, c_ulong, c_size_t, c_void_p,
+from ctypes import (c_uint32, c_int, c_size_t, c_void_p,
                     POINTER, CFUNCTYPE)
 from subprocess import check_output
 
@@ -75,6 +74,15 @@ _CDECL_32_OPC = [
 
 is_64bit = ctypes.sizeof(ctypes.c_voidp) == 8
 
+# EAX bitmap explaination
+# [31:28] Reserved
+# [27:20] Extended Family
+# [19:16] Extended Model
+# [15:14] Reserved
+# [13:12] Processor Type
+# [11:8]  Family
+# [7:4]   Model
+# [3:0]   Stepping
 CPUIDS = {
         "Amber Lake":       ['0x806e9'],
         "AMD EPYC":         ['0x800f12'],
@@ -84,7 +92,8 @@ CPUIDS = {
         "Broadwell":        ['0x4067', '0x306d4', '0x5066', '0x406f'],
         "Canon Lake":       ['0x6066'],
         "Cascade Lake":     ['0x50655', '0x50656', '0x50657'],
-        "Coffee Lake":      ['0x806ea', '0x906ea', '0x906eb', '0x906ec', '0x906ed'],
+        "Coffee Lake":      [
+            '0x806ea', '0x906ea', '0x906eb', '0x906ec', '0x906ed'],
         "Haswell":          ['0x306c', '0x4065', '0x4066', '0x306f'],
         "Ice Lake":         ['0x706e'],
         "Ivy Bridge":       ['0x306a', '0x306e'],
@@ -96,6 +105,7 @@ CPUIDS = {
         "Penryn":           ['0x1067a'],
         "Sandy Bridge":     ['0x206a', '0x206d6', '0x206d7'],
         "Skylake":          ['0x406e3', '0x506e3', '0x50654', '0x50652'],
+        "Tiger Lake":       ['0x806c1'],
         "Westmere":         ['0x2065', '0x206c', '0x206f'],
         "Whisky Lake":      ['0x806eb', '0x806ec'],
         }

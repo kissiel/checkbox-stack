@@ -56,7 +56,7 @@ id: miscellanea/chvt
 requires:
  package.name == 'kbd'
 user: root
-command: cycle_vts
+command: cycle_vts.sh
 _description:
  PURPOSE:
      This test will check that the system can switch to a virtual terminal and back to X
@@ -75,14 +75,14 @@ _description:
  Run Firmware Test Suite (fwts) automated tests.
 environ: PLAINBOX_SESSION_SHARE
 command:
- checkbox-support-fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_results.log
+ checkbox-support-fwts_test -l "$PLAINBOX_SESSION_SHARE"/fwts_results.log
 
 plugin: attachment
 category_id: com.canonical.plainbox::miscellanea
 id: miscellanea/fwts_results.log
 requires: executable.name == 'fwts'
 command:
- [[ -e ${PLAINBOX_SESSION_SHARE}/fwts_results.log ]] && xz -c ${PLAINBOX_SESSION_SHARE}/fwts_results.log
+ [[ -e "${PLAINBOX_SESSION_SHARE}"/fwts_results.log ]] && xz -c "${PLAINBOX_SESSION_SHARE}"/fwts_results.log
 _description: Attaches the miscellanes/fwts_test results log to the submission.
 
 plugin: attachment
@@ -91,7 +91,7 @@ estimated_duration: 0.5
 id: miscellanea/fwts_results_hwe.log.gz
 requires: executable.name == 'fwts'
 command:
- [ -f $PLAINBOX_SESSION_SHARE/fwts_results_hwe.log ] && gzip -c $PLAINBOX_SESSION_SHARE/fwts_results_hwe.log
+ [ -f "$PLAINBOX_SESSION_SHARE"/fwts_results_hwe.log ] && gzip -c "$PLAINBOX_SESSION_SHARE"/fwts_results_hwe.log
 _description: Attaches the FWTS results log to the submission (to HWE)
 _summary: Attach FWTS log to submission (to HWE)
 
@@ -99,7 +99,7 @@ plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 id: miscellanea/ipmi_test
 requires:
- package.name == 'ipmitool' or executable.name == 'ipmitool'
+ executable.name == 'ipmitool'
  cpuinfo.platform != 's390x'
 user: root
 command: ipmi_test.py
@@ -119,7 +119,7 @@ requires:
 _summary: Test that system booted in EFI mode
 _description:
  Test to verify that the system booted in EFI mode with Secure Boot active.
-command: boot_mode_test efi
+command: boot_mode_test.py efi
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
@@ -131,7 +131,7 @@ depends: miscellanea/efi_boot_mode
 _summary: Test that system booted with Secure Boot active
 _description:
  Test to verify that the system booted in Secure Boot active.
-command: boot_mode_test secureboot
+command: boot_mode_test.py secureboot
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
@@ -143,7 +143,7 @@ depends: miscellanea/efi_boot_mode
 _summary: Test that system supports booting into firmware setup utility
 _description:
  Test that the system supports rebooting into the firmware setup utility.
-command: boot_mode_test reboot_firmware
+command: boot_mode_test.py reboot_firmware
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
@@ -173,7 +173,7 @@ _summary: Test that system booted from the network
 _description:
  Test to verify that the system booted from the network.
  Works only on EFI-based systems.
-command: efi-pxeboot
+command: efi-pxeboot.py
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
@@ -183,7 +183,7 @@ _summary: Test that system is not a pre-release version
 _description:
  Test to verify that the system uses production, rather
  than pre-release, versions of the kernel and the OS.
-command: check-prerelease
+command: check-prerelease.py
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
@@ -193,17 +193,17 @@ _summary: Test that kernel is not tainted
 _description:
  Test to verify that the kernel is not tainted by out-of-tree
  drivers, live patches, proprietary modules, etc.
-command: kernel_taint_test
+command: kernel_taint_test.py
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 id: miscellanea/bmc_info
 requires:
- package.name == 'ipmitool' or executable.name == 'ipmitool'
+ executable.name == 'ipmitool'
  cpuinfo.platform != 's390x'
 estimated_duration: 0.5
 user: root
-command: bmc_info
+command: bmc_info.py
 _description:
  This will gather some info about the BMC itself for diagnostic purposes. This
  will not works on non-IPMI systems like AMT and blade/sled type systems.
@@ -214,11 +214,11 @@ plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 id: miscellanea/cpus_are_not_samples
 requires:
-  package.name == 'dmidecode' or executable.name == 'dmidecode'
+  executable.name == 'dmidecode'
   dmi_present.state == 'supported'
 estimated_duration: 0.5
 user: root
-command: dmitest cpu-check
+command: dmitest.py cpu-check
 _description:
  Sanity check of CPU information; fails if CPU is an engineering sample
 _summary:
@@ -228,11 +228,11 @@ plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 id: miscellanea/dmitest_server
 requires:
-  package.name == 'dmidecode' or executable.name == 'dmidecode'
+  executable.name == 'dmidecode'
   dmi_present.state == 'supported'
 estimated_duration: 0.5
 user: root
-command: dmitest server
+command: dmitest.py server
 _description:
  Sanity check of DMI system identification data (for servers)
 _summary:
@@ -246,7 +246,7 @@ requires:
   dmi_present.state == 'supported'
 estimated_duration: 0.5
 user: root
-command: dmitest --test_versions --test_serials desktop
+command: dmitest.py --test_versions --test_serials desktop
 _description:
  Sanity check of DMI system identification data (for desktops & laptops)
 _summary:
@@ -258,20 +258,20 @@ id: miscellanea/is_laptop
 user: root
 _description:
     Determine if we need to run tests specific to portable computers that may not apply to desktops.
-command: check_is_laptop
+command: check_is_laptop.sh
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 id: miscellanea/apport-directory
 requires: package.name == 'apport'
-command: if [ -d /var/crash ]; then if [ $(find /var/crash -type f | grep -v .lock | wc -l) -eq 0 ]; then echo "/var/crash is empty"; else echo `ls /var/crash`; false; fi; else echo "/var/crash does not exist"; fi
+command: if [ -d /var/crash ]; then if [ "$(find /var/crash -type f | grep -c -v .lock)" -eq 0 ]; then echo "/var/crash is empty"; else ls /var/crash; false; fi; else echo "/var/crash does not exist"; fi
 _description:
  Test that the /var/crash directory doesn't contain anything. Lists the files contained within if it does, or echoes the status of the directory (doesn't exist/is empty)
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 id: miscellanea/sources-list
-command: sources_test $SOURCES_LIST "$REPOSITORIES"
+command: sources_test.sh "$SOURCES_LIST" "$REPOSITORIES"
 _description: Checks that a specified sources list file contains the requested repositories
 
 unit: template
@@ -334,14 +334,14 @@ _summary:
  Run FWTS OOPs check
 environ: PLAINBOX_SESSION_SHARE
 command:
- checkbox-support-fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_oops_results.log -t oops
+ checkbox-support-fwts_test -l "$PLAINBOX_SESSION_SHARE"/fwts_oops_results.log -t oops
 
 plugin: attachment
 category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 0.5
 id: miscellanea/oops_results.log
 command:
- [ -e ${PLAINBOX_SESSION_SHARE}/fwts_oops_results.log ] && xz -c ${PLAINBOX_SESSION_SHARE}/fwts_oops_results.log
+ [ -e "${PLAINBOX_SESSION_SHARE}"/fwts_oops_results.log ] && xz -c "${PLAINBOX_SESSION_SHARE}"/fwts_oops_results.log
 _description: Attaches the FWTS oops results log to the submission
 
 plugin:shell
@@ -358,14 +358,14 @@ _summary:
  Run FWTS OLOG check on ppc64el
 environ: PLAINBOX_SESSION_SHARE
 command:
- checkbox-support-fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_olog_results.log -t olog
+ checkbox-support-fwts_test -l "$PLAINBOX_SESSION_SHARE"/fwts_olog_results.log -t olog
 
 plugin: attachment
 category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 0.5
 id: miscellanea/olog_results.log
 command:
- [ -e ${PLAINBOX_SESSION_SHARE}/fwts_olog_results.log ] && xz -c ${PLAINBOX_SESSION_SHARE}/fwts_olog_results.log
+ [ -e "${PLAINBOX_SESSION_SHARE}"/fwts_olog_results.log ] && xz -c "${PLAINBOX_SESSION_SHARE}"/fwts_olog_results.log
 _description: Attaches the FWTS olog results log to the submission
 
 plugin:shell
@@ -380,21 +380,21 @@ _summary:
  Run FWTS Kernel Log check
 environ: PLAINBOX_SESSION_SHARE
 command:
- checkbox-support-fwts_test -l $PLAINBOX_SESSION_SHARE/fwts_klog_results.log -t oops
+ checkbox-support-fwts_test -l "$PLAINBOX_SESSION_SHARE"/fwts_klog_results.log -t oops
 
 plugin: attachment
 category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 0.5
 id: miscellanea/klog_results.log
 command:
- [ -e ${PLAINBOX_SESSION_SHARE}/fwts_klog_results.log ] && xz -c ${PLAINBOX_SESSION_SHARE}/fwts_klog_results.log
+ [ -e "${PLAINBOX_SESSION_SHARE}"/fwts_klog_results.log ] && xz -c "${PLAINBOX_SESSION_SHARE}"/fwts_klog_results.log
 _description: Attaches the FWTS klog results log to the submission
 
 plugin: shell
 category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 0.1
 id: miscellanea/get_maas_version
-command: maas-version-check
+command: maas-version-check.sh
 _description: If system was installed via MAAS from a cert server, the MAAS version used should be contained in /etc/installed-by-maas
 _summary: Verify MAAS version used to deploy the SUT
 
@@ -403,7 +403,7 @@ category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 30.0
 id: miscellanea/get_make_and_model
 user: root
-command: get_make_and_model
+command: get_make_and_model.py
 requires:
   dmi_present.state == 'supported'
 _description: Retrieve the computer's make and model for easier access than digging through the dmidecode output.
@@ -413,7 +413,7 @@ plugin: user-interact-verify
 category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 5.0
 id: miscellanea/device_check
-command: udev_resource -l VIDEO NETWORK WIRELESS BLUETOOTH DISK CAPTURE ACCELEROMETER | tee >([[ $DISPLAY ]] && zenity --text-info --title="Device report")
+command: udev_resource.py -l VIDEO NETWORK WIRELESS BLUETOOTH DISK CAPTURE ACCELEROMETER
 _summary: Device Check
 _purpose:
     Device check
@@ -429,7 +429,7 @@ estimated_duration: 20.0
 id: miscellanea/sosreport
 user: root
 requires: executable.name == 'sosreport'
-command: sosreport --batch -n lxd --tmp-dir $PLAINBOX_SESSION_SHARE
+command: sosreport --batch -n lxd --tmp-dir "$PLAINBOX_SESSION_SHARE"
 _summary: Generate baseline sosreport
 _description: Generates a baseline sosreport of logs and system data
 
@@ -440,7 +440,8 @@ id: miscellanea/sosreport_attachment
 depends: miscellanea/sosreport
 user: root
 command:
- SOSFILE=`ls -t $PLAINBOX_SESSION_SHARE/sosreport*xz | head -1`; [ -e ${SOSFILE} ] && cat $SOSFILE
+ # shellcheck disable=SC2012
+ SOSFILE=$(ls -t "$PLAINBOX_SESSION_SHARE"/sosreport*xz | head -1); [ -e "${SOSFILE}" ] && cat "$SOSFILE"
 _summary: Attach the baseline sosreport file
 
 plugin: shell
@@ -460,3 +461,35 @@ id: miscellanea/fan_stress_reaction
 command: fan_reaction_test.py
 _summary: Check if system fans react to CPU load
 _description: Check if system fans react to CPU load
+
+plugin: shell
+category_id: com.canonical.plainbox::miscellanea
+estimated_duration: 60
+id: miscellanea/debsums
+user: root
+requires: package.name == 'debsums'
+command: debsums -c
+_summary: Check the MD5 sums of installed Debian packages
+_description: Verify installed Debian package files against MD5 checksum lists from /var/lib/dpkg/info/*.md5sums.
+
+plugin: shell
+category_id: com.canonical.plainbox::miscellanea
+id: miscellanea/maas_user_check
+requires:
+ executable.name == 'ipmitool'
+ cpuinfo.platform != 's390x'
+estimated_duration: 0.5
+user: root
+command:
+ CHAN=0
+ while [ $CHAN -le 15 ]; do
+  if ipmitool user list $CHAN 2>/dev/null |grep -E "maas.*ADMINISTRATOR"; then
+   break
+  fi
+  (( CHAN+=1 ))
+ done
+_description:
+ This will verify that the maas user was successfully created with admin
+ privileges
+_summary:
+ Verify BMC user called 'maas' was successfully created

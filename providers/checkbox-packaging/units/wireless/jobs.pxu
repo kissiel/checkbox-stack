@@ -18,7 +18,7 @@ template-unit: job
 id: wireless/wireless_scanning_{{ interface }}
 _summary: Test system can discover Wi-Fi networks on {{ interface }}
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py scan {{ interface }}
 plugin: shell
 category_id: com.canonical.plainbox::wireless
@@ -42,8 +42,9 @@ _summary: Connect to WPA-encrypted 802.11b/g Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to 802.11b/g AP with wpa security
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py secured {{ interface }} "$WPA_BG_SSID" "$WPA_BG_PSK"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -64,8 +65,9 @@ _summary: Connect to unencrypted 802.11b/g Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to insecure 802.11b/g AP
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py open {{ interface }} "$OPEN_BG_SSID"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -86,8 +88,9 @@ _summary: Connect to WPA-encrypted 802.11n Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to 802.11n AP with wpa security
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py secured {{ interface }} "$WPA_N_SSID" "$WPA_N_PSK"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -108,8 +111,9 @@ _summary: Connect to unencrypted 802.11n Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to insecure 802.11n AP
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py open {{ interface }} "$OPEN_N_SSID"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -130,8 +134,9 @@ _summary: Connect to WPA-encrypted 802.11ac Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to 802.11ac AP with wpa security
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py secured {{ interface }} "$WPA_AC_SSID" "$WPA_AC_PSK"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -153,8 +158,9 @@ _summary: Connect to unencrypted 802.11ac Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to insecure 802.11ac AP
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py open {{ interface }} "$OPEN_AC_SSID"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -176,8 +182,9 @@ _summary: Connect to WPA-encrypted 802.11ax Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to 802.11ax AP with wpa security
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py secured {{ interface }} "$WPA_AX_SSID" "$WPA_AX_PSK"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -199,8 +206,9 @@ _summary: Connect to unencrypted 802.11ax Wi-Fi network on {{ interface }}
 _purpose:
   Check system can connect to insecure 802.11ax AP
 plugin: shell
+user: root
 command:
-  net_driver_info $NET_DRIVER_INFO
+  net_driver_info.py "$NET_DRIVER_INFO"
   wifi_nmcli_test.py open {{ interface }} "$OPEN_AX_SSID"
 category_id: com.canonical.plainbox::wireless
 estimated_duration: 30.0
@@ -221,17 +229,18 @@ requires:
 user: root
 environ: ROUTER_SSID ROUTER_PSK
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $ROUTER_SSID" EXIT
-    if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        gateway_ping_test --interface=$INTERFACE
+    if create_connection.py wifi "$ROUTER_SSID" --security=wpa --key="$ROUTER_PSK"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        gateway_ping_test.py --interface="$INTERFACE"
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
@@ -260,17 +269,18 @@ requires:
 user: root
 environ: ROUTER_SSID
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $ROUTER_SSID" EXIT
-    if create_connection wifi $ROUTER_SSID; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        gateway_ping_test --interface=$INTERFACE
+    if create_connection.py wifi "$ROUTER_SSID"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        gateway_ping_test.py --interface="$INTERFACE"
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
@@ -300,17 +310,18 @@ requires:
 user: root
 environ: ROUTER_SSID ROUTER_PSK
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $ROUTER_SSID" EXIT
-    if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        gateway_ping_test --interface=$INTERFACE
+    if create_connection.py wifi "$ROUTER_SSID" --security=wpa --key="$ROUTER_PSK"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        gateway_ping_test.py --interface="$INTERFACE"
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
@@ -340,17 +351,18 @@ requires:
 user: root
 environ: ROUTER_SSID
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $ROUTER_SSID" EXIT
-    if create_connection wifi $ROUTER_SSID; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        gateway_ping_test --interface=$INTERFACE
+    if create_connection.py wifi "$ROUTER_SSID"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        gateway_ping_test.py --interface="$INTERFACE"
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
@@ -380,17 +392,18 @@ requires:
 user: root
 environ: ROUTER_SSID ROUTER_PSK
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $ROUTER_SSID" EXIT
-    if create_connection wifi $ROUTER_SSID --security=wpa --key=$ROUTER_PSK; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        gateway_ping_test --interface=$INTERFACE
+    if create_connection.py wifi "$ROUTER_SSID" --security=wpa --key="$ROUTER_PSK"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        gateway_ping_test.py --interface="$INTERFACE"
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
@@ -420,17 +433,18 @@ requires:
 user: root
 environ: ROUTER_SSID
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $ROUTER_SSID" EXIT
-    if create_connection wifi $ROUTER_SSID; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        gateway_ping_test --interface=$INTERFACE
+    if create_connection.py wifi "$ROUTER_SSID"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        gateway_ping_test.py --interface="$INTERFACE"
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
@@ -459,17 +473,18 @@ requires:
 user: root
 environ: WPA_BG_SSID WPA_BG_PSK SERVER_IPERF
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $WPA_BG_SSID" EXIT
-    if create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        iperf -c $SERVER_IPERF -t 300 -i 30
+    if create_connection.py wifi "$WPA_BG_SSID" --security=wpa --key="$WPA_BG_PSK"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        iperf -c "$SERVER_IPERF" -t 300 -i 30
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
@@ -488,17 +503,18 @@ requires:
 user: root
 environ: WPA_BG_SSID WPA_BG_PSK SERVER_IPERF
 command:
+    # shellcheck disable=SC2064
     trap "nmcli con delete id $WPA_BG_SSID" EXIT
-    if create_connection wifi $WPA_BG_SSID --security=wpa --key=$WPA_BG_PSK; then
-        connect_wireless # lp:1471663
-        INTERFACE=`nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}'`
-        iw dev $INTERFACE link
-        iperf -c $SERVER_IPERF -t 300 -i 30 -u -b 100m -p 5050
+    if create_connection.py wifi "$WPA_BG_SSID" --security=wpa --key="$WPA_BG_PSK"; then
+        connect_wireless.sh # lp:1471663
+        INTERFACE=$(nmcli dev status | awk '/802-11-wireless|wifi/ {print $1}')
+        iw dev "$INTERFACE" link
+        iperf -c "$SERVER_IPERF" -t 300 -i 30 -u -b 100m -p 5050
         STATUS=$?
         # We reconnect the Ethernet connection if any (lp:1471663)
         WIRED=$(nmcli -f UUID,TYPE c | grep -oP ".*(?=\s+.*ethernet)")
-        if [[ ! -z $WIRED ]]; then
-            nmcli c up uuid $WIRED
+        if [[ -n $WIRED ]]; then
+            nmcli c up uuid "$WIRED"
         fi
         exit $STATUS
     else
