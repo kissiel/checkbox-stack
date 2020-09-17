@@ -33,6 +33,7 @@ include:
     miscellanea/oops                               certification-status=blocker
     miscellanea/oops_results.log
     miscellanea/fan_stress_reaction
+    miscellanea/debsums
 bootstrap_include:
     fwts
 
@@ -62,6 +63,7 @@ mandatory_include:
     miscellanea/cpuid
     miscellanea/get_make_and_model
     miscellanea/get_maas_version               certification-status=blocker
+    miscellanea/maas_user_check
     miscellanea/efi_boot_mode                  certification-status=blocker
     miscellanea/secure_boot_mode
     miscellanea/reboot_firmware
@@ -74,4 +76,23 @@ mandatory_include:
     miscellanea/dmitest_server
     miscellanea/sosreport
     miscellanea/sosreport_attachment
+include:
+
+id: server-miscellaneous-regression
+unit: test plan
+_name: Miscellaneous server cert tests
+_description:
+ Miscellaneous server tests (log checks, dmi data, etc)
+mandatory_include:
+    miscellanea/submission-resources
+    miscellanea/cpuid
+    miscellanea/efi_boot_mode                  certification-status=blocker
+    miscellanea/reboot_firmware
+    miscellanea/efi_pxeboot
+    miscellanea/kernel_taint_test
+    miscellanea/cpus_are_not_samples
+    miscellanea/ipmi_test                      certification-status=blocker
+    miscellanea/bmc_info
+    miscellanea/dmitest_server
+    miscellanea/maas_user_check
 include:

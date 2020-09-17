@@ -8,6 +8,22 @@ requires:
 command: cat /proc/asound/cards
 _description: Test to detect audio devices
 
+plugin: shell
+category_id: com.canonical.plainbox::audio
+id: audio/valid-sof-firmware-sig
+requires:
+ device.category == 'AUDIO'
+ package.name == 'linux-firmware'
+command:
+ for fw in /lib/firmware/intel/sof/sof-*.ri;
+ do
+     # shellcheck disable=SC2016
+     if xxd "${fw}" | grep -q '$CPD'; then
+         sof_ri_info.py --valid "${fw}"
+     fi
+ done
+_description: Valid sof firmware signature
+
 plugin: user-interact-verify
 category_id: com.canonical.plainbox::audio
 id: audio/playback_auto
@@ -19,11 +35,11 @@ requires:
  package.name == 'gir1.2-gst-plugins-base-0.10' or package.name == 'gir1.2-gst-plugins-base-1.0'
  package.name == 'pulseaudio-utils'
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-  audio_settings set --device=pci --volume=50
-  gst_pipeline_test -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+  audio_settings.py set --device=pci --volume=50
+  gst_pipeline_test.py -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
   EXIT_CODE=$?
-  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
   exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -51,11 +67,11 @@ requires:
  package.name == 'pulseaudio-utils'
 flags: also-after-suspend-manual
 command:
- audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
- audio_settings set --verbose --device=hdmi --volume=50
- gst_pipeline_test -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+ audio_settings.py store --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+ audio_settings.py set --verbose --device=hdmi --volume=50
+ gst_pipeline_test.py -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
  EXIT_CODE=$?
- audio_settings restore --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings.py restore --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
  exit $EXIT_CODE
 _purpose:
     HDMI audio interface verification
@@ -80,11 +96,11 @@ requires:
  package.name == 'pulseaudio-utils'
 flags: also-after-suspend-manual
 command:
- audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
- audio_settings set --verbose --device=hdmi --volume=50
- gst_pipeline_test -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+ audio_settings.py store --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+ audio_settings.py set --verbose --device=hdmi --volume=50
+ gst_pipeline_test.py -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
  EXIT_CODE=$?
- audio_settings restore --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings.py restore --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
  exit $EXIT_CODE
 _purpose:
     DisplayPort audio interface verification
@@ -110,11 +126,11 @@ requires:
  package.name == 'pulseaudio-utils'
 flags: also-after-suspend-manual
 command:
- audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
- audio_settings set --verbose --device=hdmi --volume=50
- gst_pipeline_test -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+ audio_settings.py store --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+ audio_settings.py set --verbose --device=hdmi --volume=50
+ gst_pipeline_test.py -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
  EXIT_CODE=$?
- audio_settings restore --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings.py restore --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
  exit $EXIT_CODE
 _purpose:
     Thunderbolt audio interface verification
@@ -140,11 +156,11 @@ requires:
  package.name == 'pulseaudio-utils'
 flags: also-after-suspend-manual
 command:
- audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
- audio_settings set --verbose --device=hdmi --volume=50
- gst_pipeline_test -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+ audio_settings.py store --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+ audio_settings.py set --verbose --device=hdmi --volume=50
+ gst_pipeline_test.py -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
  EXIT_CODE=$?
- audio_settings restore --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings.py restore --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
  exit $EXIT_CODE
 _purpose:
     Thunderbolt audio interface verification
@@ -171,11 +187,11 @@ requires:
  package.name == 'pulseaudio-utils'
 flags: also-after-suspend-manual
 command:
- audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
- audio_settings set --verbose --device=hdmi --volume=50
- gst_pipeline_test -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+ audio_settings.py store --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+ audio_settings.py set --verbose --device=hdmi --volume=50
+ gst_pipeline_test.py -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
  EXIT_CODE=$?
- audio_settings restore --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings.py restore --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
  exit $EXIT_CODE
 _purpose:
     DisplayPort audio via USB Type-C port interface verification
@@ -202,11 +218,11 @@ requires:
  package.name == 'pulseaudio-utils'
 flags: also-after-suspend-manual
 command:
- audio_settings store --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
- audio_settings set --verbose --device=hdmi --volume=50
- gst_pipeline_test -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+ audio_settings.py store --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+ audio_settings.py set --verbose --device=hdmi --volume=50
+ gst_pipeline_test.py -t 2 --device hdmi 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
  EXIT_CODE=$?
- audio_settings restore --verbose --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings.py restore --verbose --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
  exit $EXIT_CODE
 _purpose:
     HDMI audio via USB Type-C port interface verification
@@ -227,11 +243,11 @@ requires:
  package.name == 'gir1.2-gst-plugins-base-0.10' or package.name == 'gir1.2-gst-plugins-base-1.0'
  package.name == 'pulseaudio-utils'
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-  audio_settings set --device=pci --volume=50
-  gst_pipeline_test -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+  audio_settings.py set --device=pci --volume=50
+  gst_pipeline_test.py -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
   EXIT_CODE=$?
-  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
   exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -253,11 +269,11 @@ requires:
  package.name == 'pulseaudio-utils'
  package.name == 'gstreamer1.0-plugins-good' or package.name == 'gstreamer0.10-plugins-good'
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-  audio_settings set --device=pci --volume=50
-  alsa_record_playback
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+  audio_settings.py set --device=pci --volume=50
+  alsa_record_playback.sh
   EXIT_CODE=$?
-  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
   exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -280,11 +296,11 @@ requires:
  package.name == 'pulseaudio-utils'
  package.name == 'gstreamer1.0-plugins-good' or package.name == 'gstreamer0.10-plugins-good'
 command:
- audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
- audio_settings set --device=pci --volume=50
- alsa_record_playback
+ audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+ audio_settings.py set --device=pci --volume=50
+ alsa_record_playback.sh
  EXIT_CODE=$?
- audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+ audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
  exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -306,11 +322,11 @@ requires:
  package.name == 'pulseaudio-utils'
  package.name == 'gstreamer1.0-plugins-good' or package.name == 'gstreamer0.10-plugins-good'
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-  audio_settings set --device=usb --volume=50
-  alsa_record_playback
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+  audio_settings.py set --device=usb --volume=50
+  alsa_record_playback.sh
   EXIT_CODE=$?
-  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
   exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -334,7 +350,7 @@ requires:
  package.name == 'gstreamer1.0-pulseaudio'
  package.name == 'alsa-base'
  device.category == 'AUDIO'
-command: audio_test
+command: audio_test.py
 _description:
  Play back a sound on the default output and listen for it on the
  default input.
@@ -343,7 +359,7 @@ plugin: shell
 category_id: com.canonical.plainbox::audio
 id: audio/alsa_info_collect
 estimated_duration: 2.0
-command: alsa_info --no-dialog --no-upload --output ${PLAINBOX_SESSION_SHARE}/alsa_info.log
+command: alsa_info --no-dialog --no-upload --output "${PLAINBOX_SESSION_SHARE}"/alsa_info.log
 _description:
  Collect audio-related system information. This data can be used to
  simulate this computer's audio subsystem and perform more detailed tests
@@ -354,7 +370,7 @@ category_id: com.canonical.plainbox::audio
 id: audio/alsa_info_attachment
 depends: audio/alsa_info_collect
 estimated_duration: 1.0
-command: [ -e ${PLAINBOX_SESSION_SHARE}/alsa_info.log ] && cat ${PLAINBOX_SESSION_SHARE}/alsa_info.log
+command: [ -e "${PLAINBOX_SESSION_SHARE}"/alsa_info.log ] && cat "${PLAINBOX_SESSION_SHARE}"/alsa_info.log
 _description:
  Attaches the audio hardware data collection log to the results.
 
@@ -378,7 +394,7 @@ estimated_duration: 1.0
 requires:
  package.name == 'pulseaudio-utils'
  device.category == 'AUDIO'
-command: volume_test --minvol 1 --maxvol 100
+command: volume_test.py --minvol 1 --maxvol 100
 _description:
  This test will verify that the volume levels are at an acceptable level on
  your local system.  The test will validate that the volume is greater than
@@ -398,11 +414,12 @@ _description:
       Check that external line out connection works correctly
  STEPS:
       1. Insert cable to speakers (with built-in amplifiers) on the line out port
-      2. Open system sound preferences, 'Output' tab, select 'Line-out' on the connector list. Commence the test
-      3. On the system sound preferences, select 'Internal Audio' on the device list and click 'Test Speakers' to check left and right channel
+      2. Open system sound preferences, 'Output' tab, select 'Line Out' on the connector list. Commence the test
+      3. On the system sound preferences, click 'Test Sound' to check left and right channel
  VERIFICATION:
-      1. Do you hear a sound in the speakers? The internal speakers should *not* be muted automatically
-      2. Do you hear the sound coming out on the corresponding channel?
+      1. Do you see internal speakers? The internal speakers should be replaced by external speaker from Line out port, if any
+      2. Do you hear the sound in the internal speakers? The internal speakers should be muted automatically
+      3. Do you hear the sound coming out on the corresponding channel by external speakers from Line out port?
 
 plugin: user-interact-verify
 category_id: com.canonical.plainbox::audio
@@ -415,11 +432,11 @@ requires:
  package.name == 'pulseaudio-utils'
  package.name == 'gstreamer1.0-plugins-good' or package.name == 'gstreamer0.10-plugins-good'
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-  audio_settings set --device=pci --volume=50
-  alsa_record_playback
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+  audio_settings.py set --device=pci --volume=50
+  alsa_record_playback.sh
   EXIT_CODE=$?
-  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
   exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -438,7 +455,7 @@ estimated_duration: 60.0
 requires:
  device.category == 'AUDIO'
  package.name == 'pulseaudio-utils'
-command: pulse-active-port-change sinks
+command: pulse_active_port_change.py sinks
 _description:
  PURPOSE:
      Check that system detects speakers or headphones being plugged in
@@ -459,7 +476,7 @@ estimated_duration: 60.0
 requires:
  device.category == 'AUDIO'
  package.name == 'pulseaudio-utils'
-command: pulse-active-port-change sources
+command: pulse_active_port_change.py sources
 _description:
  PURPOSE:
      Check that system detects a microphone being plugged in
@@ -485,11 +502,11 @@ requires:
  package.name == 'gir1.2-gst-plugins-base-0.10' or package.name == 'gir1.2-gst-plugins-base-1.0'
  package.name == 'pulseaudio-utils'
 command:
-    audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-    audio_settings set --device=pci --volume=50
-    gst_pipeline_test -t 10 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+    audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+    audio_settings.py set --device=pci --volume=50
+    gst_pipeline_test.py -t 10 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
     EXIT_CODE=$?
-    audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+    audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
     exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -513,11 +530,11 @@ requires:
  package.name == 'gir1.2-gst-plugins-base-0.10' or package.name == 'gir1.2-gst-plugins-base-1.0'
  package.name == 'pulseaudio-utils'
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-  audio_settings set --device=pci --volume=50
-  gst_pipeline_test -t 10 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+  audio_settings.py set --device=pci --volume=50
+  gst_pipeline_test.py -t 10 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
   EXIT_CODE=$?
-  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
   exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -552,11 +569,11 @@ requires:
  package.name == 'gir1.2-gst-plugins-base-0.10' or package.name == 'gir1.2-gst-plugins-base-1.0'
  package.name == 'pulseaudio-utils'
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
-  audio_settings set --device=pci --volume=50
-  gst_pipeline_test -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
+  audio_settings.py set --device=pci --volume=50
+  gst_pipeline_test.py -t 2 'audiotestsrc wave=sine freq=512 ! audioconvert ! audioresample ! autoaudiosink'
   EXIT_CODE=$?
-  audio_settings restore --file=$PLAINBOX_SESSION_SHARE/pulseaudio_settings
+  audio_settings.py restore --file="$PLAINBOX_SESSION_SHARE"/pulseaudio_settings
   exit $EXIT_CODE
 _description:
  PURPOSE:
@@ -582,7 +599,7 @@ requires:
  package.name == 'gstreamer1.0-pulseaudio'
  package.name == 'alsa-base'
  device.category == 'AUDIO'
-command: audio_test
+command: audio_test.py
 _description:
  Play back a sound on the default output and listen for it on the
  default input, after suspending 30 times.
@@ -595,7 +612,7 @@ depends: power-management/suspend_30_cycles
 requires:
  package.name == 'pulseaudio-utils'
  device.category == 'AUDIO'
-command: volume_test --minvol 1 --maxvol 100
+command: volume_test.py --minvol 1 --maxvol 100
 _description:
  This test will verify that the volume levels are at an acceptable level on
  your local system.  The test will validate that the volume is greater than
@@ -614,8 +631,8 @@ requires:
  package.name == 'alsa-base'
 _description: Record mixer settings after suspending 30 times.
 command:
-  audio_settings store --file=$PLAINBOX_SESSION_SHARE/audio_settings_after_suspend_30_cycles
-  diff $PLAINBOX_SESSION_SHARE/audio_settings_before_suspend $PLAINBOX_SESSION_SHARE/audio_settings_after_suspend_30_cycles
+  audio_settings.py store --file="$PLAINBOX_SESSION_SHARE"/audio_settings_after_suspend_30_cycles
+  diff "$PLAINBOX_SESSION_SHARE"/audio_settings_before_suspend "$PLAINBOX_SESSION_SHARE"/audio_settings_after_suspend_30_cycles
 
 id: audio/detect-playback-devices
 _summary: Check that at least one audio playback device exits
@@ -626,9 +643,9 @@ imports: from com.canonical.plainbox import manifest
 requires:
   manifest.has_audio_playback == 'True'
 command:
- COUNT=$(alsa_pcm_info | grep Playback | wc -l)
+ COUNT=$(alsa_pcm_info.py | grep -c Playback)
  echo "Count: $COUNT"
- if [ $COUNT -eq 0 ]; then
+ if [ "$COUNT" -eq 0 ]; then
   exit 1
  fi
 estimated_duration: 1s
@@ -642,9 +659,9 @@ imports: from com.canonical.plainbox import manifest
 requires:
   manifest.has_audio_capture == 'True'
 command:
- COUNT=$(alsa_pcm_info | grep Capture | wc -l)
+ COUNT=$(alsa_pcm_info.py | grep -c Capture)
  echo "Count: $COUNT"
- if [ $COUNT -eq 0 ]; then
+ if [ "$COUNT" -eq 0 ]; then
    exit 1
  fi
 esimated_duration: 1s

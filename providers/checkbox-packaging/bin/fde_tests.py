@@ -20,25 +20,27 @@ import re
 import subprocess as sp
 import sys
 
+from checkbox_support.snap_utils.system import get_series
+
 
 def main():
     on_desktop = len(sys.argv) > 1 and sys.argv[1] == 'desktop'
 
-    # the mountpoint corresponding to the on disk encrypted partition
-    base_mount = '/' if on_desktop else '/writable'
-
     # discover the underlying mount point for the encrypted part
     if on_desktop:
-        cmd = 'findmnt {} -n -o SOURCE'.format(base_mount)
+        cmd = 'findmnt {} -n -o SOURCE'.format('/')
     else:
-        cmd = 'findfs LABEL=writable'
+        if int(get_series()) >= 20:
+            cmd = 'findfs LABEL=ubuntu-data'
+        else:
+            cmd = 'findfs LABEL=writable'
     print('+ {}'.format(cmd))
     try:
         source = sp.check_output(cmd, shell=True).decode(
             sys.stdout.encoding).strip()
     except sp.CalledProcessError:
         raise SystemExit(
-            'ERROR: could not find mountpoint for {}'.format(base_mount))
+            'ERROR: could not find mountpoint for the encrypted partition')
     print(source, '\n')
 
     # resolve the source to an actual device node
@@ -93,11 +95,11 @@ def main():
     print(cryptinfo, '\n')
 
     # use the type as the final arbiter of success
-    regexp = re.compile(r'type:\ *LUKS1')
+    regexp = re.compile(r'type:\ *LUKS\d$', re.MULTILINE)
     if regexp.search(cryptinfo):
         print('Full Disk Encryption is operational on this device')
     else:
-        raise SystemExit('ERROR: cryptsetup did not report LUKS1 in use')
+        raise SystemExit('ERROR: cryptsetup did not report LUKS in use')
 
 
 if __name__ == "__main__":
