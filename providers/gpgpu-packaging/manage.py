@@ -33,7 +33,7 @@ class SourceDistributionCommandExt(SourceDistributionCommand):
     # Overridden version of SourceDistributionCommand that handles launcher/
     __doc__ = SourceDistributionCommand.__doc__
     _INCLUDED_ITEMS = SourceDistributionCommand._INCLUDED_ITEMS + [
-        'COPYING', 'launcher']
+        'launcher']
 
 
 @manage_py_extension
@@ -79,7 +79,7 @@ class InstallCommandExt(InstallCommand):
 setup(
     name='checkbox-provider-gpgpu',
     namespace='com.canonical.certification',
-    version="0.4.0.dev0",
+    version="0.2.0rc1",
     description=N_("Checkbox Provider for GPGPU Testing"),
     gettext_domain='checkbox-provider-gpgpu',
 )
