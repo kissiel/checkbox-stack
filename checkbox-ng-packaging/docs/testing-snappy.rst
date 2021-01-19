@@ -22,20 +22,28 @@ results.
 Installation
 ------------
 
-Installing Ubuntu Core on KVM
-`````````````````````````````
+Installing Ubuntu Core
+``````````````````````
 
-Follow the `Ubuntu tutorial <https://www.ubuntu.com/download/iot/kvm>`_
-to install Ubuntu Core on KVM.
+You can try out Ubuntu Core on a range of devices or in a virtual machine. For
+downloads and instructions see this `page <https://ubuntu.com/download/iot>`.
 
 Installing Checkbox Snap
 ````````````````````````
 
-Now you are ready to install the Checkbox snap,
-install it straight from the store::
+Now you are ready to install the Checkbox snap your Ubuntu Core device. It can
+be found in the Ubuntu store and there are versions targetting each Ubuntu Core
+series. For Series 20::
 
-    $ snap install checkbox-snappy --devmode
+    $ snap install checkbox-snappy --devmode --channel=20/stable
 
+For Ubuntu Core Series 18::
+
+    $ snap install checkbox-snappy --devmode --channel=18/stable
+
+For Ubuntu Core Series 16::
+
+    $ snap install checkbox-snappy --devmode --channel=16/stable
 
 Running Checkbox
 ----------------
@@ -99,7 +107,7 @@ Commands to select the tests to rerun are the same used to select tests in the
 first selection screen. Here you can re-run your selection with ``R`` or finish
 the session by pressing ``F``.
 
-Checkbox will then print the the test results in the terminal and save them in
+Checkbox will then print the test results in the terminal and save them in
 different formats locally on the device (and print their respective filenames):
 
 .. image:: _images/checkbox-snappy-6-test-results.png
