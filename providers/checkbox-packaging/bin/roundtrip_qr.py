@@ -54,7 +54,7 @@ def capture_webcam(name):
 
 
 def generate_data():
-    return ''.join(random.choice(string.ascii_letters) for i in range(20))
+    return ''.join(random.choice(string.ascii_letters) for i in range(10))
 
 
 def generate_qr_code(data):
@@ -62,11 +62,11 @@ def generate_qr_code(data):
 
 
 def display_code(qr):
-    with open('/dev/tty1', 'wb+', buffering=0) as term:
+    with open('/dev/tty0', 'wb+', buffering=0) as term:
         # clear the tty so the qr is always printed at the top of the sceen
         term.write(str.encode('\033c'))
         # print the qr code
-        term.write(qr.terminal(quiet_zone=5).encode())
+        term.write(qr.terminal(quiet_zone=1).encode())
 
 
 def decode_image(filename):
