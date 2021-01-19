@@ -6,13 +6,16 @@
 #    Authors: Jonathan Cave <jonathan.cave@canonical.com>
 
 import argparse
-import io
 import os
 import string
 import sys
 
+from checkbox_support.snap_utils.asserts import decode
+from checkbox_support.snap_utils.asserts import model_to_resource
+from checkbox_support.snap_utils.asserts import serial_to_resource
 from checkbox_support.snap_utils.snapd import Snapd
 from checkbox_support.snap_utils.system import get_kernel_snap
+from checkbox_support.snap_utils.system import get_series
 
 from collections import namedtuple
 
@@ -24,53 +27,25 @@ def slugify(_string):
     return ''.join(c if c in valid_chars else '_' for c in _string)
 
 
-def http_to_resource(assertion_stream):
-    """ Super naive Assertion parser
-
-    No attempt to handle assertions with a body. Discards signatures based
-    on lack of colon characters. Update: need to be less naive about
-    gadget and kernel names on UC18
-    """
-    count = int(assertion_stream.headers['X-Ubuntu-Assertions-Count'])
-    if count > 0:
-        for line in io.StringIO(assertion_stream.text):
-            if line.strip() == "":
-                print()
-            if line.count(':') == 1:
-                key, val = [x.strip() for x in line.split(':')]
-                if key in ('gadget', 'kernel'):
-                    if '=' in val:
-                        snap, track = [x.strip() for x in val.split('=')]
-                        print('{}: {}'.format(key, snap))
-                        print('{}_track: {}'.format(key, track))
-                        continue
-                print(line.strip())
-    return count
-
-
 class ModelAssertion():
 
     def invoked(self):
-        count = http_to_resource(Snapd().get_assertions('model'))
-        if count == 0:
-            # Print a dummy assertion - not nice but really trick to use
-            # plainbox resources without some defualt value
-            print('type: model')
-            print('authority-id: None')
-            print('model: None')
+        models = decode(Snapd().get_assertions('model'))
+        for m in models:
+            r = model_to_resource(m)
+            for key, val in r.items():
+                print('{}: {}'.format(key, val))
             print()
 
 
 class SerialAssertion():
 
     def invoked(self):
-        count = http_to_resource(Snapd().get_assertions('serial'))
-        if count == 0:
-            # Print a dummy assertion - not nice but really trick to use
-            # plainbox resources without some defualt value
-            print('type: serial')
-            print('authority-id: None')
-            print('serial: None')
+        serials = decode(Snapd().get_assertions('serial'))
+        for s in serials:
+            r = serial_to_resource(s)
+            for key, val in r.items():
+                print('{}: {}'.format(key, val))
             print()
 
 
@@ -202,6 +177,10 @@ class Features():
         encryption as it ensures that the kernel.img is available to the
         bootloader prior to decrypting the writable partition.
         '''
+        # UC 20 no longer requires file presence
+        if int(get_series()) >= 20:
+            print('force_kernel_extraction: True')
+            return
         snap = get_kernel_snap()
         if snap is not None:
             feature_f = '/snap/{}/current/meta/force-kernel-extraction'.format(
