@@ -134,6 +134,7 @@ class UdevadmDevice(object):
         "_bits",
         "_stack",
         "_bus",
+        "_category",
         "_interface",
         "_mac",
         "_product",
@@ -155,6 +156,7 @@ class UdevadmDevice(object):
         self._bits = bits
         self._stack = stack
         self._bus = None
+        self._category = None
         self._interface = None
         self._mac = None
         self._product = None
@@ -234,6 +236,8 @@ class UdevadmDevice(object):
 
     @property
     def category(self):
+        if self._category is not None:
+            return self._category
         if "IFINDEX" in self._environment:
             if "DEVTYPE" in self._environment:
                 devtype = self._environment["DEVTYPE"]
@@ -546,16 +550,24 @@ class UdevadmDevice(object):
             if self._environment["SUBSYSTEM"] == "hidraw":
                 return "HIDRAW"
             if self._environment["SUBSYSTEM"] == "video4linux":
-                return "CAPTURE"
+                if self.driver not in ('bcm2835-codec', 'bcm2835-isp'):
+                    # Ignore raspberrypi memory to memory (M2M) devices,
+                    # for the video decoder, encoder, and ISP resize.
+                    return "CAPTURE"
             # special device for PiCamera
             if self._environment["SUBSYSTEM"] == "vchiq":
                 return "MMAL"
+            if self._environment["SUBSYSTEM"] == "watchdog":
+                return "WATCHDOG"
 
         if ('RFKILL_TYPE' in self._environment and
                 'RFKILL_NAME' in self._environment):
             if self._environment["RFKILL_TYPE"] == 'bluetooth':
                 if self._environment["RFKILL_NAME"].startswith('hci'):
                     return 'BLUETOOTH'
+
+        if "/dev/dri/card" in self._environment.get("DEVNAME", ""):
+            return "DRI"
 
         # Any devices that have a product name and proper vendor and product
         # IDs, but had no other category, are lumped together in OTHER.
@@ -571,6 +583,10 @@ class UdevadmDevice(object):
         # up to downstream users of this class to decide what to do with
         # those devices.
         return None
+
+    @category.setter
+    def category(self, value):
+        self._category = value
 
     @property
     def major(self):
@@ -908,6 +924,10 @@ class UdevadmDevice(object):
             if "/dev/mapper" in self._environment["DEVLINKS"]:
                 return self.name
 
+        if "/dev/dri/card" in self._environment.get("DEVNAME", ""):
+            if "ID_FOR_SEAT" in self._environment:
+                return self._environment["ID_FOR_SEAT"]
+
         return None
 
     @product.setter
@@ -1088,6 +1108,9 @@ class UdevadmParser(object):
         # Do not ignore PiCamera
         if device.bus == "vchiq":
             return False
+
+        if device.category == "WATCHDOG":
+            return "virtual" in device.path
 
         # Ignore devices without bus information
         if not device.bus:
@@ -1273,6 +1296,18 @@ class UdevadmParser(object):
                 if d._stack:
                     parent = d._stack[-1]
                     HID_devices_path_list.append(parent._raw_path)
+
+        video_devices = list(self.devices.values())
+        for device in video_devices:
+            if device.category == "VIDEO":
+                for d in video_devices:
+                    if d.category == "DRI":
+                        self.devices.pop(d._raw_path, None)
+                break
+        else:
+            for d in self.devices.values():
+                if d.category == "DRI":
+                    d.category = "VIDEO"
 
         for device in list(self.devices.values()):
             if device.category == 'HIDRAW' and device._stack:

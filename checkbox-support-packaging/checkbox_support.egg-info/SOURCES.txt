@@ -49,6 +49,7 @@ checkbox_support/parsers/modprobe.py
 checkbox_support/parsers/netplan.py
 checkbox_support/parsers/pactl.py
 checkbox_support/parsers/pci_config.py
+checkbox_support/parsers/sysfs_usb.py
 checkbox_support/parsers/udevadm.py
 checkbox_support/parsers/xinput.py
 checkbox_support/parsers/tests/__init__.py
@@ -64,6 +65,7 @@ checkbox_support/parsers/tests/test_modinfo.py
 checkbox_support/parsers/tests/test_modprobe.py
 checkbox_support/parsers/tests/test_pactl.py
 checkbox_support/parsers/tests/test_pci_config.py
+checkbox_support/parsers/tests/test_sysfs_usb.py
 checkbox_support/parsers/tests/test_udevadm.py
 checkbox_support/parsers/tests/test_version.py
 checkbox_support/parsers/tests/test_xinput.py
@@ -140,6 +142,8 @@ checkbox_support/parsers/tests/udevadm_data/REALTEK_CARD_READER_AND_NVME.txt
 checkbox_support/parsers/tests/udevadm_data/RNDIS.txt
 checkbox_support/parsers/tests/udevadm_data/RPI2_WITH_CAMERA.txt
 checkbox_support/parsers/tests/udevadm_data/RPI2_WITH_CAMERA_V4L2.txt
+checkbox_support/parsers/tests/udevadm_data/RPI3B.txt
+checkbox_support/parsers/tests/udevadm_data/RPI4B4G.txt
 checkbox_support/parsers/tests/udevadm_data/SAMSUNG_N310.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK_REBOOTED.txt
@@ -148,6 +152,7 @@ checkbox_support/parsers/tests/udevadm_data/VESTA_300.txt
 checkbox_support/parsers/tests/udevadm_data/VIRT_CDROM.txt
 checkbox_support/parsers/tests/udevadm_data/VM_WITH_FLOPPY.txt
 checkbox_support/parsers/tests/udevadm_data/XEON.txt
+checkbox_support/parsers/tests/udevadm_data/ZCU104.txt
 checkbox_support/scripts/__init__.py
 checkbox_support/scripts/audio_settings.py
 checkbox_support/scripts/eddystone_scanner.py
@@ -162,9 +167,13 @@ checkbox_support/scripts/tests/__init__.py
 checkbox_support/scripts/tests/test_audio_settings.py
 checkbox_support/scripts/tests/test_gputest_benchmark.py
 checkbox_support/snap_utils/__init__.py
+checkbox_support/snap_utils/asserts.py
 checkbox_support/snap_utils/config.py
 checkbox_support/snap_utils/snapd.py
 checkbox_support/snap_utils/system.py
+checkbox_support/snap_utils/tests/__init__.py
+checkbox_support/snap_utils/tests/test_asserts.py
+checkbox_support/snap_utils/tests/test_config.py
 checkbox_support/tests/__init__.py
 checkbox_support/tests/test_human_readable_bytes.py
 checkbox_support/vendor/__init__.py
