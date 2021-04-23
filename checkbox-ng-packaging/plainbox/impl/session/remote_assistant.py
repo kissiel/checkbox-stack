@@ -24,6 +24,7 @@ import os
 import pwd
 import time
 from collections import namedtuple
+from contextlib import suppress
 from tempfile import SpooledTemporaryFile
 from threading import Thread, Lock
 from subprocess import CalledProcessError, check_output
@@ -229,7 +230,7 @@ class RemoteSessionAssistant():
                     'unix:path=/run/user/{}/bus'.format(uid)
             }
         except CalledProcessError:
-            return None
+            return {}
 
     def prepare_extra_env(self):
         # If possible also set the DISPLAY env var
@@ -260,6 +261,7 @@ class RemoteSessionAssistant():
                     'DBUS_SESSION_BUS_ADDRESS':
                         'unix:path=/run/user/{}/bus'.format(uid)
                 }
+        return {}
 
     @allowed_when(Idle)
     def start_session(self, configuration):
@@ -284,19 +286,11 @@ class RemoteSessionAssistant():
         else:
             self._normal_user = self._launcher.normal_user
             if not self._normal_user:
-                try:
-                    self._normal_user = pwd.getpwuid(1000).pw_name
-                    _logger.warning(
-                        ("normal_user not supplied via config(s). "
-                         "non-root jobs will run as %s"), self._normal_user)
-                except KeyError:
-                    raise RuntimeError(
-                        ("normal_user not supplied via config(s). "
-                         "Username for uid 1000 not found"))
+                self._normal_user = _guess_normal_user()
         runner_kwargs = {
             'normal_user_provider': lambda: self._normal_user,
             'stdin': self._pipe_to_subproc,
-            'extra_env': self.prepare_extra_env(),
+            'extra_env': self.prepare_extra_env,
         }
         self._sa.start_new_session(session_title, UnifiedRunner, runner_kwargs)
         new_blob = json.dumps({
@@ -645,7 +639,7 @@ class RemoteSessionAssistant():
         runner_kwargs = {
             'normal_user_provider': lambda: self._normal_user,
             'stdin': self._pipe_to_subproc,
-            'extra_env': self.prepare_extra_env(),
+            'extra_env': self.prepare_extra_env,
         }
         meta = self._sa.resume_session(session_id, runner_kwargs=runner_kwargs)
         app_blob = json.loads(meta.app_blob.decode("UTF-8"))
@@ -704,6 +698,9 @@ class RemoteSessionAssistant():
         self._reset_sa()
 
     def transmit_input(self, text):
+        if not text:
+            self._pipe_from_master.close()
+            return
         self._pipe_from_master.write(text)
         self._pipe_from_master.flush()
 
@@ -733,3 +730,17 @@ class RemoteSessionAssistant():
         exporter.dump_from_session_manager(self._sa._manager, exported_stream)
         exported_stream.flush()
         return exported_stream
+
+def _guess_normal_user():
+    _logger.warning("normal_user not supplied via config(s).")
+    for entry in pwd.getpwall():
+        if entry.pw_name == 'ubuntu':
+            _logger.warning("Using `ubuntu` user")
+            return 'ubuntu'
+    with suppress(KeyError):
+        user = pwd.getpwuid(1000).pw_name
+        _logger.warning("Using `%s` user", user)
+        return user
+    raise RuntimeError(
+        ("normal_user not supplied via config(s). "
+            "User `ubuntu` and username for uid 1000 were not found"))

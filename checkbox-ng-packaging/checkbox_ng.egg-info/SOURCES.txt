@@ -37,6 +37,7 @@ contrib/checkbox-sru.service
 docs/bugs.rst
 docs/conf.py
 docs/configs.rst
+docs/contributing.rst
 docs/custom-app.rst
 docs/glossary.rst
 docs/index.rst
