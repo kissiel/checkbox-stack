@@ -147,6 +147,7 @@ checkbox_support/parsers/tests/udevadm_data/RPI4B4G.txt
 checkbox_support/parsers/tests/udevadm_data/SAMSUNG_N310.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK.txt
 checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH170_WITH_USB_DISK_REBOOTED.txt
+checkbox_support/parsers/tests/udevadm_data/SHUTTLE_DH270_WITH_CORAL.txt
 checkbox_support/parsers/tests/udevadm_data/TOSHIBA_NVME.txt
 checkbox_support/parsers/tests/udevadm_data/VESTA_300.txt
 checkbox_support/parsers/tests/udevadm_data/VIRT_CDROM.txt
