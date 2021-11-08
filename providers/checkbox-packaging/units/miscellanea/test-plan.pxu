@@ -15,7 +15,6 @@ _description:
  Miscellaneous client tests (fwts, dmi, oops) (Manual)
 include:
 nested_part:
-    misc-client-cert-automated
 
 
 id: misc-client-cert-automated
@@ -33,7 +32,8 @@ include:
     miscellanea/oops                               certification-status=blocker
     miscellanea/oops_results.log
     miscellanea/fan_stress_reaction
-    miscellanea/debsums
+    miscellanea/debsums                            certification-status=blocker
+    miscellanea/check_prerelease                   certification-status=blocker
 bootstrap_include:
     fwts
 
@@ -50,6 +50,8 @@ include:
     firmware/fwts_uefirtvariable.*                 certification-status=blocker
     miscellanea/oops                               certification-status=blocker
     miscellanea/oops_results.log
+    miscellanea/debsums                            certification-status=blocker
+    miscellanea/check_prerelease                   certification-status=blocker
 bootstrap_include:
     fwts
 
@@ -67,7 +69,7 @@ mandatory_include:
     miscellanea/efi_boot_mode                  certification-status=blocker
     miscellanea/reboot_firmware
     miscellanea/efi_pxeboot
-    miscellanea/check_prerelease
+    miscellanea/check_prerelease               certification-status=blocker
     miscellanea/kernel_taint_test
     miscellanea/cpus_are_not_samples
     miscellanea/ipmi_test                      certification-status=blocker
@@ -85,7 +87,6 @@ _description:
 mandatory_include:
     miscellanea/submission-resources
     miscellanea/cpuid
-    miscellanea/efi_boot_mode                  certification-status=blocker
     miscellanea/ipmi_test                      certification-status=blocker
     miscellanea/bmc_info
     miscellanea/dmitest_server
