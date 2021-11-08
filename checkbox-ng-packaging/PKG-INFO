@@ -1,11 +1,34 @@
-Metadata-Version: 2.1
+Metadata-Version: 1.1
 Name: checkbox-ng
-Version: 1.14.0
+Version: 1.15.0rc1
 Summary: Checkbox - Command Line Test Runner
 Home-page: https://launchpad.net/checkbox-ng/
 Author: Zygmunt Krynicki
 Author-email: zygmunt.krynicki@canonical.com
 License: GPLv3
+Description: Checkbox-ng
+        ===========
+        
+        :term:`Checkbox-ng` is a hardware testing tool useful for certifying laptops,
+        desktops, servers and IOT devices with Ubuntu.
+        
+        Installation
+        ============
+        
+        $ sudo add-apt-repository ppa:checkbox-dev/ppa
+        $ sudo apt-get update
+        $ sudo apt-get install checkbox-ng
+        
+        Documentation
+        =============
+        
+        * `Using Checkbox <http://checkbox.readthedocs.io/en/latest/>`_
+        
+        Known Issues
+        ============
+        
+        https://bugs.launchpad.net/checkbox-project
+        
 Platform: POSIX
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Environment :: Console
@@ -24,29 +47,3 @@ Classifier: Topic :: Software Development :: Quality Assurance
 Classifier: Topic :: Software Development :: Testing
 Classifier: Topic :: System :: Benchmark
 Classifier: Topic :: Utilities
-License-File: COPYING
-
-Checkbox-ng
-===========
-
-:term:`Checkbox-ng` is a hardware testing tool useful for certifying laptops,
-desktops, servers and IOT devices with Ubuntu.
-
-Installation
-============
-
-$ sudo add-apt-repository ppa:checkbox-dev/ppa
-$ sudo apt-get update
-$ sudo apt-get install checkbox-ng
-
-Documentation
-=============
-
-* `Using Checkbox <http://checkbox.readthedocs.io/en/latest/>`_
-
-Known Issues
-============
-
-https://bugs.launchpad.net/checkbox-project
-
-
