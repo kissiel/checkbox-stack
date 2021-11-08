@@ -183,7 +183,7 @@ _summary: Test that system is not a pre-release version
 _description:
  Test to verify that the system uses production, rather
  than pre-release, versions of the kernel and the OS.
-command: check-prerelease.py
+command: check_prerelease.py
 requires:
   "Ubuntu Core" not in lsb.description
 
@@ -469,7 +469,7 @@ category_id: com.canonical.plainbox::miscellanea
 estimated_duration: 60
 id: miscellanea/debsums
 user: root
-requires: package.name == 'debsums'
+requires: executable.name == 'debsums'
 command: debsums -c
 _summary: Check the MD5 sums of installed Debian packages
 _description: Verify installed Debian package files against MD5 checksum lists from /var/lib/dpkg/info/*.md5sums.
