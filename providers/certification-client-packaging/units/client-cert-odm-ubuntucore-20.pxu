@@ -119,13 +119,14 @@ nested_part:
     cpu-automated
     disk-automated
     ethernet-automated
+    iot-cert-image-automated
     i2c-automated
     memory-automated
     networking-automated
     snappy-snap-automated
     wireless-automated
     wireless-wifi-master-mode-auto
-    tpm2.0_4.1.1-automated
+    tpm-cert-automated
     suspend-tp
     after-suspend-bluez-automated
     after-suspend-ethernet-automated
