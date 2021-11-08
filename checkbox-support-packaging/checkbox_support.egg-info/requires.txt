@@ -1,4 +1,4 @@
+distro>=1.0
 pyparsing>=2.0.0
 requests>=1.0
-distro>=1.0
 requests_unixsocket>=0.1.2
