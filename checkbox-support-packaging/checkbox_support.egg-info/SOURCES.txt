@@ -89,6 +89,7 @@ checkbox_support/parsers/tests/pactl_data/desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/desktop-raring-t430s-dp-available.txt
 checkbox_support/parsers/tests/pactl_data/desktop-raring-t430s.txt
 checkbox_support/parsers/tests/pactl_data/desktop-trusty-bt-headset.txt
+checkbox_support/parsers/tests/pactl_data/displayport-monitor-hifi.txt
 checkbox_support/parsers/tests/pactl_data/modules-desktop-precise-0.txt
 checkbox_support/parsers/tests/pactl_data/modules-desktop-precise.txt
 checkbox_support/parsers/tests/pactl_data/pa_ucm_pre_tag_bionic.txt
