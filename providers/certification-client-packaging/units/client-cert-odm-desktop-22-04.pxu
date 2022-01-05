@@ -1,5 +1,5 @@
-id: client-cert-odm-desktop-18-04-manual
-_name: ODM Client Certification for Desktop 18.04 - (1/2) Manual tests
+id: client-cert-odm-desktop-22-04-manual
+_name: [DRAFT] ODM Client Certification for Desktop 22.04 - (1/2) Manual tests
 unit: test plan
 _description:
  This test plan is intended for use by ODMs in their own facilities as part of
@@ -11,6 +11,7 @@ nested_part:
     audio-cert-manual
     bluetooth-cert-manual
     camera-cert-manual
+    edac-manual
     thunderbolt-cert-manual
     monitor-integrated-gpu-cert-manual
     graphics-integrated-gpu-cert-manual
@@ -31,6 +32,7 @@ nested_part:
     usb-cert-manual
     usb3-cert-manual
     usb-c-cert-full # no manual only
+    usb-dwc3-manual
     wireless-cert-manual
     # start of suspend related tests
     before-suspend-reference-cert-full
@@ -95,8 +97,8 @@ exclude:
     com.canonical.certification::after-suspend-manual-led/mute
     com.canonical.certification::after-suspend-manual-led/microphone-mute
 
-id: client-cert-odm-desktop-18-04-automated
-_name: ODM Client Certification for Desktop 18.04 - (2/2) Automated tests
+id: client-cert-odm-desktop-22-04-automated
+_name: [DRAFT] ODM Client Certification for Desktop 22.04 - (2/2) Automated tests
 unit: test plan
 _description:
  This test plan is intended for use by ODMs in their own facilities as part of
@@ -108,6 +110,7 @@ nested_part:
     audio-cert-automated
     bluetooth-cert-automated
     camera-cert-automated
+    edac-automated
     thunderbolt-cert-automated
     monitor-integrated-gpu-cert-automated
     graphics-integrated-gpu-cert-automated
@@ -128,6 +131,7 @@ nested_part:
     usb-cert-automated
     usb3-cert-automated
     # usb-c-cert-automated # only usb-c-cert-full
+    usb-dwc3-automated
     wireless-cert-automated
     # start of suspend related tests
     before-suspend-reference-cert-full
@@ -167,7 +171,7 @@ nested_part:
     cold-boot-stress-test
     suspend-stress-test
     stress-ng-cert-automated
-    tpm2.0_3.0.4
+    tpm-cert-automated
     info-attachment-cert-full
 exclude:
     com.canonical.certification::keys/hibernate
@@ -205,10 +209,10 @@ exclude:
     com.canonical.certification::after-suspend-manual-led/mute
     com.canonical.certification::after-suspend-manual-led/microphone-mute
 
-id: client-cert-odm-desktop-18-04
-_name: DONT USE - desktop-18-04 - placeholder to establish that total number of tests has not changed
+id: client-cert-odm-desktop-22-04
+_name: [DRAFT] DONT USE - desktop-22-04 - placeholder to establish that total number of tests has not changed
 unit: test plan
 include:
 nested_part:
-    client-cert-odm-desktop-18-04-manual
-    client-cert-odm-desktop-18-04-automated
+    client-cert-odm-desktop-22-04-manual
+    client-cert-odm-desktop-22-04-automated
