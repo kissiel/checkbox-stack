@@ -32,12 +32,15 @@ import sys
 import tarfile
 import tempfile
 import textwrap
+import plainbox
 
+from plainbox.impl.providers.v1 import get_universal_PROVIDERPATH_entry
 from plainbox.impl.secure.providers.v1 import Provider1Definition
 from plainbox.provider_manager import InstallCommand
 from plainbox.provider_manager import ManageCommand
 from plainbox.provider_manager import ProviderManagerTool
 from plainbox.provider_manager import manage_py_extension
+from plainbox.testing_utils.argparse_compat import optionals_section
 from plainbox.testing_utils.io import TestIO
 from plainbox.vendor import mock
 
@@ -79,7 +82,7 @@ class ProviderManagerToolTests(TestCase):
                 packaging           generate packaging meta-data
                 test                run tests defined for this provider
 
-            optional arguments:
+            {}:
               -h, --help            show this help message and exit
               --version             show program's version number and exit
 
@@ -93,7 +96,7 @@ class ProviderManagerToolTests(TestCase):
               -P, --pdb             jump into pdb (python debugger) when a command crashes
               -I, --debug-interrupt
                                     crash on SIGINT/KeyboardInterrupt, useful with --pdb
-            """.format(os.path.basename(sys.argv[0]))
+            """.format(os.path.basename(sys.argv[0]), optionals_section)
         self.assertEqual(test_io.stdout, inspect.cleandoc(help_str) + '\n')
 
     def assert_common_flat_install(self, prefix="/foo"):
@@ -263,13 +266,15 @@ class ProviderManagerToolTests(TestCase):
             tarball, "com.example.test-1.0/jobs/jobs.pxu")
         self.assert_common_sdist(tarball)
 
-    def test_develop(self):
+    @mock.patch('plainbox.impl.providers.v1.get_universal_PROVIDERPATH_entry')
+    def test_develop(self, mock_path_entry):
         """
         verify that ``develop`` creates a provider file
         """
-        xdg_data_home = os.path.join(self.tmpdir, "xdg-data-home")
-        filename = os.path.join(xdg_data_home, "plainbox-providers-1",
-                                "com.example.test.provider")
+        provider_path = os.path.join(self.tmpdir, "checkbox-providers-develop")
+        filename = os.path.join(
+            provider_path, "com.example.test.provider")
+        mock_path_entry.return_value = provider_path
         content = (
             "[PlainBox Provider]\n"
             "description = description\n"
@@ -278,19 +283,19 @@ class ProviderManagerToolTests(TestCase):
             "name = com.example:test\n"
             "version = 1.0\n"
             "\n").format(self.tmpdir)
-        with mock.patch.dict('os.environ', clear=True,
-                             XDG_DATA_HOME=xdg_data_home):
-            self.tool.main(["develop"])
+        self.tool.main(["develop"])
         self.assertFileContent(filename, content)
 
-    def test_develop__force(self):
+    @mock.patch('plainbox.impl.providers.v1.get_universal_PROVIDERPATH_entry')
+    def test_develop__force(self, mock_path_entry):
         """
         verify that ``develop --force`` overwrites existing .provider
         file
         """
-        xdg_data_home = os.path.join(self.tmpdir, "xdg-data-home")
-        filename = os.path.join(xdg_data_home, "plainbox-providers-1",
-                                "com.example.test.provider")
+        provider_path = os.path.join(self.tmpdir, "checkbox-providers-develop")
+        filename = os.path.join(
+            provider_path, "com.example.test.provider")
+        mock_path_entry.return_value = provider_path
         content = (
             "[PlainBox Provider]\n"
             "description = description\n"
@@ -302,24 +307,22 @@ class ProviderManagerToolTests(TestCase):
         os.makedirs(os.path.dirname(filename))
         with open(filename, "wt") as stream:
             stream.write("should have been overwritten")
-        with mock.patch.dict('os.environ', clear=True,
-                             XDG_DATA_HOME=xdg_data_home):
-            self.tool.main(["develop", "--force"])
+        self.tool.main(["develop", "--force"])
         self.assertFileContent(filename, content)
 
-    def test_develop__uninstall(self):
+    @mock.patch('plainbox.impl.providers.v1.get_universal_PROVIDERPATH_entry')
+    def test_develop__uninstall(self, mock_path_entry):
         """
         verify that ``develop --uninstall`` works
         """
-        xdg_data_home = os.path.join(self.tmpdir, "xdg-data-home")
-        filename = os.path.join(xdg_data_home, "plainbox-providers-1",
-                                "com.example.test.provider")
+        provider_path = os.path.join(self.tmpdir, "checkbox-providers-develop")
+        filename = os.path.join(
+            provider_path, "com.example.test.provider")
+        mock_path_entry.return_value = provider_path
         os.makedirs(os.path.dirname(filename))
         with open(filename, "wt") as stream:
             stream.write("should have been removed")
-        with mock.patch.dict('os.environ', clear=True,
-                             XDG_DATA_HOME=xdg_data_home):
-            self.tool.main(["develop", "--uninstall"])
+        self.tool.main(["develop", "--uninstall"])
         self.assertFalse(os.path.exists(filename))
 
     def test_validate(self):

@@ -68,7 +68,6 @@
 ./plainbox/impl/secure/providers/v1.py
 ./plainbox/impl/secure/qualifiers.py
 ./plainbox/impl/secure/rfc822.py
-./plainbox/impl/secure/test_config.py
 ./plainbox/impl/secure/test_origin.py
 ./plainbox/impl/secure/test_plugins.py
 ./plainbox/impl/secure/test_qualifiers.py
@@ -88,7 +87,6 @@
 ./plainbox/impl/session/test_suspend.py
 ./plainbox/impl/symbol.py
 ./plainbox/impl/test_applogic.py
-./plainbox/impl/test_box.py
 ./plainbox/impl/test_buildsystems.py
 ./plainbox/impl/test_clitools.py
 ./plainbox/impl/test_color.py

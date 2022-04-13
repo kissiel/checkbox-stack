@@ -259,7 +259,7 @@ class RemoteDebRestartStrategy(RemoteSnappyRestartStrategy):
             subprocess.call(['systemctl', 'disable', self.service_name])
 
 
-def detect_restart_strategy(session=None) -> IRestartStrategy:
+def detect_restart_strategy(session=None, session_type=None) -> IRestartStrategy:
     """
     Detect the restart strategy for the current environment.
     :param session:
@@ -269,6 +269,21 @@ def detect_restart_strategy(session=None) -> IRestartStrategy:
     :raises LookupError:
         When no such object can be found.
     """
+    # debian and unconfined checkbox-ng.service
+    # 'checkbox-slave' is deprecated, it's here so people can resume old
+    # session, but the next line should become:
+    #  session_type == 'remote':
+    # with the next release or when we do inclusive naming refactor
+    # or roughly after April of 2022
+    if session_type in ('remote', 'checkbox-slave'):
+        try:
+            subprocess.run(
+                ['systemctl', 'is-active', '--quiet', 'checkbox-ng.service'],
+                check=True)
+            return RemoteDebRestartStrategy()
+        except subprocess.CalledProcessError:
+                pass
+
     # XXX: RemoteSnappyRestartStrategy debug
     remote_restart_stragegy_debug = os.getenv('REMOTE_RESTART_DEBUG')
     if remote_restart_stragegy_debug:
@@ -300,7 +315,12 @@ def detect_restart_strategy(session=None) -> IRestartStrategy:
     snap_data = os.getenv('SNAP_DATA')
     if snap_data:
         # Classic snaps w/ remote service enabled and in use
-        if session_type == "checkbox-slave":
+        # 'checkbox-slave' is deprecated, it's here so people can resume old
+        # session, but the next line should become:
+        #  session_type == 'remote':
+        # with the next release or when we do inclusive naming refactor
+        # or roughly after April of 2022
+        if session_type in ('remote', 'checkbox-slave'):
             try:
                 slave_status = subprocess.check_output(
                     ['snapctl', 'get', 'slave'],
@@ -312,16 +332,6 @@ def detect_restart_strategy(session=None) -> IRestartStrategy:
         # Classic snaps w/o remote service
         else:
             return SnappyRestartStrategy()
-
-    # debian checkbox-ng.service
-    if session_type == "checkbox-slave":
-        try:
-            subprocess.run(
-                ['systemctl', 'is-active', '--quiet', 'checkbox-ng.service'],
-                check=True)
-            return RemoteDebRestartStrategy()
-        except subprocess.CalledProcessError:
-                pass
 
     if os.path.isdir('/etc/xdg/autostart'):
         # NOTE: Assume this is a terminal application
