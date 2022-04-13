@@ -7,7 +7,12 @@ id: graphics/{index}_driver_version_{product_slug}
 command:
  # shellcheck disable=SC1091
  source graphics_env.sh {driver} {index}
- graphics_driver.py
+ if [[ $XDG_SESSION_TYPE == "wayland" ]]
+ then
+   inxi_snapshot -Gazy
+ else
+   graphics_driver.py
+ fi
 estimated_duration: 0.5
 _description: Parses Xorg.0.log and discovers the running X driver and version for the {vendor} {product} graphics card
 _summary: Test X driver/version for {vendor} {product}
@@ -225,7 +230,12 @@ depends: graphics/VESA_drivers_not_in_use
 command:
  # shellcheck disable=SC1091
  source graphics_env.sh {driver} {index}
- xrandr_cycle.py --screenshot-dir "$PLAINBOX_SESSION_SHARE"
+ if [[ $XDG_SESSION_TYPE == "wayland" ]]
+ then
+   gnome_randr_cycle.py --screenshot-dir="$PLAINBOX_SESSION_SHARE"
+ else
+   xrandr_cycle.py --screenshot-dir="$PLAINBOX_SESSION_SHARE"
+ fi
 estimated_duration: 250.000
 _summary: Test resolution cycling for {vendor} {product}
 _description:
@@ -263,10 +273,13 @@ template-resource: graphics_card
 plugin: shell
 category_id: com.canonical.plainbox::graphics
 id: graphics/{index}_gl_support_{product_slug}
-command: /usr/lib/nux/unity_support_test -p 2>&1
+command:
+  "$CHECKBOX_RUNTIME"/usr/lib/nux/unity_support_test -p 2>&1
 estimated_duration: 0.131
 _description: Check that {vendor} {product} hardware is able to run a desktop session (OpenGL)
 _summary: Test OpenGL support for {vendor} {product}
+user: root
+
 
 unit: template
 template-resource: graphics_card
