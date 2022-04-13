@@ -38,16 +38,15 @@ from plainbox.abc import IJobResult
 from plainbox.abc import IJobRunnerUI
 from plainbox.abc import ISessionStateTransport
 from plainbox.i18n import gettext as _
-from plainbox.impl.applogic import PlainBoxConfig
 from plainbox.impl.decorators import raises
 from plainbox.impl.developer import UnexpectedMethodCall
 from plainbox.impl.developer import UsageExpectation
 from plainbox.impl.execution import UnifiedRunner
+from plainbox.impl.config import Configuration
 from plainbox.impl.providers import get_providers
 from plainbox.impl.result import JobResultBuilder
 from plainbox.impl.result import MemoryJobResult
 from plainbox.impl.runner import JobRunnerUIDelegate
-from plainbox.impl.secure.config import Unset
 from plainbox.impl.secure.origin import Origin
 from plainbox.impl.secure.qualifiers import select_jobs
 from plainbox.impl.secure.qualifiers import FieldQualifier
@@ -162,7 +161,7 @@ class SessionAssistant:
         self._app_version = app_version
         self._api_version = api_version
         self._api_flags = api_flags
-        self._config = PlainBoxConfig().get()
+        self._config = Configuration()
         Unit.config = self._config
         self._execution_ctrl_list = None  # None is "default"
         self._ctrl_setup_list = []
@@ -211,7 +210,8 @@ class SessionAssistant:
 
     @raises(UnexpectedMethodCall, LookupError)
     def configure_application_restart(
-            self, cmd_callback: 'Callable[[str], List[str]]') -> None:
+            self, cmd_callback, session_type:
+            'Callable[[str], List[str]], str') -> None:
         """
         Configure automatic restart capability.
 
@@ -219,6 +219,8 @@ class SessionAssistant:
             A callable (function or lambda) that when called with a single
             string argument, session_id, returns a list of strings describing
             how to execute the tool in order to restart a particular session.
+        :param session_type:
+            Kind of the session we're running. Either 'local' or 'remote'
         :raises UnexpectedMethodCall:
             If the call is made at an unexpected time. Do not catch this error.
             It is a bug in your program. The error message will indicate what
@@ -245,7 +247,8 @@ class SessionAssistant:
         """
         UsageExpectation.of(self).enforce()
         if self._restart_strategy is None:
-            self._restart_strategy = detect_restart_strategy(self)
+            self._restart_strategy = detect_restart_strategy(
+                self, session_type=session_type)
         self._restart_cmd_callback = cmd_callback
         # Prevent second call to this method and to the
         # use_alternate_restart_strategy() method.
@@ -297,8 +300,7 @@ class SessionAssistant:
         Use alternate configuration object.
 
         :param config:
-            A configuration object that implements a superset of the plainbox
-            configuration.
+            A Checkbox configuration object.
         :raises UnexpectedMethodCall:
             If the call is made at an unexpected time. Do not catch this error.
             It is a bug in your program. The error message will indicate what
@@ -311,7 +313,7 @@ class SessionAssistant:
         UsageExpectation.of(self).enforce()
         self._config = config
         self._exclude_qualifiers = []
-        for pattern in self._config.test_exclude:
+        for pattern in self._config.get_value('test selection', 'exclude'):
             self._exclude_qualifiers.append(
                 RegExpJobQualifier(pattern, None, False))
         Unit.config = config
@@ -1199,7 +1201,7 @@ class SessionAssistant:
         if os.path.isfile(manifest):
             with open(manifest, 'rt', encoding='UTF-8') as stream:
                 manifest_cache = json.load(stream)
-        if self._config is not None and self._config.manifest is not Unset:
+        if self._config is not None and self._config.manifest:
             for manifest_id in self._config.manifest:
                 manifest_cache.update(
                     {manifest_id: self._config.manifest[manifest_id]})
@@ -1362,11 +1364,8 @@ class SessionAssistant:
                             f.writelines(self._restart_cmd_callback(
                                 self.get_session_id()))
             if not native:
-                if self._config.environment is Unset:
-                    result = self._runner.run_job(job, job_state, ui=ui)
-                else:
-                    result = self._runner.run_job(job, job_state,
-                                                  self._config.environment, ui)
+                result = self._runner.run_job(job, job_state,
+                                              self._config.environment, ui)
                 builder = result.get_builder()
             else:
                 builder = JobResultBuilder(
