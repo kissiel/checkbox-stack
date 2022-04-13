@@ -257,6 +257,9 @@ class UdevadmDevice(object):
                     return "WIRELESS"
                 if (self._environment["INTERFACE"].startswith('can')):
                     return "SOCKETCAN"
+            if "ID_MODEL" in self._environment:
+                if (self._environment["ID_MODEL"].startswith('XClarity')):
+                    return "BMC_NETWORK"
             if self._stack:
                 parent = self._stack[-1]
                 if "PCI_CLASS" in parent._environment:
@@ -1201,7 +1204,7 @@ class UdevadmParser(object):
     def getAttributes(self, path):
         return {}
 
-    def run(self, result):
+    def run(self):
         # Some attribute lines have a space character after the
         # ':', others don't have it (see udevadm-info.c).
         line_pattern = re.compile(r"(?P<key>[A-Z]):\s*(?P<value>.*)")
@@ -1395,6 +1398,7 @@ class UdevadmParser(object):
                 # Remove Virtal CDROM devices
                 if not [k for k in device._environment if "ID_CDROM_" in k]:
                     self.devices.pop(device._raw_path, None)
+        return list(self.devices.values())
 
         [result.addDevice(device) for device in self.devices.values()]
 
@@ -1426,14 +1430,6 @@ def known_to_be_video_device(vendor_id, product_id, pci_class, pci_subclass):
         return product_id in [0x0152, 0x0412, 0x0402]
 
 
-class UdevResult(object):
-    def __init__(self):
-        self.devices = []
-
-    def addDevice(self, device):
-        self.devices.append(device)
-
-
 def parse_udevadm_output(output, lsblk=None, list_partitions=False, bits=None):
     """
     Parse output of `LANG=C udevadm info --export-db`
@@ -1448,7 +1444,4 @@ def parse_udevadm_output(output, lsblk=None, list_partitions=False, bits=None):
                 universal_newlines=True)
         except CalledProcessError:
             lsblk = ''
-    udev = UdevadmParser(output, lsblk, list_partitions, bits)
-    result = UdevResult()
-    udev.run(result)
-    return result.devices
+    return UdevadmParser(output, lsblk, list_partitions, bits).run()
