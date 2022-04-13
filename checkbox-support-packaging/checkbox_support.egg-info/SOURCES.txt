@@ -67,7 +67,6 @@ checkbox_support/parsers/tests/test_pactl.py
 checkbox_support/parsers/tests/test_pci_config.py
 checkbox_support/parsers/tests/test_sysfs_usb.py
 checkbox_support/parsers/tests/test_udevadm.py
-checkbox_support/parsers/tests/test_version.py
 checkbox_support/parsers/tests/test_xinput.py
 checkbox_support/parsers/tests/cpuinfo_data/aarch64.txt
 checkbox_support/parsers/tests/cpuinfo_data/amd64.txt
