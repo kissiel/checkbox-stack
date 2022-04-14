@@ -80,7 +80,6 @@ plainbox/impl/box.py
 plainbox/impl/buildsystems.py
 plainbox/impl/clitools.py
 plainbox/impl/color.py
-plainbox/impl/config.py
 plainbox/impl/ctrl.py
 plainbox/impl/decorators.py
 plainbox/impl/depmgr.py
@@ -89,6 +88,7 @@ plainbox/impl/execution.py
 plainbox/impl/highlevel.py
 plainbox/impl/job.py
 plainbox/impl/jobcache.py
+plainbox/impl/launcher.py
 plainbox/impl/logging.py
 plainbox/impl/parsers.py
 plainbox/impl/pod.py
@@ -100,12 +100,12 @@ plainbox/impl/test_applogic.py
 plainbox/impl/test_buildsystems.py
 plainbox/impl/test_clitools.py
 plainbox/impl/test_color.py
-plainbox/impl/test_config.py
 plainbox/impl/test_ctrl.py
 plainbox/impl/test_decorators.py
 plainbox/impl/test_depmgr.py
 plainbox/impl/test_developer.py
 plainbox/impl/test_init.py
+plainbox/impl/test_launcher.py
 plainbox/impl/test_pod.py
 plainbox/impl/test_resource.py
 plainbox/impl/test_result.py
@@ -199,6 +199,7 @@ plainbox/impl/secure/plugins.py
 plainbox/impl/secure/qualifiers.py
 plainbox/impl/secure/rfc822.py
 plainbox/impl/secure/sudo_broker.py
+plainbox/impl/secure/test_config.py
 plainbox/impl/secure/test_origin.py
 plainbox/impl/secure/test_plugins.py
 plainbox/impl/secure/test_qualifiers.py
