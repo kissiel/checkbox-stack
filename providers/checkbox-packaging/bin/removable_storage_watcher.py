@@ -5,7 +5,9 @@ import collections
 import copy
 import dbus
 import logging
+import os
 import sys
+import threading
 
 import gi
 gi.require_version('GUdev', '1.0')
@@ -16,12 +18,14 @@ from checkbox_support.dbus.udisks2 import UDisks2Model          # noqa: E402
 from checkbox_support.dbus.udisks2 import UDisks2Observer       # noqa: E402
 from checkbox_support.dbus.udisks2 import is_udisks2_supported  # noqa: E402
 from checkbox_support.dbus.udisks2 import lookup_udev_device    # noqa: E402
-from checkbox_support.dbus.udisks2 import (
+from checkbox_support.dbus.udisks2 import (                     # noqa: E402
     map_udisks1_connection_bus)  # noqa: E402
 from checkbox_support.heuristics.udisks2 import is_memory_card  # noqa: E402
 from checkbox_support.parsers.udevadm import CARD_READER_RE     # noqa: E402
 from checkbox_support.parsers.udevadm import GENERIC_RE         # noqa: E402
 from checkbox_support.parsers.udevadm import FLASH_RE           # noqa: E402
+from checkbox_support.scripts.zapper_proxy import (             # noqa: E402
+    ControlVersionDecider)
 from checkbox_support.udev import get_interconnect_speed        # noqa: E402
 from checkbox_support.udev import get_udev_block_devices        # noqa: E402
 
@@ -877,6 +881,8 @@ def main():
                         dest='logging_level', help="Enable debugging")
     parser.add_argument('--unmounted', action='store_true',
                         help="Don't require drive being automounted")
+    parser.add_argument('--zapper-usb-address', type=str,
+                        help="Zapper's USB switch address to use")
     parser.set_defaults(logging_level=logging.WARNING)
     args = parser.parse_args()
 
@@ -910,11 +916,38 @@ def main():
             args.action, args.device, args.minimum_speed, args.memorycard)
     # Run the actual listener and wait till it either times out of discovers
     # the appropriate media changes
-    print("\n\n{} NOW\n\n".format(args.action.upper()), flush=True)
-    try:
-        return listener.check(args.timeout)
-    except KeyboardInterrupt:
-        return 1
+    if args.zapper_usb_address:
+        zapper_host = os.environ.get('ZAPPER_ADDRESS')
+        if not zapper_host:
+            raise SystemExit(
+                "ZAPPER_ADDRESS environment variable not found!")
+        zapper_control = ControlVersionDecider().decide(zapper_host)
+        usb_address = args.zapper_usb_address
+        delay = 5  # in seconds
+
+        def do_the_insert():
+            logging.info("Calling zapper to connect the USB device")
+            zapper_control.usb_set_state(usb_address, 'dut')
+        insert_timer = threading.Timer(delay, do_the_insert)
+
+        def do_the_remove():
+            logging.info("Calling zapper to disconnect the USB device")
+            zapper_control.usb_set_state(usb_address, 'off')
+        remove_timer = threading.Timer(delay, do_the_remove)
+        if args.action == "insert":
+            logging.info("Starting timer for delayed insertion")
+            insert_timer.start()
+        elif args.action == "remove":
+            logging.info("Starting timer for delayed removal")
+            remove_timer.start()
+        try:
+            res = listener.check(args.timeout)
+            return res
+        except KeyboardInterrupt:
+            return 1
+
+    else:
+        print("\n\n{} NOW\n\n".format(args.action.upper()), flush=True)
 
 
 if __name__ == "__main__":

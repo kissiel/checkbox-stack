@@ -557,149 +557,6 @@ class RunCommand(object):
         self.returncode = proc.returncode
 
 
-class UVTKVMTest(object):
-
-    def __init__(self, image=None):
-        self.image = image
-        self.release = get_codename_to_test()
-        self.arch = check_output(['dpkg', '--print-architecture'],
-                                 universal_newlines=True).strip()
-        # max len(name) is 8 chars for use with test-snapd-uvtool snap
-        self.name = tempfile.mktemp()[-8:]
-
-    def run_command(self, cmd):
-        task = RunCommand(cmd)
-        if task.returncode != 0:
-            logging.error('Command {} returnd a code of {}'.format(
-                task.cmd, task.returncode))
-            logging.error(' STDOUT: {}'.format(task.stdout))
-            logging.error(' STDERR: {}'.format(task.stderr))
-            return False
-        else:
-            logging.debug('Command {}:'.format(task.cmd))
-            if task.stdout != '':
-                logging.debug(' STDOUT: {}'.format(task.stdout))
-            elif task.stderr != '':
-                logging.debug(' STDERR: {}'.format(task.stderr))
-            else:
-                logging.debug(' Command returned no output')
-            return True
-
-    def ssh_command(self, private_key_file, cmd):
-        task = RunCommand("uvt-kvm ip {}".format(self.name))
-        if task.returncode != 0:
-            logging.error('Command {} returnd a code of {}'.format(
-                task.cmd, task.returncode))
-            return False
-        vm_ip = task.stdout
-
-        ssh_cmd = ('ssh ubuntu@{} '
-                   '-o UserKnownHostsFile=/dev/null '
-                   '-o StrictHostKeyChecking=no '
-                   '-i {} {}').format(vm_ip, private_key_file, cmd)
-        return self.run_command(ssh_cmd)
-
-    def get_image_or_source(self):
-        """
-        An image can be specifed in a filesytem path and used directly in
-        uvt-create with the backing-image option or a url can be
-        specifed and used in uvt-simplestreams to generate an image.
-        """
-        url = urlparse(self.image)
-
-        if url.scheme == 'file' or os.path.isfile(url.path):
-            logging.debug("Cloud image exists locally at %s" % url.path)
-            self.image = url.path
-        else:
-            cmd = ("uvt-simplestreams-libvirt sync release={} "
-                   "arch={}".format(self.release, self.arch))
-
-            if url.scheme == 'http':
-                # Path specified to use -source option
-                logging.debug("Using --source option for uvt-simpletreams")
-                cmd = cmd + " --source {} ".format(self.image)
-
-            logging.debug("uvt-simplestreams-libvirt sync")
-            if not self.run_command(cmd):
-                return False
-        return True
-
-    def cleanup(self):
-        """
-        A combination of virsh destroy/undefine is used instead of
-        uvt-kvm destroy.  When using uvt-kvm destroy the following bug
-        is seen:
-        https://bugs.launchpad.net/ubuntu/+source/uvtool/+bug/1452095
-        """
-        # Destroy vm
-        logging.debug("Destroy VM")
-        if not self.run_command('virsh destroy {}'.format(self.name)):
-            return False
-
-        # Virsh undefine
-        logging.debug("Undefine VM")
-        if not self.run_command('virsh undefine {}'.format(self.name)):
-            return False
-
-        # Purge/Remove simplestreams image
-        if not self.run_command("uvt-simplestreams-libvirt purge"):
-            return False
-        return True
-
-    def start(self):
-        # Generate ssh key if needed
-        with tempfile.TemporaryDirectory(
-                dir=os.path.expandvars("$PLAINBOX_SESSION_SHARE")) as tmp_dir:
-            ssh_private_key_file = "{}/id_rsa".format(tmp_dir)
-            ssh_public_key_file = "{}/id_rsa.pub".format(tmp_dir)
-
-            if not os.path.exists(ssh_private_key_file):
-                cmd = ('ssh-keygen -f {} -t rsa -N \'\''.format(
-                    ssh_private_key_file))
-                if not self.run_command(cmd):
-                    return False
-
-            # Create vm
-            logging.debug("Creating VM")
-            cmd = ('uvt-kvm create --ssh-public-key-file {} {} arch={}'.format(
-                ssh_public_key_file, self.name, self.arch))
-
-            logging.debug("Checking for local image")
-            try:
-                self.image.find(".img") > 0
-            except AttributeError:
-                logging.debug("No user provided image found.")
-                logging.debug(
-                    "I will attempt to sync the image from ubuntu.com")
-            else:
-                cmd = cmd + " --backing-image-file {} ".format(self.image)
-
-            if not self.run_command(cmd):
-                return False
-
-            logging.debug("Wait for VM to complete creation")
-            cmd = 'uvt-kvm wait --ssh-private-key-file {} {}'.format(
-                ssh_private_key_file, self.name)
-            if not self.run_command(cmd):
-                return False
-
-            logging.debug("List newly created vm")
-            cmd = ("uvt-kvm list")
-            if not self.run_command(cmd):
-                return False
-
-            logging.debug("Verify VM was created with ssh")
-            if not self.ssh_command(ssh_private_key_file, ""):
-                return False
-
-            logging.debug("Verify VM was created with ssh and run a command")
-            cmd = "lsb_release -a"
-            if not self.ssh_command(ssh_private_key_file, cmd):
-                return False
-
-        return True
-
-
 class LXDTest(object):
 
     def __init__(self, template=None, rootfs=None):
@@ -865,25 +722,208 @@ class LXDTest(object):
         return True
 
 
-def test_uvtkvm(args):
-    logging.debug("Executing UVT KVM Test")
-    # if args.image is not set and UVT_IMAGE_OR_SOURCE does not exist, a key
-    # error is generated we need to handle.
-    try:
-        image = args.image or os.environ['UVT_IMAGE_OR_SOURCE']
-    except KeyError:
-        logging.warning("UVT_IMAGE_OR_SOURCE is not set")
-        image = None
-    uvt_test = UVTKVMTest(image)
-    uvt_test.get_image_or_source()
-    result = uvt_test.start()
-    uvt_test.cleanup()
+class LXDTest_vm(object):
 
+    def __init__(self, template=None, image=None):
+        self.image_url = image
+        self.template_url = template
+        self.image_tarball = None
+        self.template_tarball = None
+        self.name = 'testbed'
+        self.image_alias = uuid4().hex
+        self.default_remote = "ubuntu:"
+        self.os_version = get_release_to_test()
+
+    def run_command(self, cmd):
+        task = RunCommand(cmd)
+        if task.returncode != 0:
+            logging.error('Command {} returnd a code of {}'.format(
+                task.cmd, task.returncode))
+            logging.error(' STDOUT: {}'.format(task.stdout))
+            logging.error(' STDERR: {}'.format(task.stderr))
+            return False
+        else:
+            logging.debug('Command {}:'.format(task.cmd))
+            if task.stdout != '':
+                logging.debug(' STDOUT: {}'.format(task.stdout))
+            elif task.stderr != '':
+                logging.debug(' STDERR: {}'.format(task.stderr))
+            else:
+                logging.debug(' Command returned no output')
+            return True
+
+    def setup(self):
+        # Initialize LXD
+        result = True
+        logging.debug("Attempting to initialize LXD")
+        # TODO: Need a method to see if LXD is already initialized
+        if not self.run_command('lxd init --auto'):
+            logging.debug('Error encounterd while initializing LXD')
+            result = False
+
+        # Retrieve and insert LXD images
+        if self.template_url is not None:
+            logging.debug("Downloading template.")
+            targetfile = urlparse(self.template_url).path.split('/')[-1]
+            filename = os.path.join('/tmp', targetfile)
+            if not os.path.isfile(filename):
+                self.template_tarball = self.download_images(self.template_url,
+                                                             filename)
+                if not self.template_tarball:
+                    logging.error("Unable to download {} from "
+                                  "{}".format(self.template_tarball,
+                                              self.template_url))
+                    logging.error("Aborting")
+                    result = False
+            else:
+                logging.debug("Template file {} already exists. "
+                              "Skipping Download.".format(filename))
+                self.template_tarball = filename
+
+        if self.image_url is not None:
+            logging.debug("Downloading image.")
+            targetfile = urlparse(self.image_url).path.split('/')[-1]
+            filename = os.path.join('/tmp', targetfile)
+            if not os.path.isfile(filename):
+                self.image_tarball = self.download_images(self.image_url,
+                                                          filename)
+                if not self.image_tarball:
+                    logging.error("Unable to download {} from{}".format(
+                        self.image_tarball, self.image_url))
+                    logging.error("Aborting")
+                    result = False
+            else:
+                logging.debug("Template file {} already exists. "
+                              "Skipping Download.".format(filename))
+                self.image_tarball = filename
+
+        # Insert images
+        if self.template_url is not None and self.image_url is not None:
+            logging.debug("Importing images into LXD")
+            cmd = 'lxc image import {} {} --alias {}'.format(
+                self.template_tarball, self.image_tarball,
+                self.image_alias)
+            result = self.run_command(cmd)
+            if not result:
+                logging.error('Error encountered while attempting to '
+                              'import images into LXD')
+                result = False
+        return result
+
+    def download_images(self, url, filename):
+        """
+        Downloads LXD files for same release as host machine
+        """
+        # TODO: Clean this up to use a non-internet simplestream on MAAS server
+        logging.debug("Attempting download of {} from {}".format(filename,
+                                                                 url))
+        try:
+            urllib.request.urlretrieve(url, filename)
+        except (IOError,
+                OSError,
+                urllib.error.HTTPError,
+                urllib.error.URLError) as exception:
+            logging.error("Failed download of image from %s: %s",
+                          url, exception)
+            return False
+        except ValueError as verr:
+            logging.error("Invalid URL %s" % url)
+            logging.error("%s" % verr)
+            return False
+
+        if not os.path.isfile(filename):
+            logging.warn("Can not find {}".format(filename))
+            return False
+
+        return filename
+
+    def cleanup(self):
+        """
+        Clean up test files an Virtual Machines created
+        """
+        logging.debug('Cleaning up images and VMs created during test')
+        self.run_command('lxc image delete {}'.format(self.image_alias))
+        self.run_command('lxc delete --force {}'.format(self.name))
+
+    def start_vm(self):
+        """
+        Creates an lxd virtutal machine and performs the test
+        """
+        wait_interval = 5
+        test_interval = 300
+
+        result = self.setup()
+        if not result:
+            logging.error("One or more setup stages failed.")
+            return False
+
+        # Create Virtual Machine
+        logging.debug("Launching Virtual Machine")
+        if not self.image_url and not self.template_url:
+            logging.debug("No local image available, attempting to "
+                          "import from default remote.")
+            cmd = ('lxc init {}{} {} --vm '.format(
+               self.default_remote, self.os_version, self.name))
+        else:
+            cmd = ('lxc init {} {} --vm'.format(self.image_alias, self.name))
+
+        if not self.run_command(cmd):
+            return False
+
+        logging.debug("Start VM:")
+        cmd = ("lxc start {} ".format(self.name))
+        if not self.run_command(cmd):
+            return False
+
+        logging.debug("Virtual Machine listing:")
+        cmd = ("lxc list")
+        if not self.run_command(cmd):
+            return False
+
+        logging.debug("Wait for vm to boot")
+        check_vm = 0
+        while check_vm < test_interval:
+            time.sleep(wait_interval)
+            cmd = ("lxc exec {} -- lsb_release -a".format(self.name))
+            if self.run_command(cmd):
+                print("Vm started and booted succefully")
+                return True
+            else:
+                logging.debug("Re-verify VM booted")
+                check_vm = check_vm + wait_interval
+
+        logging.debug("testing vm failed")
+        if check_vm == test_interval:
+            return False
+
+
+def test_lxd_vm(args):
+    logging.debug("Executing LXD VM Test")
+
+    template = None
+    image = None
+
+    # First in priority are environment variables.
+    if 'LXD_TEMPLATE' in os.environ:
+        template = os.environ['LXD_TEMPLATE']
+    if 'KVM_IMAGE' in os.environ:
+        image = os.environ['KVM_IMAGE']
+
+    # Finally, highest-priority are command line arguments.
+    if args.template:
+        template = args.template
+    if args.image:
+        image = args.image
+
+    lxd_test = LXDTest_vm(template, image)
+
+    result = lxd_test.start_vm()
+    lxd_test.cleanup()
     if result:
-        print("PASS: VM was succssfully started and checked")
+        print("PASS: Virtual Machine was succssfully started and checked")
         sys.exit(0)
     else:
-        print("FAIL: VM was not started and/or checked")
+        print("FAIL: Virtual Machine was not started and checked")
         sys.exit(1)
 
 
@@ -961,10 +1001,10 @@ def main():
     # Main cli options
     kvm_test_parser = subparsers.add_parser(
         'kvm', help=("Run kvm virtualization test"))
-    uvt_kvm_test_parser = subparsers.add_parser(
-        'uvt', help=("Run uvt kvm virtualization test"))
     lxd_test_parser = subparsers.add_parser(
         'lxd', help=("Run the LXD validation test"))
+    lxd_test_vm_parser = subparsers.add_parser(
+        'lxdvm', help=("Run the LXD VM validation test"))
     parser.add_argument('--debug', dest='log_level',
                         action="store_const", const=logging.DEBUG,
                         default=logging.INFO)
@@ -980,15 +1020,18 @@ def main():
     kvm_test_parser.set_defaults(func=test_kvm)
 
     # Sub test options
-    uvt_kvm_test_parser.add_argument(
-        '-i', '--image', type=str)
-    uvt_kvm_test_parser.set_defaults(func=test_uvtkvm)
-
     lxd_test_parser.add_argument(
         '--template', type=str, default=None)
     lxd_test_parser.add_argument(
         '--rootfs', type=str, default=None)
     lxd_test_parser.set_defaults(func=test_lxd)
+
+    # Sub test options
+    lxd_test_vm_parser.add_argument(
+        '--template', type=str, default=None)
+    lxd_test_vm_parser.add_argument(
+        '--image', type=str, default=None)
+    lxd_test_vm_parser.set_defaults(func=test_lxd_vm)
 
     args = parser.parse_args()
 

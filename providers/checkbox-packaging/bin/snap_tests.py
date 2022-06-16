@@ -22,6 +22,8 @@ except KeyError:
         TEST_SNAP = 'test-snapd-tools-core18'
     elif 'checkbox20' in runtime:
         TEST_SNAP = 'test-snapd-tools-core20'
+    elif 'checkbox22' in runtime:
+        TEST_SNAP = 'test-snapd-tools-core22'
     else:
         TEST_SNAP = 'test-snapd-tools'
 SNAPD_TASK_TIMEOUT = int(os.getenv('SNAPD_TASK_TIMEOUT', 30))
@@ -36,7 +38,8 @@ class SnapList():
         """snap list should show the core package is installed."""
         data = Snapd().list()
         for snap in data:
-            if snap['name'] in ('core', 'core16', 'core18', 'core20'):
+            if snap['name'] in ('core', 'core16', 'core18', 'core20',
+                                'core22'):
                 print("Found a core snap")
                 print(snap['name'], snap['version'], snap['revision'])
                 return 0
