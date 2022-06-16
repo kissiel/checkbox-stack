@@ -38,7 +38,7 @@ with open(os.path.join(base_dir, "README.rst"), encoding="UTF-8") as stream:
 
 setup(
     name="checkbox-support",
-    version="0.54.0",
+    version="0.55.0rc1",
     url="https://launchpad.net/checkbox/",
     packages=find_packages(),
     test_suite='checkbox_support.tests.test_suite',
@@ -94,6 +94,8 @@ setup(
             ("checkbox-support-lsusb="
                 "checkbox_support.scripts.lsusb:main"),
             ("checkbox-support-parse=checkbox_support.parsers:main"),
+            ("checkbox-support-zapper-proxy="
+                "checkbox_support.scripts.zapper_proxy:main"),
         ],
     },
 )
