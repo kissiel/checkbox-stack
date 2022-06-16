@@ -14,8 +14,6 @@ checkbox_support.egg-info/dependency_links.txt
 checkbox_support.egg-info/entry_points.txt
 checkbox_support.egg-info/requires.txt
 checkbox_support.egg-info/top_level.txt
-checkbox_support/contrib/__init__.py
-checkbox_support/contrib/xrandr.py
 checkbox_support/dbus/__init__.py
 checkbox_support/dbus/udisks2.py
 checkbox_support/helpers/__init__.py
@@ -165,9 +163,11 @@ checkbox_support/scripts/nmea_test.py
 checkbox_support/scripts/run_watcher.py
 checkbox_support/scripts/snap_connect.py
 checkbox_support/scripts/usb_read_write.py
+checkbox_support/scripts/zapper_proxy.py
 checkbox_support/scripts/tests/__init__.py
 checkbox_support/scripts/tests/test_audio_settings.py
 checkbox_support/scripts/tests/test_gputest_benchmark.py
+checkbox_support/scripts/tests/test_zapper_proxy.py
 checkbox_support/snap_utils/__init__.py
 checkbox_support/snap_utils/asserts.py
 checkbox_support/snap_utils/config.py
@@ -179,6 +179,7 @@ checkbox_support/snap_utils/tests/test_config.py
 checkbox_support/tests/__init__.py
 checkbox_support/tests/test_human_readable_bytes.py
 checkbox_support/vendor/__init__.py
+checkbox_support/vendor/auto_argparse.py
 checkbox_support/vendor/ahocorapy/__init__.py
 checkbox_support/vendor/ahocorapy/keywordtree.py
 checkbox_support/vendor/beacontools/__init__.py
