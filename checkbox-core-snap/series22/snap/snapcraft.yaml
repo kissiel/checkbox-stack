@@ -480,4 +480,4 @@ parts:
 ################################################################################
   common-config:
     plugin: dump
-    source: config/
+    source: ../config/
