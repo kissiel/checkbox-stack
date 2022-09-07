@@ -44,7 +44,7 @@ if [ ! -d "$series" ]; then
 	exit 1
 fi
 
-echo "Copying over common_files/* to $series/"
+echo "Copying over common_files/* to $series"
 rsync -r common_files/ $series/
 
 
