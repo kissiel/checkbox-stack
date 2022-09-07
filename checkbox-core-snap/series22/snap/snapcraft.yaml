@@ -98,7 +98,7 @@ parts:
 ################################################################################
 # Upstream: https://kernel.ubuntu.com/git/cking/stress-ng.git/plain/snap/snapcraft.yaml
   stress-ng:
-    source-tag: ""
+    source-tag: "V0.14.03"
     source-depth: 1
     plugin: make
     source: https://github.com/ColinIanKing/stress-ng.git
@@ -115,7 +115,15 @@ parts:
       - libaio-dev
       - libcap-dev
       - libsctp-dev
+      - libatomic1
       - libjudy-dev
+      - libjpeg-dev
+      - libipsec-mb-dev
+      #- libkmkod-dev
+      - libglvnd-dev
+      - libgbm-dev
+      #- ibattr1-dev
+      - libxxhash-dev
     after: [fwts]
 ################################################################################
 # Upstream: https://kernel.ubuntu.com/git/cking/snapcraft-snaps.git/tree/acpica/snapcraft.yaml
@@ -170,7 +178,7 @@ parts:
       - -**/__pycache__
     build-environment:
       - C_INCLUDE_PATH: /usr/include/python3.10
-      - PYTHONPATH: $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages:$PYTHONPATH
+      - PYTHONPATH: $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages:${PYTHONPATH:-}
 ################################################################################
   checkbox-ng:
     source-tag: ""
@@ -210,13 +218,13 @@ parts:
       - -**/RECORD
       - -**/__pycache__
     build-environment:
-      - PYTHONPATH: $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages:$PYTHONPATH
+      - PYTHONPATH: $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages:${PYTHONPATH:-}
       - READTHEDOCS: 'True' # simplifies picamera install
 ################################################################################
   plainbox-provider-resource:
     source-tag: ""
     source-depth: 1
-    plugin: checkbox-provider
+    plugin: dump
     source: https://git.launchpad.net/plainbox-provider-resource
     source-type: git
     stage-packages:
@@ -229,7 +237,11 @@ parts:
       - smartmontools
     override-build: |
       cd src && autoreconf -i && cd -
-      snapcraftctl build
+      export PYTHONPATH=$SNAPCRAFT_STAGE/lib/python3.10/site-packages:$SNAPCRAFT_STAGE/usr/lib/python3/dist-packages
+      for path in $(find "$SNAPCRAFT_STAGE/providers/" -mindepth 1 -maxdepth 1 -type d); do export PROVIDERPATH=$path${PROVIDERPATH:+:$PROVIDERPATH}; done
+      python3 manage.py validate
+      python3 manage.py build
+      python3 manage.py install --layout=relocatable --prefix=/providers/plainbox-provider-resource --root="$SNAPCRAFT_PART_INSTALL"
     build-packages:
       - autoconf
       - automake
@@ -241,9 +253,15 @@ parts:
   plainbox-provider-checkbox:
     source-tag: ""
     source-depth: 1
-    plugin: checkbox-provider
+    plugin: dump
     source: https://git.launchpad.net/plainbox-provider-checkbox
     source-type: git
+    override-build: |
+      export PYTHONPATH=$SNAPCRAFT_STAGE/lib/python3.10/site-packages:$SNAPCRAFT_STAGE/usr/lib/python3/dist-packages
+      for path in $(find "$SNAPCRAFT_STAGE/providers/" -mindepth 1 -maxdepth 1 -type d); do export PROVIDERPATH=$path${PROVIDERPATH:+:$PROVIDERPATH}; done
+      python3 manage.py validate
+      python3 manage.py build
+      python3 manage.py install --layout=relocatable --prefix=/providers/plainbox-provider-checkbox --root="$SNAPCRAFT_PART_INSTALL"
     stage-packages:
       - bc
       - bluez-tests
@@ -320,86 +338,6 @@ parts:
       usr/lib/lib*.so*: usr/lib/$SNAPCRAFT_ARCH_TRIPLET/
     after: [plainbox-provider-resource]
 ################################################################################
-  plainbox-provider-ipdt:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/plainbox-provider-ipdt
-    source-type: git
-    stage-packages:
-      - util-linux
-    after: [plainbox-provider-checkbox]
-################################################################################
-  plainbox-provider-docker:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/plainbox-provider-docker
-    source-type: git
-    stage-packages:
-      - apache2-utils
-    after: [plainbox-provider-ipdt]
-################################################################################
-  plainbox-provider-tpm2:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/plainbox-provider-tpm2
-    source-type: git
-    stage-packages:
-      - clevis-tpm2
-    after: [plainbox-provider-docker]
-################################################################################
-  checkbox-provider-iiotg:
-    source-tag: "snap-2022-01-11T1726"
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/checkbox-provider-iiotg
-    source-type: git
-    after: [plainbox-provider-tpm2]
-################################################################################
-  plainbox-provider-sru:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/plainbox-provider-sru
-    source-type: git
-    after: [checkbox-provider-iiotg]
-################################################################################
-  checkbox-provider-edgex:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/checkbox-provider-edgex
-    source-type: git
-    stage-packages:
-      - curl
-    after: [plainbox-provider-sru]
-################################################################################
-  checkbox-provider-gpgpu:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/checkbox-provider-gpgpu
-    source-type: git
-    after: [checkbox-provider-edgex]
-################################################################################
-  plainbox-provider-certification-client:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/plainbox-provider-certification-client
-    source-type: git
-    after: [checkbox-provider-gpgpu]
-################################################################################
-  plainbox-provider-certification-server:
-    source-tag: ""
-    source-depth: 1
-    plugin: checkbox-provider
-    source: https://git.launchpad.net/plainbox-provider-certification-server
-    source-type: git
-    after: [plainbox-provider-certification-client]
-################################################################################
   glmark2:
     source: https://github.com/glmark2/glmark2.git
     plugin: meson
@@ -416,7 +354,6 @@ parts:
       #- -Dflavors=drm-gl,drm-glesv2,wayland-gl,wayland-glesv2,x11-gl,x11-glesv2
       - -Dflavors=x11-glesv2
       - --prefix=/usr
-    after: [plainbox-provider-certification-server]
     stage-packages:
       - python3-distro
 ################################################################################
@@ -425,6 +362,25 @@ parts:
     plugin: rust
     build-packages:
       - libdbus-1-dev
+    after: [rust-deps]
+################################################################################
+  rust-deps:
+    plugin: nil
+    build-packages:
+      - wget
+    override-pull: |
+      # Do not use rustup to work around https://forum.snapcraft.io/t/armhf-builds-on-launchpad-timing-out/31008
+      REQUIRED_RUST_VERSION=nightly
+      ROOT=https://static.rust-lang.org/dist/rust-$REQUIRED_RUST_VERSION
+      if [ $SNAPCRAFT_TARGET_ARCH = "amd64" ]; then
+        BINARIES_SUFFIX=x86_64-unknown-linux-gnu
+      elif [ $SNAPCRAFT_TARGET_ARCH = "armhf" ]; then
+        BINARIES_SUFFIX=armv7-unknown-linux-gnueabihf
+      elif [ $SNAPCRAFT_TARGET_ARCH = "arm64" ]; then
+        BINARIES_SUFFIX=aarch64-unknown-linux-gnu
+      fi
+      wget -O - $ROOT-$BINARIES_SUFFIX.tar.gz | tar -x -z --strip-components=1
+      ./install.sh --prefix=/usr --destdir=$SNAPCRAFT_STAGE
 ################################################################################
   rpi-support-binaries:
     plugin: nil
@@ -476,8 +432,8 @@ parts:
             )
           fi
       done
-    after: [plainbox-provider-certification-server]
 ################################################################################
   common-config:
     plugin: dump
-    source: ../config/
+    source: config/
+    source-type: local
