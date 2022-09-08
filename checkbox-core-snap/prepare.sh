@@ -47,4 +47,5 @@ fi
 echo "Copying over common_files/* to $series"
 rsync -r common_files/ $series/
 
-
+echo "Enabling snapcraft by providing real snapcraft.yaml"
+cp $series/snap/snapcraft.real $series/snap/snapcraft.yaml
