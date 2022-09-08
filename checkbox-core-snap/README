@@ -1,0 +1,14 @@
+# checkbox-core-snap
+
+This directory contains source code for all of the variants of checkbox-core-snap.
+The variants being different snaps for different releases of Ubuntu.
+
+`common_files` directory contains files that are shared between all series. By default they are not present in the corresponding series subdirectories.
+
+# Snapping
+
+Before you launch snapcraft, run `./prepare.sh` with an argument signifying which version of the snap you're planning to build. E.g.
+```
+./prepare.sh series22
+```
+

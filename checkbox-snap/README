@@ -1,0 +1,20 @@
+# checkbox-snap
+
+This directory contains source code for all of the variants of checkbox-snap.
+The variants being different snaps for different releases of Ubuntu.
+
+`common_series_classic` directory contains files that are shared between all classic series.
+`common_series_uc` directory contains files that are shared between all Ubuntu Core series.
+ By default they are not present in the corresponding series subdirectories.
+
+# Snapping
+
+Before you launch snapcraft, run `./prepare_classic.sh` or `./prepare_uc.sh` with an argument signifying which version of the snap you're planning to build. E.g.
+```
+./prepare_classic.sh series_classic22.sh
+```
+or
+```
+./prepare_uc.sh series_uc22.sh
+```
+
