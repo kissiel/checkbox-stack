@@ -22,7 +22,7 @@ jobs:
         with:
           path: checkbox-snap/series_classic22
           snapcraft-channel: 7.x/stable
-          snapcraft-args: remote-build --build-on arm64 --launchpad-accept-public-upload
+          snapcraft-args: remote-build --build-on arm64 --launchpad-accept-public-upload --launchpad-user kissiel
       - uses: actions/upload-artifact@v3
         with:
           name: snap
