@@ -31,7 +31,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: snap
-          path: ${{ steps.snapcraft.outputs.snap }}
+          path: checkbox-snap/series_classic22/*.snap
+          #path: ${{ steps.snapcraft.outputs.snap }}
 
 
 
