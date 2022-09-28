@@ -2,8 +2,6 @@ name: remote classic 22
 
 on:
   workflow_dispatch:
-env:
-  SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -19,6 +17,8 @@ jobs:
       
       - uses: snapcore/action-build@v1
         id: snapcraft
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
         with:
           path: checkbox-snap/series_classic22
           snapcraft-channel: 7.x/stable
