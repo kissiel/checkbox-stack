@@ -14,7 +14,10 @@ jobs:
         run: |
           cd checkbox-snap/
           ./prepare_classic.sh series_classic22
-      
+      - name: add LP credentials
+        run: |
+          mkdir -p ~/.local/share/snapcraft/provider/launchpad/credentials
+          cat ${{ secrets.LP_CREDS }} > ~/.local/share/snapcraft/provider/launchpad/credentials
       - uses: snapcore/action-build@v1
         id: snapcraft
         env:
@@ -22,7 +25,7 @@ jobs:
         with:
           path: checkbox-snap/series_classic22
           snapcraft-channel: 7.x/stable
-          snapcraft-args: remote-build --build-on arm64 --launchpad-accept-public-upload --launchpad-user kissiel
+          snapcraft-args: remote-build --build-on arm64 --launchpad-accept-public-upload
       - uses: actions/upload-artifact@v3
         with:
           name: snap
