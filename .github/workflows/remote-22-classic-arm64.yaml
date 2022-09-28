@@ -16,8 +16,8 @@ jobs:
           ./prepare_classic.sh series_classic22
       - name: add LP credentials
         run: |
-          mkdir -p ~/.local/share/snapcraft/provider/launchpad/credentials
-          cat ${{ secrets.LP_CREDS }} > ~/.local/share/snapcraft/provider/launchpad/credentials
+          mkdir -p ~/.local/share/snapcraft/provider/launchpad/
+          echo '${{ secrets.LP_CREDS }}' > ~/.local/share/snapcraft/provider/launchpad/credentials
       - uses: snapcore/action-build@v1
         id: snapcraft
         env:
