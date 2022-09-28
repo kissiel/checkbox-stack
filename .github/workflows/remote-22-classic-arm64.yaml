@@ -18,6 +18,8 @@ jobs:
         run: |
           mkdir -p ~/.local/share/snapcraft/provider/launchpad/
           echo '${{ secrets.LP_CREDS }}' > ~/.local/share/snapcraft/provider/launchpad/credentials
+          git config --global user.email "maciej.kisielewski@canonical.com"
+          git config --global user.name "Maciej Kisielewski"
       - uses: snapcore/action-build@v1
         id: snapcraft
         env:
