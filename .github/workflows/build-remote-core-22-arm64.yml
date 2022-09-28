@@ -2,6 +2,8 @@ name: build checkbox-core-snap remotely on arm64 for series 22
 
 on:
   workflow_dispatch:
+env:
+  SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
