@@ -1,0 +1,38 @@
+name: amd64 remotely 22 and push 
+
+on:
+  workflow_dispatch:
+env:
+  SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: copy over common files
+        run: |
+          cd checkbox-core-snap/
+          ./prepare.sh series22
+      - run: |
+          mkdir -p ~/.local/share/snapcraft/provider/launchpad/
+          echo '${{ secrets.LP_CREDS }}' > ~/.local/share/snapcraft/provider/launchpad/credentials
+          git config --global user.email "maciej.kisielewski@canonical.com"
+          git config --global user.name "Maciej Kisielewski"
+      - uses: snapcore/action-build@v1
+        id: snapcraft
+        with:
+          path: checkbox-core-snap/series22
+          snapcraft-channel: 7.x/stable
+          snapcraft-args: remote-build --build-on amd64 --launchpad-accept-public-upload
+      - uses: actions/upload-artifact@v3
+        with:
+          name: snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+      - uses: snapcore/action-publish@v1
+        with:
+          store_login: ${{ secrets.SNAPCRAFT7_CREDS }}
+          snap: ${{ steps.build.outputs.snap }}
+          release: edge
