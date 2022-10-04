@@ -1,4 +1,4 @@
-name: build checkbox-core-snap remotely on arm64 for series 22
+name: with push build checkbox-core-snap remotely on arm64 for series 22
 
 on:
   workflow_dispatch:
@@ -16,10 +16,11 @@ jobs:
         run: |
           cd checkbox-core-snap/
           ./prepare.sh series22
-      - run:
-          mkdir -p ~/.local/share/snapcraft/provider/launchpad/credentials
-          cat ${{ secrets.LP_CREDS }} > ~/.local/share/snapcraft/provider/launchpad/credentials
-      
+      - run: |
+          mkdir -p ~/.local/share/snapcraft/provider/launchpad/
+          echo '${{ secrets.LP_CREDS }}' > ~/.local/share/snapcraft/provider/launchpad/credentials
+          git config --global user.email "maciej.kisielewski@canonical.com"
+          git config --global user.name "Maciej Kisielewski"
       - uses: snapcore/action-build@v1
         id: snapcraft
         with:
@@ -30,6 +31,8 @@ jobs:
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
-
-
-
+      - uses: snapcore/action-publish@v1
+        with:
+          store_login: ${{ secrets.SNAPCRAFT7_CREDS }}
+          snap: ${{ steps.build.outputs.snap }}
+          release: edge
