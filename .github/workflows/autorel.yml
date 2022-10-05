@@ -57,7 +57,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: snap
-          path: checkbox-snap/$SERIES/*.snap
+          path: checkbox-snap/series_${{ matrix.type }}${{ matrix.releases }}/*.snap
           #path: ${{ steps.snapcraft.outputs.snap }}
 
 
