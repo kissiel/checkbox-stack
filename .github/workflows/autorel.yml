@@ -13,7 +13,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  series_matrix:
+  snap:
     strategy:
       matrix:
         type: [classic, uc]
@@ -22,6 +22,8 @@ jobs:
     env:
       SERIES: series_${{ matrix.type }}${{ matrix.releases }}
       SERIES_PRETTY:  ${{ matrix.type }} ${{ matrix.releases }}
+    name: Snap Checkbox snap for  ${{ matrix.type }}${{ matrix.releases }} series
+
     steps:
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
