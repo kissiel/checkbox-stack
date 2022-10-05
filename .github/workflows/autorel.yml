@@ -22,6 +22,7 @@ jobs:
     env:
       SERIES: series_${{ matrix.type }}${{ matrix.releases }}
       SERIES_PRETTY:  ${{ matrix.type }} ${{ matrix.releases }}
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
     name: Snap Checkbox snap for  ${{ matrix.type }}${{ matrix.releases }} series
 
     steps:
@@ -49,8 +50,6 @@ jobs:
           git config --global user.name "Maciej Kisielewski"
       - uses: snapcore/action-build@v1
         id: snapcraft
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
         with:
           path: checkbox-snap/$SERIES
           snapcraft-channel: 7.x/stable
