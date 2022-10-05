@@ -13,16 +13,33 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  series_matrix:
+    strategy:
+      matrix:
+        type: [classic, uc]
+        releases: [16, 18, 20, 22]
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    env:
+      SERIES: series_${{ matrix.type }}${{ matrix.releases }}
+      SERIES_PRETTY:  ${{ matrix.type }} ${{ matrix.releases }}
     steps:
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
+      - name: Copy over the common files for series ${{ env.SERIES_PRETTY }}
+        run: |
+          cd checkbox-snap/
+          ./prepare_${{ matrix.type }}.sh $SERIES
+
+      - name: Remove '.dev' suffix from the version name
+        run: |
+          cd checkbox-snap
+          # in the following sed onliner the '0,/^version/' bit specifies the range
+          # of lines it should act upon, this way only the first occurence of '^version'
+          # is getting affected.
+          sed -i '0,/^version/s/\(^version\:.*\).dev/\1/' $SERIES/snap/snapcraft.yaml
+
       # Runs a single command using the runners shell
       - name: Print the tag
-        run: echo new tag detected ${{github.ref_name}}
+        run: echo new tag detected ${{github.ref_name}} ${{ env.SERIES_PRETTY }}
