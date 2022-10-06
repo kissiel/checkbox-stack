@@ -1,0 +1,56 @@
+name: Autorelease beta version of checkbox-core-snap
+
+on:
+  push:
+    tags:
+        - "checkbox-core-snap-v*"
+  workflow_dispatch:
+
+jobs:
+  snap:
+    strategy:
+      matrix:
+        releases: [16, 18, 20, 22]
+    runs-on: ubuntu-latest
+    env:
+      SERIES: series_${{ matrix.releases }}
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
+    name: Snap Checkbox Core snap for  series ${{ matrix.releases }} series
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Copy over the common files for series ${{ matrix.releases }}
+        run: |
+          cd checkbox-core-snap/
+          ./prepare.sh $SERIES
+
+      - name: Remove '.dev' suffix from the version name
+        run: |
+          cd checkbox-core-snap
+          # in the following sed onliner the '0,/^version/' bit specifies the range
+          # of lines it should act upon, this way only the first occurence of '^version'
+          # is getting affected.
+          sed -i '0,/^version/s/\(^version\:.*\).dev/\1/' $SERIES/snap/snapcraft.yaml
+      - name: add LP credentials
+        run: |
+          mkdir -p ~/.local/share/snapcraft/provider/launchpad/
+          echo '${{ secrets.LP_CREDS }}' > ~/.local/share/snapcraft/provider/launchpad/credentials
+          git config --global user.email "ce-certifcation-qa@lists.canonical.com"
+          git config --global user.name "Certification bot"
+      - uses: snapcore/action-build@v1
+        id: snapcraft
+        with:
+          path: checkbox-core-snap/series_{{ matrix.releases }}
+          snapcraft-channel: 7.x/stable
+          snapcraft-args: remote-build --build-on amd64,arm64,armhf,i386 --launchpad-accept-public-upload
+      - uses: actions/upload-artifact@v3
+        with:
+          name: snap
+          path: checkbox-snap/series_${{ matrix.releases }}/*.snap
+          # enable after testing
+          #       - uses: snapcore/action-publish@v1
+          #  	with:
+          # 	  store_login: ${{ secrets.SNAPCRAFT7_CREDS }}
+          # 	  snap: ${{ steps.build.outputs.snap }}
+          # 	  release: beta
