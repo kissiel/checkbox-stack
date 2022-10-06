@@ -13,7 +13,7 @@ jobs:
         releases: [16, 18, 20, 22]
     runs-on: ubuntu-latest
     env:
-      SERIES: series_${{ matrix.releases }}
+      SERIES: series${{ matrix.releases }}
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
     name: Snap Checkbox Core snap for  series ${{ matrix.releases }} series
 
