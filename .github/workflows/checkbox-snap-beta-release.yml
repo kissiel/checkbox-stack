@@ -49,8 +49,20 @@ jobs:
           snapcraft-args: remote-build --build-on amd64,arm64,armhf,i386 --launchpad-accept-public-upload
       - uses: actions/upload-artifact@v3
         with:
-          name: series_${{ matrix.type }}${{ matrix.releases }}
-          path: checkbox-snap/series_${{ matrix.type }}${{ matrix.releases }}/*.snap
+          name: series_${{ matrix.type }}${{ matrix.releases }}_amd64.snap
+          path: checkbox-snap/series_${{ matrix.type }}${{ matrix.releases }}/*_amd64.snap
+      - uses: actions/upload-artifact@v3
+        with:
+          name: series_${{ matrix.type }}${{ matrix.releases }}_i386.snap
+          path: checkbox-snap/series_${{ matrix.type }}${{ matrix.releases }}/*_i386.snap
+      - uses: actions/upload-artifact@v3
+        with:
+          name: series_${{ matrix.type }}${{ matrix.releases }}_arm64.snap
+          path: checkbox-snap/series_${{ matrix.type }}${{ matrix.releases }}/*_amd64.snap
+      - uses: actions/upload-artifact@v3
+        with:
+          name: series_${{ matrix.type }}${{ matrix.releases }}_armhf.snap
+          path: checkbox-snap/series_${{ matrix.type }}${{ matrix.releases }}/*_armhf.snap
           # enable after testing
           #       - uses: snapcore/action-publish@v1
           #  	with:
